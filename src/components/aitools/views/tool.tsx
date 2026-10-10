@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { PLATFORM_LABEL, catById, fmtK, type Tool, type ViewId } from "@/lib/aitools/data";
 import { useTools } from "../tools-provider";
-import { AppIcon } from "../ui";
+import { AppIcon, FeaturedBadge } from "../ui";
 import { FeaturedArt } from "../mockups";
 
 /* --------------------------- bookmarks store --------------------------- */
@@ -239,7 +239,6 @@ export function ToolDetail({
     .slice(0, 4);
 
   const metaBits = [
-    ...(tool.featured ? ["Editors' pick"] : []),
     "Open source",
   ];
   if (tool.selfHosted) metaBits.push("Self-hosting available");
@@ -285,7 +284,10 @@ export function ToolDetail({
         <ToolIcon tool={tool} />
         <div className="min-w-0 min-w-[240px] flex-1">
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-faint">{cat.short}</p>
-          <h1 className="mt-2.5 text-4xl font-extrabold tracking-tight text-ink">{tool.name}</h1>
+          <div className="mt-2.5 flex flex-wrap items-center gap-3">
+            <h1 className="text-4xl font-extrabold tracking-tight text-ink">{tool.name}</h1>
+            {tool.featured && <FeaturedBadge />}
+          </div>
           <p className="mt-2.5 max-w-xl text-lg leading-snug text-mute">{tool.desc}</p>
           <p className="mt-3 text-[13px] text-faint">{metaBits.join(" · ")}</p>
         </div>

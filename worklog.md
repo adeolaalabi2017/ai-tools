@@ -335,3 +335,20 @@ Work Log:
 
 Stage Summary:
 - Tasks 11 + 12 hold up in a fresh session: install intact, admin panel fully functional, both themes + mobile verified, lint/dev.log clean; no code changes required this pass
+
+---
+Task ID: 13
+Agent: Z.ai Code (main agent)
+Task: Complete + verify the three queued features: featured badges site-wide, stars/votes on category cards, search results grouped by category
+
+Work Log:
+- Audited coverage and found most of the work already present from the prior session (unrecorded due to context break): FeaturedBadge existed in ui.tsx and rendered in ToolRow (ui.tsx) + ToolCard (browse-parts.tsx — used by Browse and Trending); categories.tsx already aggregated live GitHub stars + community votes per category onto every category card; search-modal.tsx already grouped results under category headers with per-group counts
+- Closed the one real gap: tool detail page only mentioned "Editors' pick" in the small meta line — added FeaturedBadge next to the H1 in views/tool.tsx header (flex-wrap row so it drops cleanly on mobile) and removed the now-redundant meta text bit
+- Verified via agent-browser: Browse "Newest projects" shows 3 Featured badges (incl. NightOwl community+featured, accent-soft pill + sparkle icon); NightOwl + OpenCode detail pages show the badge beside the title in both dark and light themes; Categories cards show live aggregates (Agents 890K stars / AI Assistants 533K / Coding 371K)
+- Proved the vote aggregate is live: POSTed a test vote to /api/tools/openclaw/vote → reload → Agents card ▲ went 0 → 1; toggled the vote back off to restore clean state
+- Verified search grouping: ⌘K → "open" → groups </> Coding·3 (Open Lovable, OpenCode, Cline), Video & Audio·2, Voice·2, Agents·3, Research·2 with star counts right-aligned and keyboard nav intact
+- Mobile 390px: category cards stack single-column with compact stat rows, zero horizontal overflow; lint clean; dev.log only 200s (vote POSTs, search, list queries)
+
+Stage Summary:
+- All three queued features are live and browser-verified: Featured badges appear on cards, rows, and the detail header everywhere a tool renders; category cards carry live stars+votes aggregates; ⌘K search results are grouped by category with counts
+- Only code change this pass: views/tool.tsx (FeaturedBadge import + header placement, meta line dedupe) — everything else was verification of prior work now recorded here

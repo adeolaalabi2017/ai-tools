@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { byId, type Tool, type ViewId } from "@/lib/aitools/data";
+import { type Tool, type ViewId } from "@/lib/aitools/data";
 import { ToolsProvider, useTools } from "./tools-provider";
 import { Nav } from "./nav";
 import { Footer } from "./footer";
@@ -13,6 +13,7 @@ import { Trending } from "./views/trending";
 import { Browse } from "./views/browse";
 import { Submit } from "./views/submit";
 import { AdminQueue } from "./views/admin";
+import { ToolDetail } from "./views/tool";
 
 export default function AIToolStore() {
   return (
@@ -30,6 +31,7 @@ function AIToolStoreApp() {
   const [browseQuery, setBrowseQuery] = useState("");
   const [browseCategory, setBrowseCategory] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeToolId, setActiveToolId] = useState<string | null>(null);
 
   /* ⌘K / Ctrl+K toggles the search palette from anywhere */
   useEffect(() => {
@@ -46,6 +48,7 @@ function AIToolStoreApp() {
   const navigate = useCallback((v: ViewId) => {
     setView(v);
     setActiveCategory(null);
+    setActiveToolId(null);
     /* arriving at the catalog from nav/footer starts unfiltered */
     if (v === "browse") {
       setBrowseQuery("");
@@ -59,36 +62,36 @@ function AIToolStoreApp() {
     setSearchOpen(true);
   }, []);
 
-  const browseWith = useCallback((cat: string | null, q = "") => {
-    setBrowseCategory(cat);
-    setBrowseQuery(q);
-    setView("browse");
-    window.scrollTo({ top: 0 });
-  }, []);
-
   const openCategory = useCallback((catId: string) => {
     setActiveCategory(catId);
     setView("category");
     window.scrollTo({ top: 0 });
   }, []);
 
-  const openTool = useCallback(
-    (t: Tool) => {
-      browseWith(null, t.name);
-    },
-    [browseWith],
-  );
+  const openTool = useCallback((t: Tool) => {
+    setActiveToolId(t.id);
+    setView("tool");
+    window.scrollTo({ top: 0 });
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-base text-ink">
       <Nav view={view} onNavigate={navigate} onOpenSearch={() => openSearch()} />
 
       <main className="flex-1">
-        <div key={view === "category" ? `category:${activeCategory ?? ""}` : view} className="animate-rise">
+        <div
+          key={
+            view === "category"
+              ? `category:${activeCategory ?? ""}`
+              : view === "tool"
+                ? `tool:${activeToolId ?? ""}`
+                : view
+          }
+          className="animate-rise"
+        >
           {view === "discover" && (
             <Discover
               onNavigate={navigate}
-              onBrowseCategory={(c) => browseWith(c)}
               onOpenCategory={openCategory}
               onOpenSearch={openSearch}
               onOpenTool={openTool}
@@ -121,6 +124,14 @@ function AIToolStoreApp() {
           )}
           {view === "submit" && <Submit onDiscover={() => navigate("discover")} />}
           {view === "admin" && <AdminQueue onNavigate={navigate} />}
+          {view === "tool" && (
+            <ToolDetail
+              toolId={activeToolId}
+              onNavigate={navigate}
+              onOpenTool={openTool}
+              onOpenCategory={openCategory}
+            />
+          )}
         </div>
       </main>
 
@@ -132,8 +143,7 @@ function AIToolStoreApp() {
         onClose={() => setSearchOpen(false)}
         onNavigate={navigate}
         onOpenTool={(t) => {
-          const fresh = getTool(t.id) ?? byId(t.id) ?? t;
-          browseWith(fresh.cat, fresh.name);
+          openTool(getTool(t.id) ?? t);
         }}
       />
     </div>

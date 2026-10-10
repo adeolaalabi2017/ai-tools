@@ -161,3 +161,40 @@ Work Log:
 Stage Summary:
 - Phase 3 shipped and verified end-to-end: editorial submission flow (submit -> pending -> admin approve/reject), per-category detail views with server filtering + Most upvoted sort, moderation queue UI in the footer's CONTRIBUTE column
 - Demo-ready state: 2 pending submissions in the Review queue for immediate exploration
+
+---
+Task ID: 6
+Agent: full-stack-developer
+Task: Tool detail view (OpenStore-style) built and wired
+
+Work Log:
+- Read worklog (Tasks 1–5) + studied the reference screenshot spec, home.tsx, data.ts, ui.tsx, browse-parts.tsx, mockups.tsx, tools-provider.tsx, api.ts, nav.tsx, views/{discover,category,admin,trending} and globals.css to lock patterns (dotgrid utility, AppIcon sizes, VoteChip language, UTC-safe date formatting, container/border tokens) before coding
+- data.ts: added `| "tool"` to the ViewId union — the task scoped edits to tool.tsx + home.tsx, but `view === "tool"` / `setView("tool")` cannot typecheck otherwise and the mission explicitly introduces the new ViewId; purely additive one-token change, no existing member touched (flagged in agent-ctx)
+- Created views/tool.tsx: breadcrumb (Discover / category buttons + faint ">" separators), header (local 64px ToolIcon since AppIcon maxes at lg/h-10; mono short eyebrow, text-4xl h1, desc, meta line assembled from selfHosted/sourceAvailable/weeklyGain, right CTAs: bg-solid "Get {name}" + bordered "GitHub" both → repo URL, icon-only bookmark), 5-cell stats bar (grid-cols-2→md:3→lg:5 with per-cell responsive border-r/border-t so 2-col and 3-col wrapped rows render clean, lg:pl-0 first cell; stars/votes/license/platforms/created; votes cell is a real <button> calling toggleVote with aria-pressed + accent voted state), Screenshots showcase (chrome bar with dots + centered repo, dotgrid body min-h clamp(300px,55vh,520px), FeaturedArt from featuredArt ?? 12-entry category→art map scaled 1.1/1.35/1.6 inside overflow-hidden, caption strip), Best-for/User-feedback split panel (CATEGORY_BEST_FOR 12-entry copy map, rating block or "No aggregate rating verified.", discussions/issues links, footnote), About + Details (derived paragraph, truth-derived checklist ≤4, "Alternative to" chips from replaces split, sidebar dl with repo mono link + "Oct 5, 2026" snapshot note), More in {label} (2 siblings by stars desc, See category ›), Back to Discover, "Tool not found." empty state
+- Bookmarks: module-level localStorage external store ("aistore-bookmarks") read with useSyncExternalStore (empty server snapshot, cached read, write-through toggle) — mirrors tools-provider myVotes pattern, zero setState-in-effect
+- home.tsx: added activeToolId state; navigate() resets it; openTool now sets id + view "tool" + scroll top (signature unchanged — all ToolCard/ToolRow/trending-row/search entry points switch automatically); removed now-unused browseWith and the stale onBrowseCategory prop on <Discover> (also fixes a pre-existing TS excess-prop error); search-modal onOpenTool → openTool(getTool(t.id) ?? t); animate-rise key extended with tool:${activeToolId}; rendered <ToolDetail> for view "tool"
+- Verified with agent-browser: bun run lint clean + tsc --noEmit clean; Browse (nav New) → first card → OpenClaw detail renders ALL sections with real data and agent-browser errors empty; breadcrumb category crumb → Agents category view, Discover crumb → discover; votes cell click 0→1 accent "You upvoted this", reload persists (curl API votes:1), toggle-off → API votes:0; bookmark fills accent (settled computed color #4ade80) + localStorage ["openclaw"], reload persists via detail re-open, toggled off → []; "More in Agents" AutoGPT row opens its detail; "See category" → Voice category view; "Back to Discover" → discover; search modal "voice" → 6 server results → first (OpenWhispr) opens detail
+- Responsive: 390px — scrollWidth 390 == clientWidth (no horizontal overflow), stats 2-col, about/details stacked to 1-col, header CTAs wrap on one row, scaled mockup 275px inside 348px body with no chrome-bar overlap; 1440px — stats 5 cols, about grid 704px/360px; zero console errors, dev.log clean
+- Final state: 64 curated public + 2 pending demo rows (nightowl, promptdeck), 0 community, sum(votes) = 0
+
+Stage Summary:
+- Shipped the OpenStore-style tool detail view ("tool" ViewId) reached from every existing entry point (cards, rows, trending table, category cards, search palette) via the openTool switch in home.tsx; all content renders from useTools() (merged editorial + live votes) with zero backend changes
+- Files: created src/components/aitools/views/tool.tsx (+ agent-ctx/6-full-stack-developer.md); modified src/components/aitools/home.tsx and the one-token ViewId addition in src/lib/aitools/data.ts
+- Decisions: votes stat replaces the reference's "community forks" (our real engagement data, wired to the live vote endpoint); LICENSE cell fixed to "OSS" (every listed project is open source); platform captions and checklist items derived strictly from true data flags ("Full list in Details" when ≤3 platforms); screenshots reuse the CSS mockup artwork scaled up instead of generated images; bookmarks follow the provider's external-store pattern for SSR-safe persistence
+- Verification: all E2E flows green at desktop + mobile, lint + tsc clean, zero console errors, DB restored to demo-ready state (votes 0, 2 pending submissions)
+
+---
+Task ID: 7
+Agent: Z.ai Code (main agent)
+Task: Integration verification of the tool detail view (Task 6)
+
+Work Log:
+- Final lint clean; opened OpenClaw detail via Browse card click (entry-point wiring confirmed)
+- Full-page desktop screenshot reviewed against the uploaded OpenStore reference: breadcrumb, header CTAs (Get {name} / GitHub / bookmark), 5-cell stats bar, Screenshots showcase (chrome bar + dot-grid + scaled mockup + caption), BEST FOR / User feedback split panel, About + Details sidebar, More in Agents (AutoGPT + Paperclip), Back to Discover — all render faithfully with real data
+- Votes cell on detail page: toggle on -> API votes:1 + accent "You upvoted this", toggle off -> votes:0 (restored)
+- Mobile 390px: no horizontal overflow, header stacks cleanly, stats 2-col; 0 console errors; dev.log healthy
+- DB state: 64 curated + 2 pending demo rows, votes 0
+
+Stage Summary:
+- Tool detail page shipped and verified end-to-end at desktop + mobile; every tool card/row/search result across the app now opens the real detail view instead of a pre-filtered Browse
+- Adaptation decisions held: COMMUNITY VOTES stat (real data) replaces reference's forks; LICENSE shows "OSS" honestly; screenshots use scaled CSS mockups with browser chrome

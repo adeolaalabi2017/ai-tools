@@ -9,7 +9,8 @@ export type ViewId =
   | "trending"
   | "browse"
   | "submit"
-  | "admin";
+  | "admin"
+  | "tool";
 
 export type Platform = "web" | "mac" | "win" | "linux" | "ios" | "android";
 

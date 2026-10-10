@@ -14,6 +14,7 @@ import { Browse } from "./views/browse";
 import { Submit } from "./views/submit";
 import { AdminQueue } from "./views/admin";
 import { ToolDetail } from "./views/tool";
+import { Wanted } from "./views/wanted";
 
 export default function AIToolStore() {
   return (
@@ -122,7 +123,12 @@ function AIToolStoreApp() {
               onOpenTool={openTool}
             />
           )}
-          {view === "submit" && <Submit onDiscover={() => navigate("discover")} />}
+          {view === "submit" && (
+            <Submit
+              onDiscover={() => navigate("discover")}
+              onWanted={() => navigate("wanted")}
+            />
+          )}
           {view === "admin" && <AdminQueue onNavigate={navigate} />}
           {view === "tool" && (
             <ToolDetail
@@ -132,6 +138,7 @@ function AIToolStoreApp() {
               onOpenCategory={openCategory}
             />
           )}
+          {view === "wanted" && <Wanted onNavigate={navigate} onOpenTool={openTool} />}
         </div>
       </main>
 

@@ -42,3 +42,32 @@ model Vote {
   @@unique([toolId, voter])
   @@index([voter])
 }
+
+// Community "wanted alternative" request board.
+// id is the slug of the target software so duplicate requests resolve to the
+// same row — a duplicate becomes a WantVote ("the strongest needs rise").
+model Want {
+  id        String   @id // slug of the target, e.g. "notion"
+  target    String // display name of the software to replace
+  note      String? // extra context from the requester
+  status    String   @default("open") // "open" | "progress" | "fulfilled"
+  requester String? // display name; null = anonymous visitor
+  dupes     Int      @default(0) // duplicate requests merged into this one
+  baseVotes Int      @default(0) // seeded/editorial votes; real total = baseVotes + wantVotes count
+  connected String   @default("") // CSV of Tool ids linked when a request is fulfilled
+  createdAt DateTime @default(now())
+  wantVotes WantVote[]
+
+  @@index([status])
+}
+
+model WantVote {
+  id        String   @id @default(cuid())
+  wantId    String
+  want      Want     @relation(fields: [wantId], references: [id], onDelete: Cascade)
+  voter     String // anonymous client token (localStorage)
+  createdAt DateTime @default(now())
+
+  @@unique([wantId, voter])
+  @@index([voter])
+}

@@ -10,7 +10,8 @@ export type ViewId =
   | "browse"
   | "submit"
   | "admin"
-  | "tool";
+  | "tool"
+  | "wanted";
 
 export type Platform = "web" | "mac" | "win" | "linux" | "ios" | "android";
 

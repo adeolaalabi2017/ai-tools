@@ -196,3 +196,55 @@ export async function featureTool(id: string, featured: boolean): Promise<{ tool
     body: JSON.stringify({ featured }),
   });
 }
+
+/* ------------------------------- wants -------------------------------- */
+
+/** One row on the "Wanted alternatives" board. */
+export interface ApiWant {
+  id: string;
+  target: string;
+  note: string | null;
+  status: "open" | "progress" | "fulfilled" | string;
+  requester: string | null;
+  dupes: number;
+  votes: number;
+  connected: string[];
+  createdAt: string;
+}
+
+export interface WantsPage {
+  wants: ApiWant[];
+  total: number;
+}
+
+export interface WantRequestPayload {
+  target: string;
+  note?: string;
+  voter: string;
+}
+
+export interface WantRequestResult {
+  want: ApiWant;
+  /** True when the target already existed and the request became a vote. */
+  deduped: boolean;
+}
+
+export async function fetchWants(sort: "votes" | "newest" = "votes"): Promise<WantsPage> {
+  return request<WantsPage>(`/api/wants?sort=${sort}`);
+}
+
+export async function createWant(payload: WantRequestPayload): Promise<WantRequestResult> {
+  return request<WantRequestResult>(`/api/wants`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function voteWant(id: string, voter: string): Promise<VoteResult> {
+  return request<VoteResult>(`/api/wants/${encodeURIComponent(id)}/vote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ voter }),
+  });
+}

@@ -131,3 +131,74 @@ export const moderateSchema = z.object({
 export const featureSchema = z.object({
   featured: z.boolean(),
 });
+
+/* ------------------------------- wants -------------------------------- */
+
+/** Wire format returned by every /api/wants endpoint. */
+export interface ApiWant {
+  id: string;
+  target: string;
+  note: string | null;
+  status: "open" | "progress" | "fulfilled" | string;
+  requester: string | null;
+  /** Duplicate requests merged into this one. */
+  dupes: number;
+  /** baseVotes + live WantVote count. */
+  votes: number;
+  /** Tool ids from the catalog connected to a fulfilled request. */
+  connected: string[];
+  createdAt: string;
+}
+
+/** Structural type of a Prisma `Want` row as read from SQLite. */
+export interface DbWant {
+  id: string;
+  target: string;
+  note: string | null;
+  status: string;
+  requester: string | null;
+  dupes: number;
+  baseVotes: number;
+  connected: string; // CSV of tool ids
+  createdAt: Date;
+}
+
+export function serializeWant(w: DbWant, votes: number): ApiWant {
+  return {
+    id: w.id,
+    target: w.target,
+    note: w.note,
+    status: w.status,
+    requester: w.requester,
+    dupes: w.dupes,
+    votes,
+    connected: w.connected.split(",").filter(Boolean),
+    createdAt: w.createdAt.toISOString(),
+  };
+}
+
+/**
+ * Requests are deduped by a normalized key: lowercase, letters+digits only.
+ * "Notion", "notion " and "Notion!" all resolve to the same want id "notion".
+ */
+export function normalizeWantTarget(target: string): string {
+  return target.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 80);
+}
+
+/** Body for POST /api/wants — creating a request (or voting via duplicate). */
+export const wantRequestSchema = z.object({
+  target: z
+    .string()
+    .trim()
+    .min(2, "Name the software to replace (2–80 characters)")
+    .max(80, "Name the software to replace (2–80 characters)"),
+  note: z.string().trim().max(280, "Note must be 280 characters or fewer").optional(),
+  voter: z
+    .string()
+    .trim()
+    .min(8, "Voter token must be 8–64 characters")
+    .max(64, "Voter token must be 8–64 characters"),
+});
+
+/** Body for POST /api/wants/[id]/vote. Reuses the voter token shape. */
+export const wantVoteSchema = voteSchema;

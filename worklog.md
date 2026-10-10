@@ -220,3 +220,26 @@ Stage Summary:
 - Shipped all three deferred features on top of the live data layer: aggregate stars/votes on category cards, category-grouped search results, and a full editorial featured-badge system (schema → APIs → card badges → moderator toggles at approval + a featured-picks manager)
 - featured is a real DB flag (not the static EDITORS_PICKS) so moderators control badges; the static trio keeps the fallback and fresh boots consistent
 - Files: prisma/schema.prisma, prisma/seed.ts, prisma/featured-seed.ts (new), src/lib/aitools/{server,api,data}.ts, src/app/api/tools/[id]/moderate/route.ts, src/app/api/tools/[id]/feature/route.ts (new), src/components/aitools/{tools-provider,ui,browse-parts,search-modal}.tsx, views/{categories,admin,tool}.tsx
+
+---
+Task ID: 9
+Agent: Z.ai Code (main agent)
+Task: Build the "Wanted alternatives" page (the community request board the footer link opens to), per the user's reference screenshot
+
+Work Log:
+- Schema: added `Want` (id = normalized target slug, target, note, status open|progress|fulfilled, requester, dupes, baseVotes, connected CSV, createdAt) + `WantVote` (unique wantId+voter) to prisma/schema.prisma; `bun run db:push`
+- Seed: new `prisma/seed-wants.ts` (idempotent upserts) — 10 demo requests: 3 fulfilled (ChatGPT→Open WebUI/LibreChat, Notion→AppFlowy/Reor, Zapier→n8n/Activepieces), 3 in progress (Copilot→Aider/Cline, Perplexity→Perplexica, ElevenLabs→Coqui/VoiceStudio), 4 open (Midjourney, Google Analytics, Zoom, 1Password)
+- API `GET/POST /api/wants`: GET returns all wants with votes = baseVotes + WantVote count, sorted in JS (votes desc, newest tiebreak — Prisma can't sum a relation count + column); POST dedupes by normalized target — duplicate request becomes a vote (+dupes) in a transaction, new requests auto-cast the requester's vote and start open; zod via wantRequestSchema
+- API `POST /api/wants/[id]/vote`: toggle in a transaction, returns { votes, voted, want }
+- Client: api.ts gains ApiWant/fetchWants/createWant/voteWant; data.ts ViewId gains "wanted"; tools-provider exports ensureVoterToken (shared anonymous token)
+- New view `src/components/aitools/views/wanted.tsx`: mono eyebrow + hero (exact reference copy), GitHub sign-in banner (click → honest demo note), board card with request form (target + optional note, helper "Duplicate requests become votes for the original."), status filter chips with live counts (All/Open/In progress/Fulfilled), Most wanted/Newest sort dropdown, want rows (▲ vote pill with optimistic toggle + reconcile, "An open-source alternative to X", status badges, requested-by · timeAgo · "N duplicates became votes", connected project chips that open the tool detail page), skeleton loading, and the reference's exact error state ("Wanted alternatives couldn't load." / "The request board is unavailable." / Try again) on fetch failure with working recovery
+- myWantVotes: localStorage-backed useSyncExternalStore store (same SSR-safe pattern as myVotes/bookmarks)
+- Wiring: home.tsx renders the "wanted" view; footer "Wanted alternatives" now opens it (was a submit placeholder); Submit page's "Request one" navigates to the board (removed the "coming soon" note); board footer cross-links back to Submit an app
+- Fixed during E2E: (1) GET sort ignored baseVotes so a 1-vote new request outranked seeded 214 — now JS-sorted by total votes; (2) dedupe/create didn't mark the browser's vote locally → pill desync — handleSubmit now writes myWantVotes on both paths
+- E2E (agent-browser): vote on/off (214↔215, accent state, DB row), new request "Arc Browser" (feedback, counts 11/5, own vote marked), duplicate "arc browser" → "Already requested — your request became a vote" + dupes 63→64, connected chip → AppFlowy tool page, Open filter (5 rows), Newest sort (Arc first), API blocked → exact error state → Try again recovers 11 rows, Submit "Request one" cross-link; desktop 1440 + mobile 390 zero overflow, zero console errors, footer sticky
+- Cleanup: test votes + arc-browser want deleted, seed re-run — final state 10 seeded wants, 0 wantVotes; lint clean, dev.log clean
+
+Stage Summary:
+- The "Wanted alternatives" request board is live: request → dedupe-as-vote → vote → status badges → connected projects, fully backed by Prisma with anonymous per-browser vote integrity
+- Duplicate handling matches the reference copy: repeated requests become votes so the strongest needs rise; fulfilled requests link into the existing tool catalog
+- Files: prisma/schema.prisma, prisma/seed-wants.ts (new), src/app/api/wants/route.ts (new), src/app/api/wants/[id]/vote/route.ts (new), src/lib/aitools/{server,api,data}.ts, src/components/aitools/{tools-provider,home,footer}.tsx, views/{wanted (new),submit}.tsx

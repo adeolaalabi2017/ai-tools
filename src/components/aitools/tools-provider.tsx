@@ -70,7 +70,7 @@ function writeMyVotes(next: ReadonlySet<string>): void {
 }
 
 /** Lazily create/read the anonymous voter token (client-side only). */
-function ensureVoterToken(): string | null {
+export function ensureVoterToken(): string | null {
   try {
     let token = window.localStorage.getItem(VOTER_KEY);
     if (!token) {

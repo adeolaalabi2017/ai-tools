@@ -27,7 +27,13 @@ function prettyName(slug: string): string {
     .join(" ");
 }
 
-export function Submit({ onDiscover }: { onDiscover: () => void }) {
+export function Submit({
+  onDiscover,
+  onWanted,
+}: {
+  onDiscover: () => void;
+  onWanted: () => void;
+}) {
   const queryClient = useQueryClient();
   const [repo, setRepo] = useState("");
   const [fetchState, setFetchState] = useState<"idle" | "loading" | "done" | "error">("idle");
@@ -46,7 +52,6 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
   const [submitting, setSubmitting] = useState(false);
   const [repoError, setRepoError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [cancelNote, setCancelNote] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const repoValid = useMemo(() => GITHUB_RE.test(repo.trim()), [repo]);
@@ -436,12 +441,11 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
             Looking for an alternative instead?{" "}
             <button
               type="button"
-              onClick={() => setCancelNote(true)}
+              onClick={onWanted}
               className="text-ink2 underline underline-offset-4 transition-colors hover:text-ink"
             >
               Request one
             </button>
-            {cancelNote && <span className="ml-2 text-faint">(opens the community wishlist — coming soon)</span>}
           </p>
           <div className="flex items-center gap-3">
             <button

@@ -111,6 +111,7 @@ export function staticToolToApi(t: Tool): ApiTool {
     votes: t.votes ?? 0,
     status: t.status ?? "curated",
     submitter: t.submitter ?? null,
+    featured: Boolean(t.featured),
   };
 }
 
@@ -142,6 +143,7 @@ export function apiToolToTool(api: ApiTool, base?: Tool): Tool {
     votes: api.votes,
     status: api.status,
     submitter: api.submitter,
+    featured: api.featured,
     rating: base?.rating,
     featuredArt: base?.featuredArt,
   };

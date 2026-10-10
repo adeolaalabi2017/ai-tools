@@ -22,8 +22,9 @@ model Tool {
   createdAt       DateTime @default(now())
   emoji           String   @default("🧩")
   glyph           String? // 1-3 letter fallback icon
-  status          String   @default("curated") // "curated" | "community"
+  status          String   @default("curated") // "curated" | "community" | "pending"
   submitter       String? // display name / email of community submitter
+  featured        Boolean  @default(false) // editorial pick — toggled by moderators
   toolVotes       Vote[]
 
   @@index([cat])

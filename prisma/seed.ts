@@ -25,6 +25,7 @@ async function main() {
       emoji: t.emoji.trim() || "🧩",
       glyph: t.glyph ?? null,
       status: "curated",
+      featured: Boolean(t.featured),
     };
     const existing = await prisma.tool.findUnique({ where: { id: t.id } });
     if (existing) {

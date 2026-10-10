@@ -22,6 +22,7 @@ export interface ApiTool {
   votes: number;
   status: "curated" | "community" | string;
   submitter: string | null;
+  featured: boolean;
 }
 
 export interface ToolsPage {
@@ -178,10 +179,20 @@ export async function voteTool(id: string, voter: string): Promise<VoteResult> {
 export async function moderateTool(
   id: string,
   action: "approve" | "reject",
+  opts: { featured?: boolean } = {},
 ): Promise<ModerateResult> {
   return request<ModerateResult>(`/api/tools/${encodeURIComponent(id)}/moderate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action }),
+    body: JSON.stringify({ action, featured: opts.featured }),
+  });
+}
+
+/** Toggle the editorial "Featured" badge on an approved tool. */
+export async function featureTool(id: string, featured: boolean): Promise<{ tool: ApiTool }> {
+  return request<{ tool: ApiTool }>(`/api/tools/${encodeURIComponent(id)}/feature`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ featured }),
   });
 }

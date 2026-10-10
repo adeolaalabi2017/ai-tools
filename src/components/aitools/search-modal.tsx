@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Search, CornerDownLeft } from "lucide-react";
+import { Search, CornerDownLeft, Star } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import {
+  CATEGORIES,
   TOOLS,
   VIEW_PAGES,
   matchTool,
   catLabel,
+  fmtK,
   type Tool,
   type ViewId,
 } from "@/lib/aitools/data";
@@ -114,7 +116,30 @@ function Palette({
       .map((t) => ({ kind: "tool" as const, tool: t }));
   }, [searching, search.data, q, debouncedQ, getTool]);
 
-  const items = useMemo<Item[]>(() => [...pages, ...tools], [pages, tools]);
+  /* app results grouped by category (catalog order; rank kept within group) */
+  const grouped = useMemo(() => {
+    const byCat = new Map<string, ToolItem[]>();
+    for (const item of tools) {
+      const arr = byCat.get(item.tool.cat);
+      if (arr) arr.push(item);
+      else byCat.set(item.tool.cat, [item]);
+    }
+    const groups: { cat: string; items: ToolItem[] }[] = [];
+    for (const c of CATEGORIES) {
+      const arr = byCat.get(c.id);
+      if (arr && arr.length > 0) groups.push({ cat: c.id, items: arr });
+    }
+    /* any tool whose cat is unknown still shows, under its own label */
+    for (const [cat, items] of byCat) {
+      if (!CATEGORIES.some((c) => c.id === cat)) groups.push({ cat, items });
+    }
+    return groups;
+  }, [tools]);
+
+  const items = useMemo<Item[]>(
+    () => [...pages, ...grouped.flatMap((g) => g.items)],
+    [pages, grouped],
+  );
 
   /* reset the highlighted row whenever the query changes (adjust-during-render) */
   const [prevQ, setPrevQ] = useState(q);
@@ -224,39 +249,42 @@ function Palette({
             </>
           )}
 
-          {tools.length > 0 && (
-            <>
-              <p className="px-4 pb-1.5 pt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
-                Apps
-              </p>
-              {tools.map((item) => {
-                const gi = items.indexOf(item);
-                const t = item.tool;
-                return (
-                  <button
-                    key={t.id}
-                    data-idx={gi}
-                    onMouseEnter={() => setIdx(gi)}
-                    onClick={() => activate(item)}
-                    className={cn(
-                      "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors",
-                      gi === idx ? "bg-card" : "hover:bg-card/60",
-                    )}
-                  >
-                    <AppIcon tool={t} size="sm" />
-                    <span className="shrink-0 text-sm font-medium text-ink">{t.name}</span>
-                    <span className="min-w-0 flex-1 truncate text-[13px] text-faint">
-                      · Alternative to {t.replaces}
-                    </span>
-                    <span className="hidden shrink-0 items-center gap-1.5 font-mono text-[11px] text-accent sm:flex">
-                      <CategoryIcon id={t.cat} className="h-3 w-3" />
-                      {catLabel(t.cat)}
-                    </span>
-                  </button>
-                );
-              })}
-            </>
-          )}
+          {grouped.length > 0 &&
+            grouped.map((g) => (
+              <div key={`cat-${g.cat}`}>
+                <p className="flex items-center gap-1.5 px-4 pb-1 pt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
+                  <CategoryIcon id={g.cat} className="h-3 w-3" />
+                  {catLabel(g.cat)}
+                  <span className="text-faint/60">· {g.items.length}</span>
+                </p>
+                {g.items.map((item) => {
+                  const gi = items.indexOf(item);
+                  const t = item.tool;
+                  return (
+                    <button
+                      key={t.id}
+                      data-idx={gi}
+                      onMouseEnter={() => setIdx(gi)}
+                      onClick={() => activate(item)}
+                      className={cn(
+                        "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                        gi === idx ? "bg-card" : "hover:bg-card/60",
+                      )}
+                    >
+                      <AppIcon tool={t} size="sm" />
+                      <span className="shrink-0 text-sm font-medium text-ink">{t.name}</span>
+                      <span className="min-w-0 flex-1 truncate text-[13px] text-faint">
+                        · Alternative to {t.replaces}
+                      </span>
+                      <span className="hidden shrink-0 items-center gap-1 font-mono text-[11px] text-faint sm:flex">
+                        <Star className="h-3 w-3" />
+                        {fmtK(t.stars)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
 
           {items.length === 0 && (
             <div className="px-4 py-10 text-center">

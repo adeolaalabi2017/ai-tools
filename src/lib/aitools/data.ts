@@ -63,6 +63,7 @@ export interface Tool {
   /* editorial extras */
   rating?: { score: number; reviews: number; source: string; highlight: string; feedbackNotes?: number };
   featuredArt?: "terminal" | "chat" | "nodes" | "wave" | "flow";
+  featured?: boolean;
   /* live/API extras (populated by the tools provider) */
   votes?: number;
   status?: "curated" | "community" | string;
@@ -84,7 +85,7 @@ const T = (
 ): Tool => ({ id, name, repo, desc, replaces, cat, stars, platforms, createdAt, emoji, ...extra });
 
 export const TOOLS: Tool[] = [
-  T("opencode", "OpenCode", "sst/opencode", "An AI coding agent that feels at home in your terminal.", "Claude Code", "coding", 211_900, ["mac", "win", "linux"], "2025-03-14", "🧑‍💻", { featuredArt: "terminal" }),
+  T("opencode", "OpenCode", "sst/opencode", "An AI coding agent that feels at home in your terminal.", "Claude Code", "coding", 211_900, ["mac", "win", "linux"], "2025-03-14", "🧑‍💻", { featuredArt: "terminal", featured: true }),
   T("openclaw", "OpenClaw", "openclaw/openclaw", "Your assistant, on your devices and in your chats.", "ChatGPT personal assistant workflows", "agents", 391_400, ["mac", "win", "linux", "web", "ios", "android"], "2025-11-02", "🦞"),
   T("paperclip", "Paperclip", "paperclipai/paperclip", "Bring your agents, tasks, and work into one place.", "Devin team workflows", "agents", 97_500, ["mac", "win", "linux"], "2024-12-09", "📎", { selfHosted: true, weeklyGain: 8_700, featuredArt: "flow" }),
   T("open-webui", "Open WebUI", "open-webui/open-webui", "A beautiful, self-hosted home for your AI conversations.", "ChatGPT interface", "assistants", 154_000, ["web", "mac", "win", "linux"], "2023-08-21", "💬", { selfHosted: true, sourceAvailable: true, featuredArt: "chat", rating: { score: 4.6, reviews: 214, source: "G2", highlight: "Reviewers highlight multi-model support and effortless self-hosting for teams that need data control." } }),
@@ -96,11 +97,11 @@ export const TOOLS: Tool[] = [
   T("difys", "Dify", "langgenius/dify", "Ship LLM apps without the glue code.", "OpenAI platform", "devtools", 92_100, ["web", "linux"], "2023-04-11", "🚀", { selfHosted: true }),
   T("opencut", "OpenCut", "OpenCut-app/OpenCut", "Your stories. Your editor. No subscription required.", "CapCut", "video", 92_600, ["web", "mac", "win", "linux"], "2025-01-17", "✂️", { selfHosted: true }),
   T("openhands", "OpenHands", "All-Hands-AI/OpenHands", "AI agents that help bring your software ideas to life.", "Devin", "agents", 90_000, ["web", "linux"], "2024-03-12", "🙌", { selfHosted: true }),
-  T("comfyui", "ComfyUI", "comfyanonymous/ComfyUI", "A node-based studio for AI image generation.", "Midjourney workflows", "images", 78_900, ["web", "linux", "mac", "win"], "2023-01-24", "🎨", { selfHosted: true, featuredArt: "nodes" }),
+  T("comfyui", "ComfyUI", "comfyanonymous/ComfyUI", "A node-based studio for AI image generation.", "Midjourney workflows", "images", 78_900, ["web", "linux", "mac", "win"], "2023-01-24", "🎨", { selfHosted: true, featuredArt: "nodes", featured: true }),
   T("gpt4all", "GPT4All", "nomic-ai/gpt4all", "Local chat models for everyday hardware.", "ChatGPT offline", "assistants", 73_400, ["mac", "win", "linux"], "2023-04-02", "💻", { selfHosted: true }),
   T("whisper", "Whisper", "openai/whisper", "Robust speech recognition from open models.", "Otter.ai", "voice", 81_200, ["linux", "mac", "win"], "2022-09-21", "🎧", { selfHosted: true }),
   T("hyperframes", "HyperFrames", "heygen-com/hyperframes", "Write HTML. Render video. Bring ideas into motion.", "After Effects motion workflows", "video", 57_200, ["mac", "win", "linux"], "2024-10-03", "🎞️", { weeklyGain: 3_100 }),
-  T("voicestudio", "VoiceStudio", "debpalash/VoiceStudio", "A local-first studio for voice, speech, and storytelling.", "ElevenLabs", "voice", 53_600, ["mac", "win", "linux"], "2024-11-20", "🎙️", { selfHosted: true, weeklyGain: 14_700, featuredArt: "wave" }),
+  T("voicestudio", "VoiceStudio", "debpalash/VoiceStudio", "A local-first studio for voice, speech, and storytelling.", "ElevenLabs", "voice", 53_600, ["mac", "win", "linux"], "2024-11-20", "🎙️", { selfHosted: true, weeklyGain: 14_700, featuredArt: "wave", featured: true }),
   T("ragflow", "RAGFlow", "infiniflow/ragflow", "Deep retrieval for your team's knowledge.", "Glean", "research", 54_300, ["web", "linux"], "2024-02-27", "🧲", { selfHosted: true }),
   T("privategpt", "privateGPT", "zylon-ai/private-gpt", "Ask questions to your documents. 100% private.", "ChatGPT for docs", "assistants", 54_300, ["linux", "mac", "win"], "2023-05-07", "🔏", { selfHosted: true }),
   T("anythingllm", "AnythingLLM", "Mintplex-Labs/anything-llm", "Chat with your documents, anywhere.", "ChatGPT + Dropbox AI", "assistants", 45_200, ["mac", "win", "linux", "web"], "2023-06-15", "📚", { selfHosted: true, rating: { score: 4.3, reviews: 176, source: "Capterra", highlight: "Reviewers value simple document chat, desktop apps, and workspaces that keep private data on private hardware.", feedbackNotes: 62 } }),

@@ -1,10 +1,12 @@
 "use client";
 
-import { ArrowRight, Search } from "lucide-react";
+import { useMemo } from "react";
+import { ArrowRight, Search, Star } from "lucide-react";
 import {
   CATEGORIES,
   GOOD_STARTS,
   countByCat,
+  fmtK,
   type Tool,
   type ViewId,
 } from "@/lib/aitools/data";
@@ -22,8 +24,21 @@ export function Categories({
   onOpenSearch: () => void;
   onOpenTool: (t: Tool) => void;
 }) {
-  const { tools } = useTools();
+  const { tools, votes } = useTools();
   const goodStarts = GOOD_STARTS(tools);
+
+  /* aggregate GitHub stars + community votes per category, from live data */
+  const catStats = useMemo(() => {
+    const m = new Map<string, { stars: number; votes: number }>();
+    for (const c of CATEGORIES) m.set(c.id, { stars: 0, votes: 0 });
+    for (const t of tools) {
+      const s = m.get(t.cat);
+      if (!s) continue;
+      s.stars += t.stars;
+      s.votes += votes[t.id] ?? t.votes ?? 0;
+    }
+    return m;
+  }, [tools, votes]);
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
@@ -47,22 +62,42 @@ export function Categories({
 
       {/* grid */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {CATEGORIES.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => onOpenCategory(c.id)}
-            className="group rounded-xl border border-line bg-card p-5 text-left transition-colors hover:border-line2 hover:bg-elev"
-          >
-            <div className="flex items-center gap-3">
-              <CategoryIcon id={c.id} className="h-[18px] w-[18px] text-ink2" />
-              <span className="text-[15px] font-semibold text-ink">{c.label}</span>
-            </div>
-            <p className="mt-3 flex items-center gap-1.5 text-[13px] text-faint">
-              {countByCat(c.id, tools)} curated apps
-              <ArrowRight className="h-3.5 w-3.5 text-accent transition-transform group-hover:translate-x-0.5" />
-            </p>
-          </button>
-        ))}
+        {CATEGORIES.map((c) => {
+          const stats = catStats.get(c.id) ?? { stars: 0, votes: 0 };
+          return (
+            <button
+              key={c.id}
+              onClick={() => onOpenCategory(c.id)}
+              className="group rounded-xl border border-line bg-card p-5 text-left transition-colors hover:border-line2 hover:bg-elev"
+            >
+              <div className="flex items-center gap-3">
+                <CategoryIcon id={c.id} className="h-[18px] w-[18px] text-ink2" />
+                <span className="text-[15px] font-semibold text-ink">{c.label}</span>
+              </div>
+              <p className="mt-3 flex items-center gap-1.5 text-[13px] text-faint">
+                {countByCat(c.id, tools)} apps
+                <ArrowRight className="h-3.5 w-3.5 text-accent transition-transform group-hover:translate-x-0.5" />
+              </p>
+              <div className="mt-3.5 flex items-center gap-4 border-t border-line pt-3 font-mono text-xs">
+                <span
+                  className="flex items-center gap-1.5 text-faint transition-colors group-hover:text-ink2"
+                  title={`${stats.stars.toLocaleString("en-US")} GitHub stars in ${c.label}`}
+                >
+                  <Star className="h-3 w-3" />
+                  {fmtK(stats.stars)}
+                  <span className="hidden sm:inline">stars</span>
+                </span>
+                <span
+                  className="flex items-center gap-1.5 text-faint transition-colors group-hover:text-accent"
+                  title={`${stats.votes.toLocaleString("en-US")} community votes in ${c.label}`}
+                >
+                  ▲ {stats.votes}
+                  <span className="hidden sm:inline">{stats.votes === 1 ? "vote" : "votes"}</span>
+                </span>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       {/* good places to start */}

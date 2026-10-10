@@ -227,8 +227,9 @@ export function ToolRow({
         <AppIcon tool={tool} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-2 truncate text-[15px] font-semibold text-ink">
-              {tool.name}
+            <span className="flex min-w-0 items-center gap-2 truncate text-[15px] font-semibold text-ink">
+              <span className="truncate">{tool.name}</span>
+              {tool.featured && <FeaturedBadge />}
               {badge}
             </span>
             <Github className="h-4 w-4 shrink-0 text-faint transition-colors group-hover:text-ink2" />
@@ -388,6 +389,21 @@ export function SourceBadge() {
   return (
     <span className="rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-px text-[10px] font-medium text-amber-500">
       Source-available
+    </span>
+  );
+}
+
+/* ---------------------------- featured badge --------------------------- */
+
+/** Editorial "Featured" pick — set by moderators at approval or via the queue. */
+export function FeaturedBadge() {
+  return (
+    <span
+      title="Editors' pick"
+      className="inline-flex shrink-0 items-center gap-1 rounded-md border border-accent/40 bg-accent-soft px-1.5 py-px text-[10px] font-medium leading-[1.4] text-accent"
+    >
+      <Sparkles className="h-3 w-3" aria-hidden />
+      Featured
     </span>
   );
 }

@@ -2,7 +2,8 @@
 /*  /api/tools/[id]/moderate — approve or reject (delete) a tool       */
 /*                                                                     */
 /*  approve: pending → community (idempotent no-op if already          */
-/*           community/curated).                                       */
+/*           community/curated). An optional `featured` boolean sets   */
+/*           the editorial flag at approval time.                      */
 /*  reject:  allowed only for pending/community rows → deletes the     */
 /*           tool (Vote rows cascade). Curated rows are protected.     */
 /* ------------------------------------------------------------------ */
@@ -40,10 +41,15 @@ export async function POST(
 
     if (action === "approve") {
       // Idempotent: pending → community; community/curated stay untouched.
-      if (tool.status === "pending") {
+      // An explicit `featured` flag ("Feature on AIStore" toggle) is applied
+      // whenever provided — including on idempotent re-approvals.
+      if (tool.status === "pending" || parsed.data.featured !== undefined) {
         const updated = await db.tool.update({
           where: { id },
-          data: { status: "community" },
+          data: {
+            ...(tool.status === "pending" ? { status: "community" } : {}),
+            ...(parsed.data.featured !== undefined ? { featured: parsed.data.featured } : {}),
+          },
           include: { _count: { select: { toolVotes: true } } },
         });
         return NextResponse.json({

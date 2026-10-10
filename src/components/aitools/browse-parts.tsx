@@ -11,7 +11,7 @@ import {
   type Platform,
   type Tool,
 } from "@/lib/aitools/data";
-import { AppIcon, Dropdown, PlatformRow, WeeklyGain, CategoryIcon, VoteChip } from "./ui";
+import { AppIcon, Dropdown, FeaturedBadge, PlatformRow, WeeklyGain, CategoryIcon, VoteChip } from "./ui";
 
 /* ------------------------------ filter bar ----------------------------- */
 
@@ -161,9 +161,12 @@ export function ToolCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <AppIcon tool={tool} />
-          <div className="min-w-0">
-            <h3 className="truncate text-[15px] font-semibold text-ink">{tool.name}</h3>
-            <p className="mt-0.5 text-xs text-faint">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <div className="flex items-center gap-1.5">
+              <h3 className="truncate text-[15px] font-semibold text-ink">{tool.name}</h3>
+              {tool.featured && <FeaturedBadge />}
+            </div>
+            <p className="mt-0.5 truncate text-xs text-faint">
               {cat.label}
               {tool.selfHosted ? " · Self-hosted" : ""}
             </p>

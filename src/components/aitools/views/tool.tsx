@@ -238,7 +238,10 @@ export function ToolDetail({
     .filter((x): x is string => Boolean(x))
     .slice(0, 4);
 
-  const metaBits = ["Open source"];
+  const metaBits = [
+    ...(tool.featured ? ["Editors' pick"] : []),
+    "Open source",
+  ];
   if (tool.selfHosted) metaBits.push("Self-hosting available");
   if (tool.sourceAvailable) metaBits.push("Source available");
   if (typeof tool.weeklyGain === "number") metaBits.push("Trending this week");

@@ -198,3 +198,25 @@ Work Log:
 Stage Summary:
 - Tool detail page shipped and verified end-to-end at desktop + mobile; every tool card/row/search result across the app now opens the real detail view instead of a pre-filtered Browse
 - Adaptation decisions held: COMMUNITY VOTES stat (real data) replaces reference's forks; LICENSE shows "OSS" honestly; screenshots use scaled CSS mockups with browser chrome
+
+---
+Task ID: 8
+Agent: Z.ai Code (main agent)
+Task: The three features deferred behind the tool page — stars/vote counts on category cards, search results grouped by category, and featured/editorial badges moderators can toggle when approving
+
+Work Log:
+- Schema: added `featured Boolean @default(false)` to Tool, `bun run db:push` (+ regenerate); new `prisma/featured-seed.ts` flags the EDITORS_PICKS trio (opencode, voicestudio, comfyui) — seed.ts also passes `featured` through for fresh-DB boots
+- API: serializeTool/DbTool/ApiTool now carry `featured`; moderateSchema gained optional `featured` applied on approve (also on idempotent re-approvals); new `POST /api/tools/[id]/feature` toggles the badge on approved tools (400 for pending — they are featured at approval time); api.ts client: moderateTool opts + featureTool()
+- Frontend plumbing: Tool type + static data gain `featured`; staticToolToApi/apiToolToTool map it (DB wins so unfeaturing sticks); FeaturedBadge (accent Sparkles chip) in ui.tsx rendered automatically on ToolRow + ToolCard; detail page meta shows "Editors' pick"
+- Categories view (Feature A): per-category aggregate footer — "★ {fmtK(stars)} stars · ▲ {n} votes" computed from live tools + provider votes (updates instantly when voting); label "curated apps"→"apps"
+- Search palette (Feature B): app results grouped under per-category headers (icon + label + count, catalog order, rank kept within group); per-row category chip replaced by stars; keyboard nav/indices unchanged (flat items array)
+- Admin view (Feature C): pending rows get a star toggle — label flips Approve → "Approve & feature" and passes featured on approval; new "Featured picks" manager section lists all approved tools (featured first, max-h-96 thin-scroll) with optimistic on/off star toggles + featured count
+- Env incident: the running dev server held a pre-regeneration Prisma client (featured silently undefined); after full process cleanup a stale Turbopack cache kept serving it — fixed by `rm -rf .next` + clean restart; also discovered tool-session-spawned processes can be reaped between calls, so server lifecycle is per-call (boot flow `.zscripts/dev.sh` restores it on container restart — schema/seed changes are boot-safe)
+- E2E (curl): submit→approve(featured:true)→community+featured→toggle off/on→pending-feature 400→reject-delete; trio intact, 64 total
+- E2E (agent-browser): categories cards show stars/votes and flip to "▲ 1 vote" live after upvoting; Featured badges on ToolRow + ToolCard (OpenCode/VoiceStudio, and NightOwl right after approve&feature); search "chat" groups AI Assistants·8 | Agents·1 | Developer Tools·2 with headers, keyboard nav opens LobeChat detail; detail meta "Editors' pick · Open source"; admin star toggle → "Approve & feature" → NightOwl joins featured list and Browse badge; unfeature via manager (3 featured); mobile 390 + desktop 1440 zero overflow, zero console errors
+- Cleanup: NightOwl deleted, seed-pending restored, test vote removed — final state 64 public + 2 pending, 3 featured trio, 0 votes; lint clean, dev.log clean
+
+Stage Summary:
+- Shipped all three deferred features on top of the live data layer: aggregate stars/votes on category cards, category-grouped search results, and a full editorial featured-badge system (schema → APIs → card badges → moderator toggles at approval + a featured-picks manager)
+- featured is a real DB flag (not the static EDITORS_PICKS) so moderators control badges; the static trio keeps the fallback and fresh boots consistent
+- Files: prisma/schema.prisma, prisma/seed.ts, prisma/featured-seed.ts (new), src/lib/aitools/{server,api,data}.ts, src/app/api/tools/[id]/moderate/route.ts, src/app/api/tools/[id]/feature/route.ts (new), src/components/aitools/{tools-provider,ui,browse-parts,search-modal}.tsx, views/{categories,admin,tool}.tsx

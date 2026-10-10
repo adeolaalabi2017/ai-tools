@@ -25,6 +25,7 @@ export interface ApiTool {
   votes: number;
   status: string;
   submitter: string | null;
+  featured: boolean;
 }
 
 /** Structural type of a Prisma `Tool` row as read from SQLite. */
@@ -45,6 +46,7 @@ export interface DbTool {
   glyph: string | null;
   status: string;
   submitter: string | null;
+  featured: boolean;
 }
 
 /**
@@ -70,6 +72,7 @@ export function serializeTool(t: DbTool, votes: number): ApiTool {
     votes,
     status: t.status,
     submitter: t.submitter,
+    featured: t.featured,
   };
 }
 
@@ -120,4 +123,11 @@ export const voteSchema = z.object({
 /** Moderation body behind /api/tools/[id]/moderate. */
 export const moderateSchema = z.object({
   action: z.enum(["approve", "reject"]),
+  /** Optional editorial flag applied when approving (ignored on reject). */
+  featured: z.boolean().optional(),
+});
+
+/** Feature-toggle body behind /api/tools/[id]/feature. */
+export const featureSchema = z.object({
+  featured: z.boolean(),
 });

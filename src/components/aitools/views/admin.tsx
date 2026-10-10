@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Loader2, RefreshCw, Star, Trash2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { catById, type ViewId } from "@/lib/aitools/data";
-import { fetchTools, moderateTool, type ApiTool, type ToolsPage } from "@/lib/aitools/api";
-import { apiToolToTool } from "../tools-provider";
+import { catLabel, fmtK, type ViewId } from "@/lib/aitools/data";
+import { featureTool, fetchTools, moderateTool, type ApiTool, type ToolsPage } from "@/lib/aitools/api";
+import { apiToolToTool, useTools } from "../tools-provider";
 import { AppIcon, CategoryIcon, PlatformRow } from "../ui";
 
 type Action = "approve" | "reject";
@@ -36,7 +36,9 @@ function fmtDate(iso: string): string {
 
 export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
   const queryClient = useQueryClient();
+  const { tools } = useTools();
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const [featureBusyId, setFeatureBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const query = useQuery({
@@ -48,12 +50,22 @@ export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) 
   const rows: ApiTool[] = query.data?.tools ?? [];
   const count = query.data ? query.data.total : null;
 
-  const moderate = async (id: string, action: Action) => {
+  /* every approved tool, featured first — the moderator's editorial list */
+  const editorial = useMemo(
+    () =>
+      tools
+        .filter((t) => t.status !== "pending")
+        .sort((a, b) => Number(b.featured ?? false) - Number(a.featured ?? false) || b.stars - a.stars),
+    [tools],
+  );
+  const featuredCount = editorial.filter((t) => t.featured).length;
+
+  const moderate = async (id: string, action: Action, featured?: boolean) => {
     if (pendingAction) return;
     setActionError(null);
     setPendingAction({ id, action });
     try {
-      await moderateTool(id, action);
+      await moderateTool(id, action, action === "approve" ? { featured } : {});
       /* optimistic removal — the row leaves the queue immediately */
       queryClient.setQueryData<ToolsPage>(["tools", "pending"], (old) =>
         old
@@ -70,6 +82,32 @@ export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) 
       );
     } finally {
       setPendingAction(null);
+    }
+  };
+
+  const toggleFeatured = async (id: string, featured: boolean) => {
+    if (featureBusyId) return;
+    setActionError(null);
+    setFeatureBusyId(id);
+    const prev = queryClient.getQueryData<ToolsPage>(["tools", "all"]);
+    /* optimistic flip so the toggle feels instant */
+    queryClient.setQueryData<ToolsPage>(["tools", "all"], (old) =>
+      old
+        ? { ...old, tools: old.tools.map((t) => (t.id === id ? { ...t, featured } : t)) }
+        : old,
+    );
+    try {
+      await featureTool(id, featured);
+      void queryClient.invalidateQueries({ queryKey: ["tools", "all"] });
+    } catch {
+      queryClient.setQueryData<ToolsPage>(["tools", "all"], prev);
+      setActionError(
+        featured
+          ? "Couldn't feature the tool. Please try again."
+          : "Couldn't remove the feature. Please try again.",
+      );
+    } finally {
+      setFeatureBusyId(null);
     }
   };
 
@@ -110,7 +148,7 @@ export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) 
               tool={a}
               busy={pendingAction?.id === a.id ? pendingAction.action : null}
               anyBusy={pendingAction !== null}
-              onApprove={() => void moderate(a.id, "approve")}
+              onApprove={(featured) => void moderate(a.id, "approve", featured)}
               onRemove={() => void moderate(a.id, "reject")}
             />
           ))}
@@ -133,6 +171,77 @@ export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) 
           {actionError}
         </p>
       )}
+
+      {/* ------------------------- editorial picks manager ------------------------- */}
+      <section className="mt-16">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">Featured picks</h2>
+            <p className="mt-1.5 text-sm text-mute">
+              Toggle a tool to badge it as an editors&rsquo; pick across the directory.
+            </p>
+          </div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-faint">
+            {featuredCount} featured
+          </p>
+        </div>
+
+        <div className="thin-scroll mt-5 max-h-96 overflow-y-auto rounded-xl border border-line bg-card">
+          {editorial.map((t, i) => (
+            <div
+              key={t.id}
+              className={cn(
+                "flex items-center gap-3.5 px-4 py-3",
+                i > 0 && "border-t border-line",
+                t.featured && "bg-accent-soft/40",
+              )}
+            >
+              <AppIcon tool={t} size="sm" />
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="truncate text-sm font-medium text-ink">{t.name}</span>
+                  <span className="hidden shrink-0 items-center gap-1 text-xs text-faint sm:flex">
+                    <CategoryIcon id={t.cat} className="h-3 w-3" />
+                    {catLabel(t.cat)}
+                  </span>
+                </div>
+                <p className="mt-0.5 truncate font-mono text-[11px] text-faint">{t.repo}</p>
+              </div>
+              <span className="hidden shrink-0 items-center gap-1.5 font-mono text-xs text-faint md:flex">
+                ★ {fmtK(t.stars)}
+              </span>
+              <button
+                type="button"
+                onClick={() => void toggleFeatured(t.id, !t.featured)}
+                disabled={featureBusyId !== null}
+                aria-pressed={Boolean(t.featured)}
+                aria-label={
+                  t.featured ? `Remove ${t.name} from featured picks` : `Feature ${t.name} as an editors' pick`
+                }
+                title={t.featured ? "Remove feature" : "Feature on AIStore"}
+                className={cn(
+                  "grid h-9 w-9 shrink-0 place-items-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+                  t.featured
+                    ? "border-accent/40 bg-accent-soft text-accent"
+                    : "border-line text-mute hover:border-line2 hover:text-ink",
+                )}
+              >
+                {featureBusyId === t.id ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Star className={cn("h-4 w-4", t.featured && "fill-current")} />
+                )}
+              </button>
+            </div>
+          ))}
+          {editorial.length === 0 && (
+            <p className="px-4 py-10 text-center text-sm text-mute">No approved tools yet.</p>
+          )}
+        </div>
+        <p className="mt-3 text-xs text-faint">
+          Featured tools carry the badge on cards and rows everywhere in the directory.
+        </p>
+      </section>
     </div>
   );
 }
@@ -149,11 +258,13 @@ function PendingRow({
   tool: ApiTool;
   busy: Action | null;
   anyBusy: boolean;
-  onApprove: () => void;
+  onApprove: (featured: boolean) => void;
   onRemove: () => void;
 }) {
   const t = apiToolToTool(tool);
-  const cat = catById(t.cat);
+  const cat = catLabel(t.cat);
+  /* the editorial flag the moderator can flip before approving */
+  const [feature, setFeature] = useState(false);
 
   return (
     <article className="rounded-xl border border-line bg-card p-5">
@@ -168,8 +279,8 @@ function PendingRow({
             <p className="mt-1.5 text-sm leading-relaxed text-mute">{t.desc}</p>
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-xs text-mute">
-                <CategoryIcon id={cat.id} className="h-3 w-3" />
-                {cat.label}
+                <CategoryIcon id={t.cat} className="h-3 w-3" />
+                {cat}
               </span>
               <PlatformRow platforms={t.platforms} />
             </div>
@@ -186,13 +297,29 @@ function PendingRow({
         >
           <button
             type="button"
-            onClick={onApprove}
+            onClick={() => setFeature((f) => !f)}
+            aria-pressed={feature}
+            aria-label={feature ? `Don't feature ${t.name} on approval` : `Also feature ${t.name} on approval`}
+            title={feature ? "Will be featured on approval" : "Feature on AIStore when approved"}
             disabled={anyBusy}
-            aria-label={`Approve ${t.name}`}
+            className={cn(
+              "grid h-9 w-9 place-items-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+              feature
+                ? "border-accent/40 bg-accent-soft text-accent"
+                : "border-line text-mute hover:border-line2 hover:text-ink",
+            )}
+          >
+            <Star className={cn("h-4 w-4", feature && "fill-current")} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onApprove(feature)}
+            disabled={anyBusy}
+            aria-label={`Approve ${t.name}${feature ? " and feature it" : ""}`}
             className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-solid px-3.5 text-[13px] font-medium text-solidfg transition-colors hover:bg-solidhover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy === "approve" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-            {busy === "approve" ? "Approving…" : "Approve"}
+            {busy === "approve" ? "Approving…" : feature ? "Approve & feature" : "Approve"}
           </button>
           <button
             type="button"

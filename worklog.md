@@ -264,3 +264,24 @@ Stage Summary:
 - The palette now implements 60/30/10 verbatim: dominant canvas (60%), a distinct green-charcoal secondary layer for header/cards/containers (30%), and the green accent reserved for CTAs, links, active chips and key icons (10%) in both themes
 - Fixed a long-standing silent bug where bg-accent-soft produced no CSS (theme key mismatch) — all soft-green chip surfaces now actually render
 - Files: src/app/globals.css, src/components/aitools/{nav,footer,browse-parts}.tsx, views/{discover,admin,wanted,tool,submit}.tsx
+
+---
+Task ID: 11
+Agent: Z.ai Code (main agent)
+Task: Install the @efferd/dashboard-3 registry block into the project
+
+Work Log:
+- components.json already present (shadcn new-york, 48 ui components); added the "registries" entry for @efferd (https://efferd.com/r/{style}/{name}.json)
+- `npx skills add shadcn/ui` and `npx shadcn@latest add @efferd/dashboard-3` both hung (sandbox npm path stalls); bunx shadcn also hung inside the add step (npm-based dep resolution), so installed manually: fetched dashboard-3/indicator/app-shell-3/formater/logo JSONs via curl (registry reachable, 0.3s)
+- Resolved the full dependency tree: base components all present except kbd (fetched from ui.shadcn.com new-york registry); no new npm packages needed (cva, lucide-react, recharts 3.8 already installed)
+- Wrote 24 files with a flattened layout (components/<name>.tsx + lib/formater.ts + ui/kbd.tsx) and normalized the CLI-internal imports the registry relies on (@/components/1/*, @/components/2/*, ~/components/* → flat @/components/*)
+- Replaced 43 <IconPlaceholder> tokens (efferd's icon-library placeholder) with their lucide="..." icons, merging into existing lucide-react imports; preserved spread props {...slotProps} className={...} in delta.tsx variants; fixed two files where the generated import landed before "use client"
+- Compatibility fixes: added icon-sm/icon-xs sizes to ui/button.tsx buttonVariants (efferd uses newer button API); cast ChartLegendContent content prop in channel-breakdown-chart.tsx (recharts 3 cloneElement payload typing; runtime already correct)
+- Theming collision found and fixed at runtime verification: AIStore's 60/30/10 palette re-assigns shadcn tokens (--card → dark green-charcoal), leaving block cards dark-on-dark; created src/components/dashboard-demo.tsx which mounts AppShell+Dashboard and re-scopes standard shadcn light theme vars to the block subtree
+- Browser-verified via a temporary / route mount: full customer-support dashboard renders — sidebar shell (collapses to sheet on mobile 390), breadcrumbs header, 4 stat cards with delta chips, conversation-volume area chart, channel donut with legend, CSAT stacked bars, first-reply scatter, team-on-duty roster with status indicators, recent-conversations table, workspace activity; zero console errors; page.tsx restored to AIStore afterwards (diff-verified) and app re-verified
+- lint clean; pre-existing tsc debt in examples/skills and ui/chart.tsx (recharts 3 typings) predates this change and is untouched
+
+Stage Summary:
+- @efferd/dashboard-3 (+ app-shell-3, indicator, formater, logo, kbd) fully installed: 24 new/updated files, no new npm deps
+- Ready-to-use mount: src/components/dashboard-demo.tsx (<DashboardDemo/>) renders the complete demo behind AppShell with correct theming; components are route-independent and can be wired into any view
+- Files: components.json, src/components/ui/{button,kbd}.tsx, src/components/{dashboard,dashboard-demo,stats,delta,channel-breakdown-chart,conversation-volume-chart,csat-responses-chart,first-reply-time-chart,recent-conversations,support-activity,team-on-duty,app-shell,app-sidebar,app-header,app-shared,app-breadcrumbs,nav-group,nav-user,latest-change,custom-sidebar-trigger,dashboard-skeleton,indicator,logo}.tsx, src/lib/formater.ts

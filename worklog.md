@@ -352,3 +352,27 @@ Work Log:
 Stage Summary:
 - All three queued features are live and browser-verified: Featured badges appear on cards, rows, and the detail header everywhere a tool renders; category cards carry live stars+votes aggregates; ⌘K search results are grouped by category with counts
 - Only code change this pass: views/tool.tsx (FeaturedBadge import + header placement, meta line dedupe) — everything else was verification of prior work now recorded here
+
+---
+Task ID: 14
+Agent: Z.ai Code (main agent)
+Task: Review admin dashboard coverage vs the full build; add a public blog + CMS (posts, wants moderation, catalog tool editor) to the admin panel
+
+Work Log:
+- Audit: mapped every public feature/data store against admin coverage. Covered: review queue (approve/reject/feature-on-approval), featured toggles, activity, KPIs/charts. Gaps found: (1) Wanted board had zero moderation surface, (2) approved tools had no metadata editing, (3) no content management at all, (4) no auth gate. Built to close 1–3; auth gate remains a recommendation
+- Schema: added Post model (slug unique, title, excerpt, markdown content, author, tags CSV, coverEmoji, status draft|published, publishedAt, updatedAt) — bun run db:push
+- Hit a stale Prisma Client issue: dev server process kept the pre-push client (db.post undefined, 500s) — clean restart of the background dev server fixed it; fresh-node test confirmed the generated client was correct all along
+- server.ts: ApiPost/DbPost/serializePost + postCreateSchema/postUpdateSchema (title 4–120, excerpt 10–280, content ≥20, tags ≤6×24, coverEmoji ≤8) + wantAdminSchema (status enum + connected id list) + toolUpdateSchema (desc/replaces/cat/platforms/selfHosted/sourceAvailable/emoji)
+- API: GET/POST /api/posts (public = published only; ?all=1 = admin list; slug from title with -2/-3 collisions; first publish stamps publishedAt); GET/PATCH/DELETE /api/posts/[id] (id-or-slug lookup; drafts 404 via slug so nothing leaks; slug immutable); PATCH/DELETE /api/wants/[id] (connected ids validated against the catalog, order preserved); PATCH /api/tools/[id] (metadata only — name/repo immutable)
+- api.ts: ApiPost/PostsPage/PostPayload + fetchPosts/getPost/createPost/updatePost/deletePost + updateWant/deleteWant + updateTool
+- Public blog: ViewId += blog|post; VIEW_PAGES + Blog; nav "Blog" (desktop + mobile rows, active for post view too); footer Blog link; views/blog.tsx (tag chips, lead card + grid, read-time, empty/loading states, submit CTA); views/post.tsx (breadcrumb, emoji cover, meta, markdown body, back, "More from the blog"); md.tsx — dependency-free safe markdown renderer (React elements, no HTML injection; headings/lists/code/quotes/hr/bold/italic/inline-code/links)
+- Admin CMS: app-shared nav += Moderation/Wanted requests, Catalog/All tools, Content/Blog sections; three new managers following the dashboard-3 Card/Table patterns — blog-manager.tsx (table + status badges + publish toggle + two-click delete + full create/edit dialog with word count + draft/publish), wants-manager.tsx (status Select, connected-tool chips with unlink, Connect… select, two-click delete, optimistic on both admin+public caches), catalog-manager.tsx (search + status filter, inline category Select, featured star, edit dialog: desc/replaces/emoji/platform chips/self-hosted/source-available)
+- admin-dashboard.tsx composes all three (ids admin-wants/admin-catalog/admin-blog, scroll-mt-20)
+- Seed: prisma/seed-posts.ts — 3 realistic posts (welcome, featured-picks guide, community roundup) via upsert
+- Verified end-to-end (agent-browser): public blog index (tag chips, lead card, 3 posts) + post reader (headings/bold/lists render); admin created "CMS smoke test post" → published → visible first in table → unpublish → Draft badge → deleted (arm+confirm); wants: ChatGPT fulfilled→in progress→fulfilled, connected OpenWebUI (chip 2→3) + unlinked, all API-verified; catalog: OpenClaw desc edit + self-hosted toggle + category Agents→Writing→Agents, all API-verified then reverted; mobile 390 blog zero overflow; light theme CMS verified; lint clean; dev.log zero 4xx/5xx
+- Known accepted gaps (recommendations, not bugs): no auth gate on admin (posts ?all=1 reachable), no image uploads (emoji covers), slug immutable on rename, no rate limiting
+
+Stage Summary:
+- The admin panel now covers the full build: tools (review/feature/edit/categorize), wants (status/connect/delete), and content (blog CRUD with instant publishing) — all on the 60-30-10 system in both themes
+- Public site gained a blog (index + reader) with a safe custom markdown renderer and no new dependencies
+- Files: prisma/schema.prisma + seed-posts.ts, src/lib/aitools/{server,api,data}.ts, src/app/api/posts{,/[id]}/route.ts, src/app/api/wants/[id]/route.ts, src/app/api/tools/[id]/route.ts, src/components/{blog-manager,wants-manager,catalog-manager,app-shared,admin-dashboard}.tsx, src/components/aitools/{md,nav,footer,home}.tsx, src/components/aitools/views/{blog,post}.tsx

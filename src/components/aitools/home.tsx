@@ -14,6 +14,9 @@ import { Browse } from "./views/browse";
 import { Submit } from "./views/submit";
 import { ToolDetail } from "./views/tool";
 import { Wanted } from "./views/wanted";
+import { Blog } from "./views/blog";
+import { PostView } from "./views/post";
+import type { ApiPost } from "@/lib/aitools/api";
 import { AdminDashboard } from "@/components/admin-dashboard";
 
 export default function AIToolStore() {
@@ -33,6 +36,7 @@ function AIToolStoreApp() {
   const [browseCategory, setBrowseCategory] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
+  const [activePost, setActivePost] = useState<ApiPost | null>(null);
 
   /* ⌘K / Ctrl+K toggles the search palette from anywhere */
   useEffect(() => {
@@ -50,6 +54,7 @@ function AIToolStoreApp() {
     setView(v);
     setActiveCategory(null);
     setActiveToolId(null);
+    setActivePost(null);
     /* arriving at the catalog from nav/footer starts unfiltered */
     if (v === "browse") {
       setBrowseQuery("");
@@ -72,6 +77,12 @@ function AIToolStoreApp() {
   const openTool = useCallback((t: Tool) => {
     setActiveToolId(t.id);
     setView("tool");
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  const openPost = useCallback((p: ApiPost) => {
+    setActivePost(p);
+    setView("post");
     window.scrollTo({ top: 0 });
   }, []);
 
@@ -156,6 +167,15 @@ function AIToolStoreApp() {
             />
           )}
           {view === "wanted" && <Wanted onNavigate={navigate} onOpenTool={openTool} />}
+          {view === "blog" && <Blog onNavigate={navigate} onOpenPost={openPost} />}
+          {view === "post" && (
+            <PostView
+              key={activePost?.id ?? "none"}
+              post={activePost}
+              onNavigate={navigate}
+              onOpenPost={openPost}
+            />
+          )}
         </div>
       </main>
 

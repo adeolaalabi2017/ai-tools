@@ -9,6 +9,7 @@ const LINKS: { id: ViewId; label: string; dot?: boolean }[] = [
   { id: "categories", label: "Categories" },
   { id: "trending", label: "Trending" },
   { id: "browse", label: "New", dot: true },
+  { id: "blog", label: "Blog" },
 ];
 
 function toggleTheme() {
@@ -41,20 +42,24 @@ export function Nav({
         </button>
 
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-          {LINKS.map((l) => (
-            <button
-              key={l.id}
-              onClick={() => onNavigate(l.id)}
-              aria-current={view === l.id ? "page" : undefined}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] transition-colors",
-                view === l.id ? "bg-elev text-ink" : "text-mute hover:text-ink",
-              )}
-            >
-              {l.label}
-              {l.dot && <span className="animate-dot h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />}
-            </button>
-          ))}
+          {LINKS.map((l) => {
+            const active =
+              view === l.id || (l.id === "blog" && view === "post");
+            return (
+              <button
+                key={l.id}
+                onClick={() => onNavigate(l.id)}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] transition-colors",
+                  active ? "bg-elev text-ink" : "text-mute hover:text-ink",
+                )}
+              >
+                {l.label}
+                {l.dot && <span className="animate-dot h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-1.5">
@@ -104,7 +109,9 @@ export function Nav({
             onClick={() => onNavigate(l.id)}
             className={cn(
               "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] transition-colors",
-              view === l.id ? "bg-elev text-ink" : "text-mute",
+              view === l.id || (l.id === "blog" && view === "post")
+                ? "bg-elev text-ink"
+                : "text-mute",
             )}
           >
             {l.label}

@@ -202,3 +202,85 @@ export const wantRequestSchema = z.object({
 
 /** Body for POST /api/wants/[id]/vote. Reuses the voter token shape. */
 export const wantVoteSchema = voteSchema;
+
+/** Admin body for PATCH /api/wants/[id] — status + connected tool ids. */
+export const wantAdminSchema = z.object({
+  status: z.enum(["open", "progress", "fulfilled"]).optional(),
+  connected: z.array(z.string().trim().min(1).max(80)).max(12).optional(),
+});
+
+/** Admin body for PATCH /api/tools/[id] — metadata edits from the catalog manager. */
+export const toolUpdateSchema = z.object({
+  desc: z.string().trim().min(10, "Description must be 10–200 characters").max(200, "Description must be 10–200 characters").optional(),
+  replaces: z.string().trim().min(2, "Replaces must be 2–80 characters").max(80, "Replaces must be 2–80 characters").optional(),
+  cat: z.string().refine(isCategoryId, "Unknown category").optional(),
+  platforms: z.array(z.enum(PLATFORM_VALUES)).min(1, "Pick at least one platform").optional(),
+  selfHosted: z.boolean().optional(),
+  sourceAvailable: z.boolean().optional(),
+  emoji: z.string().trim().min(1, "Emoji required").max(8, "Emoji must be 8 characters or fewer").optional(),
+});
+
+/* ------------------------------- posts -------------------------------- */
+
+/** Wire format returned by every /api/posts endpoint. */
+export interface ApiPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  tags: string[];
+  coverEmoji: string;
+  status: "draft" | "published" | string;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Structural type of a Prisma `Post` row as read from SQLite. */
+export interface DbPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  tags: string; // CSV
+  coverEmoji: string;
+  status: string;
+  publishedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export function serializePost(p: DbPost): ApiPost {
+  return {
+    id: p.id,
+    slug: p.slug,
+    title: p.title,
+    excerpt: p.excerpt,
+    content: p.content,
+    author: p.author,
+    tags: p.tags.split(",").map((s) => s.trim()).filter(Boolean),
+    coverEmoji: p.coverEmoji,
+    status: p.status,
+    publishedAt: p.publishedAt ? p.publishedAt.toISOString() : null,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+  };
+}
+
+/** Body for POST /api/posts (admin CMS create). */
+export const postCreateSchema = z.object({
+  title: z.string().trim().min(4, "Title must be 4–120 characters").max(120, "Title must be 4–120 characters"),
+  excerpt: z.string().trim().min(10, "Excerpt must be 10–280 characters").max(280, "Excerpt must be 10–280 characters"),
+  content: z.string().trim().min(20, "Content must be at least 20 characters"),
+  author: z.string().trim().max(80, "Author must be 80 characters or fewer").optional(),
+  tags: z.array(z.string().trim().min(1).max(24, "Tags must be 24 characters or fewer")).max(6, "At most 6 tags").optional(),
+  coverEmoji: z.string().trim().max(8, "Cover must be 8 characters or fewer").optional(),
+  status: z.enum(["draft", "published"]).optional(),
+});
+
+/** Body for PATCH /api/posts/[id] — partial update. Slug is immutable. */
+export const postUpdateSchema = postCreateSchema.partial();

@@ -197,6 +197,120 @@ export async function featureTool(id: string, featured: boolean): Promise<{ tool
   });
 }
 
+/** Admin metadata edit for a tool (catalog manager). */
+export interface ToolUpdatePayload {
+  desc?: string;
+  replaces?: string;
+  cat?: string;
+  platforms?: string[];
+  selfHosted?: boolean;
+  sourceAvailable?: boolean;
+  emoji?: string;
+}
+
+export async function updateTool(id: string, payload: ToolUpdatePayload): Promise<{ tool: ApiTool }> {
+  return request<{ tool: ApiTool }>(`/api/tools/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+/* ------------------------------- posts -------------------------------- */
+
+/** Wire format of a blog post (mirrors the server ApiPost). */
+export interface ApiPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  tags: string[];
+  coverEmoji: string;
+  status: "draft" | "published" | string;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PostsPage {
+  posts: ApiPost[];
+  total: number;
+}
+
+export interface PostPayload {
+  title: string;
+  excerpt: string;
+  content: string;
+  author?: string;
+  tags?: string[];
+  coverEmoji?: string;
+  status?: "draft" | "published";
+}
+
+/** Public list returns published posts only; `all: true` includes drafts (admin CMS). */
+export async function fetchPosts(opts: { all?: boolean } = {}): Promise<PostsPage> {
+  return request<PostsPage>(`/api/posts${opts.all ? "?all=1" : ""}`);
+}
+
+/** Fetch one post by id or slug (drafts only reachable via id). */
+export async function getPost(idOrSlug: string): Promise<ApiPost | null> {
+  try {
+    return await request<{ post: ApiPost }>(`/api/posts/${encodeURIComponent(idOrSlug)}`)
+      .then((b) => b.post);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+export async function createPost(payload: PostPayload): Promise<ApiPost> {
+  const body = await request<{ post: ApiPost }>(`/api/posts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return body.post;
+}
+
+export async function updatePost(id: string, payload: Partial<PostPayload>): Promise<ApiPost> {
+  const body = await request<{ post: ApiPost }>(`/api/posts/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return body.post;
+}
+
+export async function deletePost(id: string): Promise<{ deleted: boolean }> {
+  return request<{ deleted: boolean }>(`/api/posts/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
+/* ------------------------------- wants admin --------------------------- */
+
+/** Admin update of a wanted request (status + connected tools). */
+export interface WantUpdatePayload {
+  status?: "open" | "progress" | "fulfilled";
+  connected?: string[];
+}
+
+export async function updateWant(id: string, payload: WantUpdatePayload): Promise<{ want: ApiWant }> {
+  return request<{ want: ApiWant }>(`/api/wants/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteWant(id: string): Promise<{ deleted: boolean }> {
+  return request<{ deleted: boolean }>(`/api/wants/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
 /* ------------------------------- wants -------------------------------- */
 
 /** One row on the "Wanted alternatives" board. */

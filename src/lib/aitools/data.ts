@@ -11,7 +11,9 @@ export type ViewId =
   | "submit"
   | "admin"
   | "tool"
-  | "wanted";
+  | "wanted"
+  | "blog"
+  | "post";
 
 export type Platform = "web" | "mac" | "win" | "linux" | "ios" | "android";
 
@@ -244,6 +246,7 @@ export const VIEW_PAGES: { label: string; view: ViewId; hint: string }[] = [
   { label: "Categories", view: "categories", hint: "Browse by what tools help you do" },
   { label: "Trending", view: "trending", hint: "GitHub momentum this week" },
   { label: "New", view: "browse", hint: "Every tool in the collection" },
+  { label: "Blog", view: "blog", hint: "News, guides, and roundups" },
   { label: "Submit a project", view: "submit", hint: "Add a tool to AIStore" },
 ];
 

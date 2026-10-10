@@ -9,6 +9,7 @@ export function Footer({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
     { label: "Categories", view: "categories" },
     { label: "Trending", view: "trending" },
     { label: "New", view: "browse" },
+    { label: "Blog", view: "blog" },
   ];
   const contribute: { label: string; view?: ViewId; external?: boolean }[] = [
     { label: "Submit an app", view: "submit" },

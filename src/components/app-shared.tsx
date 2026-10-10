@@ -6,7 +6,9 @@ import {
   FolderTreeIcon,
   GlobeIcon,
   LayoutGridIcon,
+  LayoutListIcon,
   ListChecksIcon,
+  NewspaperIcon,
   PlusIcon,
   StarIcon,
   TargetIcon,
@@ -57,6 +59,11 @@ export const navGroups: SidebarNavGroup[] = [
         icon: <ListChecksIcon />,
       },
       {
+        title: "Wanted requests",
+        section: "admin-wants",
+        icon: <TargetIcon />,
+      },
+      {
         title: "Featured picks",
         section: "admin-featured",
         icon: <StarIcon />,
@@ -65,6 +72,26 @@ export const navGroups: SidebarNavGroup[] = [
         title: "Activity",
         section: "admin-activity",
         icon: <ActivityIcon />,
+      },
+    ],
+  },
+  {
+    label: "Catalog",
+    items: [
+      {
+        title: "All tools",
+        section: "admin-catalog",
+        icon: <LayoutListIcon />,
+      },
+    ],
+  },
+  {
+    label: "Content",
+    items: [
+      {
+        title: "Blog",
+        section: "admin-blog",
+        icon: <NewspaperIcon />,
       },
     ],
   },

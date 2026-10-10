@@ -22,6 +22,9 @@ import { ReviewQueueTable } from "@/components/recent-conversations";
 import { FeaturedPicks } from "@/components/team-on-duty";
 import { ModerationActivity } from "@/components/support-activity";
 import { DashboardSkeleton } from "@/components/dashboard-skeleton";
+import { BlogManager } from "@/components/blog-manager";
+import { WantsManager } from "@/components/wants-manager";
+import { CatalogManager } from "@/components/catalog-manager";
 
 type Action = "approve" | "reject";
 type PendingAction = { id: string; action: Action } | null;
@@ -354,6 +357,9 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
               onViewCatalog={() => onNavigate("browse")}
               tools={recentAdditions}
             />
+            <WantsManager className="scroll-mt-20" id="admin-wants" />
+            <CatalogManager className="scroll-mt-20" id="admin-catalog" />
+            <BlogManager className="scroll-mt-20" id="admin-blog" />
           </>
         )}
       </div>

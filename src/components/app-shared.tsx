@@ -1,123 +1,102 @@
-import { ActivityIcon, BarChart3Icon, HelpCircleIcon, LayoutGridIcon, ListChecksIcon, MessageSquareTextIcon, PlugIcon, SettingsIcon, UsersIcon } from "lucide-react";
+"use client";
+
+import {
+  ActivityIcon,
+  CompassIcon,
+  FolderTreeIcon,
+  GlobeIcon,
+  LayoutGridIcon,
+  ListChecksIcon,
+  PlusIcon,
+  StarIcon,
+  TargetIcon,
+  TrendingUpIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
+import type { ViewId } from "@/lib/aitools/data";
 
 export type SidebarNavItem = {
-	title: string;
-	path?: string;
-	icon?: ReactNode;
-	isActive?: boolean;
-	subItems?: SidebarNavItem[];
+  title: string;
+  path?: string;
+  icon?: ReactNode;
+  isActive?: boolean;
+  /** SPA view to open (renders a button instead of an anchor). */
+  view?: ViewId;
+  /** In-page section anchor on the admin dashboard (e.g. "admin-queue"). */
+  section?: string;
+  subItems?: SidebarNavItem[];
 };
 
 export type SidebarNavGroup = {
-	label?: string;
-	items: SidebarNavItem[];
+  label?: string;
+  items: SidebarNavItem[];
 };
 
+/** Fired when a nav item wants to open an SPA view. */
+export type AdminNavigate = (v: ViewId) => void;
+/** Fired when a nav item wants to scroll to a dashboard section. */
+export type AdminSection = (id: string) => void;
+
 export const navGroups: SidebarNavGroup[] = [
-	{
-		items: [
-			{
-				title: "Overview",
-				path: "#/overview",
-				icon: (
-					<LayoutGridIcon />
-				),
-				isActive: true,
-			},
-		],
-	},
-	{
-		label: "Today",
-		items: [
-			{
-				title: "Queue",
-				path: "#/queue",
-				icon: (
-					<ListChecksIcon />
-				),
-			},
-			{
-				title: "Team insights",
-				path: "#/team-insights",
-				icon: (
-					<BarChart3Icon />
-				),
-			},
-		],
-	},
-	{
-		label: "Inbox",
-		items: [
-			{
-				title: "Conversations",
-				icon: (
-					<MessageSquareTextIcon />
-				),
-				subItems: [
-					{ title: "Unassigned", path: "#/inbox/unassigned" },
-					{ title: "Assigned to me", path: "#/inbox/assigned" },
-					{ title: "Recently closed", path: "#/inbox/closed" },
-				],
-			},
-			{
-				title: "Customers",
-				path: "#/customers",
-				icon: (
-					<UsersIcon />
-				),
-			},
-			{
-				title: "Channels",
-				path: "#/channels",
-				icon: (
-					<PlugIcon />
-				),
-			},
-		],
-	},
-	{
-		label: "Organization",
-		items: [
-			{
-				title: "Workspace",
-				icon: (
-					<SettingsIcon />
-				),
-				subItems: [
-					{ title: "Branding", path: "#/workspace/branding" },
-					{ title: "Team & roles", path: "#/workspace/team" },
-					{ title: "API keys", path: "#/workspace/api-keys" },
-					{ title: "Webhooks", path: "#/workspace/webhooks" },
-					{ title: "Billing", path: "#/workspace/billing" },
-				],
-			},
-		],
-	},
+  {
+    items: [
+      {
+        title: "Overview",
+        section: "admin-top",
+        icon: <LayoutGridIcon />,
+        isActive: true,
+      },
+    ],
+  },
+  {
+    label: "Moderation",
+    items: [
+      {
+        title: "Review queue",
+        section: "admin-queue",
+        icon: <ListChecksIcon />,
+      },
+      {
+        title: "Featured picks",
+        section: "admin-featured",
+        icon: <StarIcon />,
+      },
+      {
+        title: "Activity",
+        section: "admin-activity",
+        icon: <ActivityIcon />,
+      },
+    ],
+  },
+  {
+    label: "Directory",
+    items: [
+      { title: "Browse tools", view: "browse", icon: <CompassIcon /> },
+      { title: "Categories", view: "categories", icon: <FolderTreeIcon /> },
+      { title: "Trending", view: "trending", icon: <TrendingUpIcon /> },
+      { title: "Wanted board", view: "wanted", icon: <TargetIcon /> },
+    ],
+  },
 ];
 
 export const footerNavLinks: SidebarNavItem[] = [
-	{
-		title: "Help Center",
-		path: "#/help",
-		icon: (
-			<HelpCircleIcon />
-		),
-	},
-	{
-		title: "System status",
-		path: "#/status",
-		icon: (
-			<ActivityIcon />
-		),
-	},
+  {
+    title: "Back to AIStore",
+    view: "discover",
+    icon: <GlobeIcon />,
+  },
+  {
+    title: "Submit an app",
+    view: "submit",
+    icon: <PlusIcon />,
+  },
 ];
 
 export const navLinks: SidebarNavItem[] = [
-	...navGroups.flatMap((group) =>
-		group.items.flatMap((item) =>
-			item.subItems?.length ? [item, ...item.subItems] : [item]
-		)
-	),
-	...footerNavLinks,
+  ...navGroups.flatMap((group) =>
+    group.items.flatMap((item) =>
+      item.subItems?.length ? [item, ...item.subItems] : [item],
+    ),
+  ),
+  ...footerNavLinks,
 ];

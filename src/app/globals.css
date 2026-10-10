@@ -154,6 +154,38 @@
   --accent-soft: rgba(74, 222, 128, 0.11);
   --dot: rgba(255, 255, 255, 0.09);
   --backdrop: rgba(0, 0, 0, 0.72);
+
+  /* ---- shadcn semantic tokens → 60-30-10 bridge (dark default) ---- */
+  --background: var(--base);
+  --foreground: var(--ink);
+  --card-foreground: var(--ink);
+  --popover: var(--elev);
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: #0a0c0b;
+  --secondary: var(--elev);
+  --secondary-foreground: var(--ink);
+  --muted: var(--elev);
+  --muted-foreground: var(--mute);
+  --accent-foreground: #0a0c0b;
+  --destructive: #f87171;
+  --border: var(--line);
+  --input: var(--line-2);
+  --ring: var(--accent);
+  /* chart ramp: green family + one warm outlier (≤10% accent rule) */
+  --chart-1: #4ade80;
+  --chart-2: #2dd4bf;
+  --chart-3: #a3e635;
+  --chart-4: #34d399;
+  --chart-5: #fbbf24;
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: #0a0c0b;
+  --sidebar-accent: var(--elev);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--accent);
 }
 
 html[data-theme='light'] {
@@ -175,6 +207,37 @@ html[data-theme='light'] {
   --accent-soft: rgba(22, 163, 74, 0.1);
   --dot: rgba(0, 0, 0, 0.1);
   --backdrop: rgba(24, 24, 27, 0.4);
+
+  /* ---- shadcn semantic tokens → 60-30-10 bridge (light) ---- */
+  --background: var(--base);
+  --foreground: var(--ink);
+  --card-foreground: var(--ink);
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--elev);
+  --secondary-foreground: var(--ink);
+  --muted: var(--elev);
+  --muted-foreground: var(--mute);
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --border: var(--line);
+  --input: var(--line-2);
+  --ring: var(--accent);
+  --chart-1: #16a34a;
+  --chart-2: #0d9488;
+  --chart-3: #65a30d;
+  --chart-4: #059669;
+  --chart-5: #d97706;
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--elev);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--accent);
 }
 
 @theme inline {
@@ -293,3 +356,5 @@ html[data-theme='light'] ::selection {
 }
 
 /* 60-30-10 palette applied */
+
+/* dashboard-3 tokens bridged */

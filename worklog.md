@@ -285,3 +285,35 @@ Stage Summary:
 - @efferd/dashboard-3 (+ app-shell-3, indicator, formater, logo, kbd) fully installed: 24 new/updated files, no new npm deps
 - Ready-to-use mount: src/components/dashboard-demo.tsx (<DashboardDemo/>) renders the complete demo behind AppShell with correct theming; components are route-independent and can be wired into any view
 - Files: components.json, src/components/ui/{button,kbd}.tsx, src/components/{dashboard,dashboard-demo,stats,delta,channel-breakdown-chart,conversation-volume-chart,csat-responses-chart,first-reply-time-chart,recent-conversations,support-activity,team-on-duty,app-shell,app-sidebar,app-header,app-shared,app-breadcrumbs,nav-group,nav-user,latest-change,custom-sidebar-trigger,dashboard-skeleton,indicator,logo}.tsx, src/lib/formater.ts
+
+---
+Task ID: 12
+Agent: Z.ai Code (main agent)
+Task: User approved ("Go ahead") — make the @efferd/dashboard-3 dashboard THE admin panel, adapted to the 60-30-10 build
+
+Work Log:
+- Re-ran official installer to reconcile Task 11's manual files: `npx -y skills add shadcn/ui -y` (installed .agents/skills/shadcn) and `npx shadcn@latest add @efferd/dashboard-3 -y` with `yes N |` pipe → kept existing ui/* (60-30-10-adapted), wrote remaining block files (app-shell, app-sidebar, app-header, nav-group, nav-user, app-shared, app-breadcrumbs, latest-change, custom-sidebar-trigger, dashboard-skeleton, indicator, logo, delta, formater, 5 chart/widget components); stray top-level components/ cleaned
+- globals.css: bridged ALL shadcn semantic tokens to 60-30-10 in BOTH :root (dark default) and html[data-theme='light'] — background/foreground/card-fg/popover/primary(=accent)/secondary/muted/accent-fg/destructive/border/input/ring/chart-1..5(green family + one amber)/sidebar-* → block components inherit the palette with zero per-component overrides
+- Adapted every block component to AIStore moderation data (all real, from /api/tools):
+  - app-shared: nav = Overview/Review queue/Featured picks/Activity (section anchors) + Directory (SPA views) + footer (Back to AIStore/Submit an app)
+  - app-sidebar: AIStore+ADMIN brand, green "Review queue (n)" CTA, globe button; nav-group renders buttons for view/section items
+  - app-header: breadcrumb "Admin · Overview", View site, theme toggle (data-theme pattern), moderator NavUser
+  - stats: 4 KPIs w/ icons (Tools live/Pending review/Community votes/Featured picks), pending in warn amber
+  - conversation-volume-chart → CatalogGrowthChart (cumulative approved by month, 12/24/all selector, real Delta %)
+  - channel-breakdown-chart → CategoryShareChart (top3 + neutral Other, PIE_OTHER_FILL=line2 to respect 10% accent rule)
+  - csat-responses-chart → MonthlyAdditionsChart (curated vs community stacked, last 12 months)
+  - first-reply-time-chart → CategoryStarsChart (median stars per category, top 8, fmtK labels)
+  - recent-conversations → ReviewQueueTable (sticky header, star-draft/approve/remove, optimistic removal + invalidate all, min-w-560 overflow-auto)
+  - team-on-duty → FeaturedPicks (featureTool optimistic toggle, StatusIndicator featured dot, max-h-80 scroll)
+  - support-activity → ModerationActivity (4 newest additions, community/curated icons, fmtRelative)
+  - admin-format.ts: fmtDateShort/fmtRelative (UTC-safe)
+- admin-dashboard.tsx: composition root — derives KPIs/charts from useTools + pending query (refetch 20s), moderation state, AppShell with pendingCount, section ids admin-top/queue/featured/activity + scroll-mt-20
+- home.tsx: view==="admin" now renders full-viewport AdminDashboard (site nav/footer hidden); views/admin.tsx (old AdminQueue) deleted; dashboard.tsx/dashboard-demo.tsx/logo.tsx removed
+- Fixed crash: additionsData compared unpadded month strings ("2025-9">"2025-10") → buckets[-1] TypeError on system date 2026-10; rewrote as numeric month-distance from window start
+- Verified via agent-browser (1440+390, dark+light): dashboard renders, approve flow (NightOwl: 64→65 tools, pending 2→1, DB persisted), feature toggle (featured:true in API), SPA nav from sidebar, mobile Sheet, icon-collapse, section scroll (scrollTop 2323), zero horizontal overflow, zero console errors (only benign recharts width warning), lint clean
+
+Stage Summary:
+- Admin panel = dashboard-3: full-screen console (inset sidebar + sticky header + KPI/chart grid) replacing the old AdminQueue view, fully on the 60-30-10 token system in both themes
+- All moderation powers preserved & live: approve (± feature-on-approval), remove, featured toggle — same endpoints, optimistic UI, 20s queue polling
+- Shadcn semantic tokens now permanently aliased to 60-30-10 → any future shadcn/registry component drops in themed automatically
+- Key files: src/components/admin-dashboard.tsx (+14 adapted block components), src/components/admin-format.ts, src/app/globals.css (token bridge), src/components/aitools/home.tsx (admin route swap)

@@ -12,9 +12,9 @@ import { CategoryView } from "./views/category";
 import { Trending } from "./views/trending";
 import { Browse } from "./views/browse";
 import { Submit } from "./views/submit";
-import { AdminQueue } from "./views/admin";
 import { ToolDetail } from "./views/tool";
 import { Wanted } from "./views/wanted";
+import { AdminDashboard } from "@/components/admin-dashboard";
 
 export default function AIToolStore() {
   return (
@@ -75,6 +75,24 @@ function AIToolStoreApp() {
     window.scrollTo({ top: 0 });
   }, []);
 
+  /* the admin console takes over the whole viewport — no site chrome */
+  if (view === "admin") {
+    return (
+      <div className="bg-base text-ink">
+        <AdminDashboard onNavigate={navigate} />
+        <SearchModal
+          open={searchOpen}
+          initialQuery={searchSeed}
+          onClose={() => setSearchOpen(false)}
+          onNavigate={navigate}
+          onOpenTool={(t) => {
+            openTool(getTool(t.id) ?? t);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-base text-ink">
       <Nav view={view} onNavigate={navigate} onOpenSearch={() => openSearch()} />
@@ -129,7 +147,6 @@ function AIToolStoreApp() {
               onWanted={() => navigate("wanted")}
             />
           )}
-          {view === "admin" && <AdminQueue onNavigate={navigate} />}
           {view === "tool" && (
             <ToolDetail
               toolId={activeToolId}

@@ -55,6 +55,10 @@ export interface Tool {
   /* editorial extras */
   rating?: { score: number; reviews: number; source: string; highlight: string; feedbackNotes?: number };
   featuredArt?: "terminal" | "chat" | "nodes" | "wave" | "flow";
+  /* live/API extras (populated by the tools provider) */
+  votes?: number;
+  status?: "curated" | "community" | string;
+  submitter?: string | null;
 }
 
 const T = (
@@ -154,56 +158,63 @@ export const catById = (id: string): Category =>
 
 export const catLabel = (id: string): string => catById(id).label;
 
-export const countByCat = (id: string): number =>
-  TOOLS.filter((t) => t.cat === id).length;
+export const countByCat = (id: string, list: Tool[] = TOOLS): number =>
+  list.filter((t) => t.cat === id).length;
 
 export const platformLabel = (t: Tool): string =>
   PLATFORM_LABEL[t.platforms[0] ?? "web"];
 
-export const trendingTools = (): Tool[] =>
-  TOOLS.filter((t) => typeof t.weeklyGain === "number").sort(
+export const trendingTools = (list: Tool[] = TOOLS): Tool[] =>
+  list.filter((t) => typeof t.weeklyGain === "number").sort(
     (a, b) => (b.weeklyGain ?? 0) - (a.weeklyGain ?? 0),
   );
 
-export const byId = (id: string): Tool | undefined => TOOLS.find((t) => t.id === id);
+export const byId = (id: string, list: Tool[] = TOOLS): Tool | undefined =>
+  list.find((t) => t.id === id);
 
-export const EDITORS_PICKS: Tool[] = ["opencode", "voicestudio", "comfyui"]
-  .map((id) => byId(id))
-  .filter((t): t is Tool => Boolean(t));
+export const EDITORS_PICKS = (list: Tool[] = TOOLS): Tool[] =>
+  ["opencode", "voicestudio", "comfyui"]
+    .map((id) => byId(id, list))
+    .filter((t): t is Tool => Boolean(t));
 
-export const OPEN_FAMILY: Tool[] = [
-  "open-notebook",
-  "openhands",
-  "openwhispr",
-  "openclaw",
-  "openwork",
-  "open-lovable",
-]
-  .map((id) => byId(id))
-  .filter((t): t is Tool => Boolean(t));
+export const OPEN_FAMILY = (list: Tool[] = TOOLS): Tool[] =>
+  [
+    "open-notebook",
+    "openhands",
+    "openwhispr",
+    "openclaw",
+    "openwork",
+    "open-lovable",
+  ]
+    .map((id) => byId(id, list))
+    .filter((t): t is Tool => Boolean(t));
 
-export const GOOD_STARTS: Tool[] = [
-  "opencode",
-  "open-webui",
-  "comfyui",
-  "librechat",
-  "openhands",
-  "appflowy",
-]
-  .map((id) => byId(id))
-  .filter((t): t is Tool => Boolean(t));
+export const GOOD_STARTS = (list: Tool[] = TOOLS): Tool[] =>
+  [
+    "opencode",
+    "open-webui",
+    "comfyui",
+    "librechat",
+    "openhands",
+    "appflowy",
+  ]
+    .map((id) => byId(id, list))
+    .filter((t): t is Tool => Boolean(t));
 
-export const POPULAR_CARDS: Tool[] = ["comfyui", "n8n", "librechat"]
-  .map((id) => byId(id))
-  .filter((t): t is Tool => Boolean(t));
+export const POPULAR_CARDS = (list: Tool[] = TOOLS): Tool[] =>
+  ["comfyui", "n8n", "librechat"]
+    .map((id) => byId(id, list))
+    .filter((t): t is Tool => Boolean(t));
 
-export const WELL_REVIEWED: Tool[] = ["open-webui", "anythingllm", "jan"]
-  .map((id) => byId(id))
-  .filter((t): t is Tool => Boolean(t));
+export const WELL_REVIEWED = (list: Tool[] = TOOLS): Tool[] =>
+  ["open-webui", "anythingllm", "jan"]
+    .map((id) => byId(id, list))
+    .filter((t): t is Tool => Boolean(t));
 
-export const STACK_LIST: Tool[] = ["ollama", "open-webui", "comfyui", "flowise"]
-  .map((id) => byId(id))
-  .filter((t): t is Tool => Boolean(t));
+export const STACK_LIST = (list: Tool[] = TOOLS): Tool[] =>
+  ["ollama", "open-webui", "comfyui", "flowise"]
+    .map((id) => byId(id, list))
+    .filter((t): t is Tool => Boolean(t));
 
 export const PAGE_SEEDS = ["ChatGPT", "Midjourney", "GitHub Copilot", "ElevenLabs"];
 

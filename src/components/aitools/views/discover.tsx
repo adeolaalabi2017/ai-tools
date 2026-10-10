@@ -9,7 +9,6 @@ import {
   PAGE_SEEDS,
   POPULAR_CARDS,
   STACK_LIST,
-  TOOLS,
   WELL_REVIEWED,
   catLabel,
   countByCat,
@@ -19,6 +18,7 @@ import {
   type Tool,
   type ViewId,
 } from "@/lib/aitools/data";
+import { useTools } from "../tools-provider";
 import {
   AppIcon,
   CategoryIcon,
@@ -39,15 +39,21 @@ export function Discover({
   onOpenSearch: (q?: string) => void;
   onOpenTool: (t: Tool) => void;
 }) {
-  const trend = trendingTools();
+  const { tools } = useTools();
+  const trend = trendingTools(tools);
   const maxGain = Math.max(...trend.map((t) => t.weeklyGain ?? 0), 1);
+  const openFamily = OPEN_FAMILY(tools);
+  const editorsPicks = EDITORS_PICKS(tools);
+  const popularCards = POPULAR_CARDS(tools);
+  const wellReviewed = WELL_REVIEWED(tools);
+  const stackList = STACK_LIST(tools);
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
       {/* ---------------------------------- hero --------------------------------- */}
       <section className="pb-20 pt-20 text-center sm:pt-24">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-faint">
-          The AI tools directory · {TOOLS.length} reviewed tools
+          The AI tools directory · {tools.length} reviewed tools
         </p>
         <h1 className="mx-auto mt-5 text-balance text-5xl font-extrabold leading-[1.04] tracking-tight text-ink sm:text-6xl md:text-7xl">
           Find the best
@@ -107,8 +113,8 @@ export function Discover({
           action="All apps"
           onAction={() => onNavigate("browse")}
         />
-        <div className="grid gap-4 md:grid-cols-3">
-          {EDITORS_PICKS.map((t) => (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {editorsPicks.map((t) => (
             <div
               key={t.id}
               className="group overflow-hidden rounded-2xl border border-line bg-card transition-colors hover:border-line2"
@@ -150,11 +156,11 @@ export function Discover({
         <SectionHeader
           title="The Open family"
           sub="Projects that carry “Open” in their name."
-          action={`All ${countByCat("agents") + countByCat("coding") + countByCat("research") + countByCat("voice")} >`}
+          action={`All ${countByCat("agents", tools) + countByCat("coding", tools) + countByCat("research", tools) + countByCat("voice", tools)} >`}
           onAction={() => onNavigate("browse")}
         />
-        <div className="grid gap-x-8 md:grid-cols-2 xl:grid-cols-3">
-          {OPEN_FAMILY.map((t) => (
+        <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2 xl:grid-cols-3">
+          {openFamily.map((t) => (
             <ToolRow key={t.id} tool={t} onClick={() => onOpenTool(t)} />
           ))}
         </div>
@@ -236,8 +242,8 @@ export function Discover({
           action="See all"
           onAction={() => onNavigate("browse")}
         />
-        <div className="grid gap-4 md:grid-cols-3">
-          {POPULAR_CARDS.map((t) => (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {popularCards.map((t) => (
             <button
               key={t.id}
               onClick={() => onOpenTool(t)}
@@ -282,14 +288,14 @@ export function Discover({
           action="See all"
           onAction={() => onNavigate("browse")}
         />
-        <div className="grid gap-4 md:grid-cols-3">
-          {WELL_REVIEWED.map((t) =>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {wellReviewed.map((t) =>
             t.rating ? (
               <div key={t.id} className="flex flex-col rounded-2xl border border-line bg-card p-6 transition-colors hover:border-line2">
                 <div className="flex items-center justify-between gap-3">
                   <span className="flex min-w-0 items-center gap-3">
                     <AppIcon tool={t} />
-                    <span className="min-w-0">
+                    <span className="min-w-0 flex-1 overflow-hidden">
                       <span className="block truncate text-[15px] font-semibold text-ink">{t.name}</span>
                       <span className="block truncate text-xs text-faint">{t.desc}</span>
                     </span>
@@ -389,7 +395,7 @@ export function Discover({
               </button>
             </div>
             <div className="overflow-hidden rounded-xl border border-line">
-              {STACK_LIST.map((t, i) => (
+              {stackList.map((t, i) => (
                 <button
                   key={t.id}
                   onClick={() => onOpenTool(t)}

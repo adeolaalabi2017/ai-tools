@@ -2,7 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { TOOLS, matchTool, type Tool, type Platform } from "@/lib/aitools/data";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { matchTool, type Tool, type Platform } from "@/lib/aitools/data";
+import { fetchTools } from "@/lib/aitools/api";
+import { useTools, apiToolToTool } from "../tools-provider";
+import { useDebounced } from "../use-debounced";
 import { CountRow, FilterBar, ToolCard } from "../browse-parts";
 import { EmptyState } from "./trending";
 
@@ -25,6 +29,9 @@ export function Browse({
   const [sort, setSort] = useState("newest");
   const [visible, setVisible] = useState(PAGE_SIZE);
 
+  const { tools: liveTools, getTool } = useTools();
+  const debouncedQ = useDebounced(q, 250);
+
   /* resetting the page window whenever filters change (adjust-during-render) */
   const filterKey = `${q}|${category}|${platform}|${selfHosted}|${sourceAvailable}|${sort}`;
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
@@ -38,20 +45,49 @@ export function Browse({
     if (v === "sourceavail") setSourceAvailable((s) => !s);
   };
 
-  const results = useMemo(() => {
-    let list = TOOLS;
-    if (category) list = list.filter((t) => t.cat === category);
-    if (platform !== "all") list = list.filter((t) => t.platforms.includes(platform as Platform));
-    if (selfHosted) list = list.filter((t) => t.selfHosted);
-    if (sourceAvailable) list = list.filter((t) => t.sourceAvailable);
-    list = list.filter((t) => matchTool(t, q));
-    if (sort === "newest") list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    if (sort === "stars") list = [...list].sort((a, b) => b.stars - a.stars);
-    if (sort === "momentum")
-      list = [...list].sort((a, b) => (b.weeklyGain ?? -1) - (a.weeklyGain ?? -1));
-    return list;
-  }, [q, category, platform, selfHosted, sourceAvailable, sort]);
+  /* server-driven listing; previous data stays on screen while switching filters */
+  const query = useQuery({
+    queryKey: [
+      "tools",
+      "browse",
+      { q: debouncedQ, category, platform, selfHosted, sourceAvailable, sort },
+    ],
+    queryFn: () =>
+      fetchTools({
+        q: debouncedQ || undefined,
+        cat: category ?? undefined,
+        platform: platform !== "all" ? platform : undefined,
+        selfHosted: selfHosted || undefined,
+        sourceAvailable: sourceAvailable || undefined,
+        sort,
+        limit: 999,
+      }),
+    placeholderData: keepPreviousData,
+  });
 
+  const page = query.data;
+  const isError = query.isError;
+
+  const results = useMemo<Tool[]>(() => {
+    if (page) return page.tools.map((a) => getTool(a.id) ?? apiToolToTool(a));
+    /* graceful fallback: if the API is unreachable, filter the live/static list client-side */
+    if (isError) {
+      let list = liveTools;
+      if (category) list = list.filter((t) => t.cat === category);
+      if (platform !== "all") list = list.filter((t) => t.platforms.includes(platform as Platform));
+      if (selfHosted) list = list.filter((t) => t.selfHosted);
+      if (sourceAvailable) list = list.filter((t) => t.sourceAvailable);
+      list = list.filter((t) => matchTool(t, q));
+      if (sort === "newest") list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      if (sort === "stars") list = [...list].sort((a, b) => b.stars - a.stars);
+      if (sort === "momentum")
+        list = [...list].sort((a, b) => (b.weeklyGain ?? -1) - (a.weeklyGain ?? -1));
+      return list;
+    }
+    return [];
+  }, [page, isError, liveTools, getTool, category, platform, selfHosted, sourceAvailable, q, sort]);
+
+  const total = page ? page.total : isError ? results.length : 0;
   const shown = results.slice(0, visible);
 
   return (
@@ -84,11 +120,13 @@ export function Browse({
       />
 
       <div className="mt-6">
-        <CountRow count={results.length} selfHosted={selfHosted} onToggleSelfHosted={() => setSelfHosted((s) => !s)} />
+        <CountRow count={total} selfHosted={selfHosted} onToggleSelfHosted={() => setSelfHosted((s) => !s)} />
       </div>
 
-      {shown.length > 0 ? (
-        <div className="mt-4 grid gap-x-8 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
+      {!page && !isError ? (
+        <div className="mt-10 font-mono text-sm text-faint">Loading apps…</div>
+      ) : shown.length > 0 ? (
+        <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
           {shown.map((t) => (
             <ToolCard key={t.id} tool={t} showWeekly onClick={() => onOpenTool(t)} />
           ))}
@@ -100,7 +138,7 @@ export function Browse({
       {shown.length > 0 && (
         <div className="mt-14 text-center">
           <p className="text-[13px] text-faint">
-            Showing {shown.length} of {results.length} apps
+            Showing {shown.length} of {total} apps
           </p>
           {visible < results.length && (
             <button

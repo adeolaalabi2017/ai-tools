@@ -1,8 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { trendingTools, matchTool, PLATFORM_LABEL, type Tool } from "@/lib/aitools/data";
 import type { Platform } from "@/lib/aitools/data";
+import { fetchTools } from "@/lib/aitools/api";
+import { useTools, apiToolToTool } from "../tools-provider";
+import { useDebounced } from "../use-debounced";
 import { CountRow, FilterBar, ToolCard } from "../browse-parts";
 
 export function Trending({ onOpenTool }: { onOpenTool: (t: Tool) => void }) {
@@ -13,23 +17,57 @@ export function Trending({ onOpenTool }: { onOpenTool: (t: Tool) => void }) {
   const [sourceAvailable, setSourceAvailable] = useState(false);
   const [sort, setSort] = useState("momentum");
 
+  const { tools: liveTools, getTool } = useTools();
+  const debouncedQ = useDebounced(q, 250);
+
   const onFilters = (v: string) => {
     if (v === "selfhosted") setSelfHosted((s) => !s);
     if (v === "sourceavail") setSourceAvailable((s) => !s);
   };
 
-  const results = useMemo(() => {
-    let list = trendingTools();
-    if (category) list = list.filter((t) => t.cat === category);
-    if (platform !== "all") list = list.filter((t) => t.platforms.includes(platform as Platform));
-    if (selfHosted) list = list.filter((t) => t.selfHosted);
-    if (sourceAvailable) list = list.filter((t) => t.sourceAvailable);
-    list = list.filter((t) => matchTool(t, q));
-    if (sort === "stars") list = [...list].sort((a, b) => b.stars - a.stars);
-    if (sort === "newest") list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    /* default: momentum (already sorted by weekly gain) */
-    return list;
-  }, [q, category, platform, selfHosted, sourceAvailable, sort]);
+  /* server-driven listing; previous data stays on screen while switching filters */
+  const query = useQuery({
+    queryKey: [
+      "tools",
+      "trending",
+      { q: debouncedQ, category, platform, selfHosted, sourceAvailable, sort },
+    ],
+    queryFn: () =>
+      fetchTools({
+        q: debouncedQ || undefined,
+        cat: category ?? undefined,
+        platform: platform !== "all" ? platform : undefined,
+        selfHosted: selfHosted || undefined,
+        sourceAvailable: sourceAvailable || undefined,
+        trending: true,
+        sort,
+        limit: 999,
+      }),
+    placeholderData: keepPreviousData,
+  });
+
+  const page = query.data;
+  const isError = query.isError;
+
+  const results = useMemo<Tool[]>(() => {
+    if (page) return page.tools.map((a) => getTool(a.id) ?? apiToolToTool(a));
+    /* graceful fallback: if the API is unreachable, filter the live/static list client-side */
+    if (isError) {
+      let list = trendingTools(liveTools);
+      if (category) list = list.filter((t) => t.cat === category);
+      if (platform !== "all") list = list.filter((t) => t.platforms.includes(platform as Platform));
+      if (selfHosted) list = list.filter((t) => t.selfHosted);
+      if (sourceAvailable) list = list.filter((t) => t.sourceAvailable);
+      list = list.filter((t) => matchTool(t, q));
+      if (sort === "stars") list = [...list].sort((a, b) => b.stars - a.stars);
+      if (sort === "newest") list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      /* default: momentum (already sorted by weekly gain) */
+      return list;
+    }
+    return [];
+  }, [page, isError, liveTools, getTool, category, platform, selfHosted, sourceAvailable, q, sort]);
+
+  const total = page ? page.total : isError ? results.length : 0;
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
@@ -63,11 +101,13 @@ export function Trending({ onOpenTool }: { onOpenTool: (t: Tool) => void }) {
       />
 
       <div className="mt-6">
-        <CountRow count={results.length} selfHosted={selfHosted} onToggleSelfHosted={() => setSelfHosted((s) => !s)} />
+        <CountRow count={total} selfHosted={selfHosted} onToggleSelfHosted={() => setSelfHosted((s) => !s)} />
       </div>
 
-      {results.length > 0 ? (
-        <div className="mt-4 grid gap-x-8 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
+      {!page && !isError ? (
+        <div className="mt-10 font-mono text-sm text-faint">Loading apps…</div>
+      ) : results.length > 0 ? (
+        <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
           {results.map((t) => (
             <ToolCard key={t.id} tool={t} showWeekly onClick={() => onOpenTool(t)} />
           ))}

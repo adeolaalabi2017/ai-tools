@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { byId, type Tool, type ViewId } from "@/lib/aitools/data";
+import { ToolsProvider, useTools } from "./tools-provider";
 import { Nav } from "./nav";
 import { Footer } from "./footer";
 import { SearchModal } from "./search-modal";
@@ -12,6 +13,15 @@ import { Browse } from "./views/browse";
 import { Submit } from "./views/submit";
 
 export default function AIToolStore() {
+  return (
+    <ToolsProvider>
+      <AIToolStoreApp />
+    </ToolsProvider>
+  );
+}
+
+function AIToolStoreApp() {
+  const { getTool } = useTools();
   const [view, setView] = useState<ViewId>("discover");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchSeed, setSearchSeed] = useState("");
@@ -102,7 +112,7 @@ export default function AIToolStore() {
         onClose={() => setSearchOpen(false)}
         onNavigate={navigate}
         onOpenTool={(t) => {
-          const fresh = byId(t.id) ?? t;
+          const fresh = getTool(t.id) ?? byId(t.id) ?? t;
           browseWith(fresh.cat, fresh.name);
         }}
       />

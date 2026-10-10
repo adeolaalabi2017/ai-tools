@@ -2,8 +2,10 @@
 
 import { useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Github } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { CATEGORIES } from "@/lib/aitools/data";
+import { ApiError, submitTool } from "@/lib/aitools/api";
 import { Dropdown } from "../ui";
 
 const PLATFORM_CHIPS = [
@@ -26,6 +28,7 @@ function prettyName(slug: string): string {
 }
 
 export function Submit({ onDiscover }: { onDiscover: () => void }) {
+  const queryClient = useQueryClient();
   const [repo, setRepo] = useState("");
   const [fetchState, setFetchState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [name, setName] = useState("");
@@ -39,6 +42,10 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
   const [audience, setAudience] = useState("");
   const [selfHosting, setSelfHosting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [createdName, setCreatedName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [repoError, setRepoError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [cancelNote, setCancelNote] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -69,6 +76,45 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
   const togglePlatform = (id: string) =>
     setPlatforms((ps) => (ps.includes(id) ? ps.filter((p) => p !== id) : [...ps, id]));
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit || submitting) return;
+    setSubmitting(true);
+    setRepoError(null);
+    setFormError(null);
+    const m = repo.trim().match(GITHUB_RE);
+    try {
+      const created = await submitTool({
+        name: name.trim(),
+        /* the API expects "owner/repo" */
+        repo: m ? `${m[1]}/${m[2]}` : repo.trim(),
+        desc: desc.trim(),
+        replaces: alt.trim(),
+        cat: category,
+        platforms,
+        homepage: website.trim() || undefined,
+      });
+      setCreatedName(created.name || name.trim());
+      /* let every list know a new tool exists */
+      void queryClient.invalidateQueries({ queryKey: ["tools", "all"] });
+      setSubmitted(true);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.status === 409) {
+          setRepoError(err.message || "This repository is already listed.");
+        } else if (err.status === 400) {
+          setFormError(err.issues[0] ?? err.message ?? "Please double-check the form and try again.");
+        } else {
+          setFormError(err.message || "Something went wrong. Please try again.");
+        }
+      } else {
+        setFormError("Couldn't reach the server. Please try again.");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (submitted) {
     return (
       <div className="mx-auto max-w-3xl px-5 pb-24">
@@ -78,8 +124,8 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
           </span>
           <h1 className="mt-5 text-2xl font-bold tracking-tight text-ink">Submission received</h1>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-mute">
-            <span className="text-ink2">{name}</span> is in the Community Finds queue. Once it gathers enough votes,
-            our editors will take a closer look.
+            <span className="text-ink2">{createdName}</span> is live in the directory. Once it gathers enough
+            votes, our editors will take a closer look for a curated spot.
           </p>
           <div className="mt-7 flex items-center justify-center gap-3">
             <button
@@ -92,6 +138,9 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
                 setDesc("");
                 setPlatforms([]);
                 setFetchState("idle");
+                setCreatedName("");
+                setRepoError(null);
+                setFormError(null);
               }}
               className="rounded-lg border border-line bg-elev px-4 py-2.5 text-sm text-ink2 transition-colors hover:border-line2 hover:text-ink"
             >
@@ -130,12 +179,11 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
 
       <form
         onSubmit={(e) => {
-          e.preventDefault();
-          if (canSubmit) setSubmitted(true);
+          void handleSubmit(e);
         }}
       >
         {/* 01 — repository */}
-        <section className="grid gap-4 border-t border-line py-10 md:grid-cols-[200px_1fr] md:gap-10">
+        <section className="grid grid-cols-1 gap-4 border-t border-line py-10 md:grid-cols-[200px_1fr] md:gap-10">
           <div>
             <p className="font-mono text-xs text-faint">01</p>
             <h2 className="mt-1 text-[15px] font-semibold text-ink">Repository</h2>
@@ -161,6 +209,7 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
                   onChange={(e) => {
                     setRepo(e.target.value);
                     setFetchState("idle");
+                    setRepoError(null);
                   }}
                   placeholder="github.com/owner/repo"
                   className="h-full min-w-0 flex-1 bg-transparent font-mono text-[13px] text-ink outline-none placeholder:text-faint"
@@ -191,18 +240,19 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
                   ? "Fetched from GitHub — name, description, and website filled in."
                   : "Name, description, and website fill in from GitHub."}
             </p>
+            {repoError && <p className="mt-2 text-xs font-medium text-amber-500">{repoError}</p>}
           </div>
         </section>
 
         {/* 02 — details */}
-        <section className="grid gap-4 border-t border-line py-10 md:grid-cols-[200px_1fr] md:gap-10">
+        <section className="grid grid-cols-1 gap-4 border-t border-line py-10 md:grid-cols-[200px_1fr] md:gap-10">
           <div>
             <p className="font-mono text-xs text-faint">02</p>
             <h2 className="mt-1 text-[15px] font-semibold text-ink">Project details</h2>
             <p className="mt-2 text-[13px] leading-relaxed text-faint">Where it fits and what it replaces.</p>
           </div>
           <div className="space-y-6">
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
                 <label htmlFor="pname" className="block text-[13px] font-medium text-ink2">
                   Project name
@@ -292,7 +342,7 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
         </section>
 
         {/* 03 — more details */}
-        <section className="grid gap-4 border-t border-line py-10 md:grid-cols-[200px_1fr] md:gap-10">
+        <section className="grid grid-cols-1 gap-4 border-t border-line py-10 md:grid-cols-[200px_1fr] md:gap-10">
           <div>
             <p className="font-mono text-xs text-faint">03</p>
             <h2 className="mt-1 text-[15px] font-semibold text-ink">More details</h2>
@@ -372,6 +422,12 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
           </div>
         </section>
 
+        {formError && (
+          <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-500">
+            {formError}
+          </p>
+        )}
+
         {/* footer actions */}
         <div className="flex flex-col gap-4 border-t border-line pt-7 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[13px] text-faint">
@@ -395,10 +451,10 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
             </button>
             <button
               type="submit"
-              disabled={!canSubmit}
+              disabled={!canSubmit || submitting}
               className="rounded-lg bg-solid px-4 py-2.5 text-sm font-medium text-solidfg transition-colors hover:bg-solidhover disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Submit project
+              {submitting ? "Submitting…" : "Submit project"}
             </button>
           </div>
         </div>

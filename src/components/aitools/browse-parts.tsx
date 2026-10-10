@@ -11,7 +11,7 @@ import {
   type Platform,
   type Tool,
 } from "@/lib/aitools/data";
-import { AppIcon, Dropdown, PlatformRow, WeeklyGain, CategoryIcon } from "./ui";
+import { AppIcon, Dropdown, PlatformRow, WeeklyGain, CategoryIcon, VoteChip } from "./ui";
 
 /* ------------------------------ filter bar ----------------------------- */
 
@@ -187,6 +187,7 @@ export function ToolCard({
             <span className="font-mono text-ink2">{fmtK(tool.stars)}</span>
           </span>
           {showWeekly && typeof tool.weeklyGain === "number" && <WeeklyGain gain={tool.weeklyGain} />}
+          <VoteChip id={tool.id} name={tool.name} />
         </div>
         <PlatformRow platforms={tool.platforms} />
       </div>

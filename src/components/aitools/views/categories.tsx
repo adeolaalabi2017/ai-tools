@@ -4,11 +4,11 @@ import { ArrowRight, Search } from "lucide-react";
 import {
   CATEGORIES,
   GOOD_STARTS,
-  TOOLS,
   countByCat,
   type Tool,
   type ViewId,
 } from "@/lib/aitools/data";
+import { useTools } from "../tools-provider";
 import { CategoryIcon, SectionHeader, SourceBadge, ToolRow } from "../ui";
 
 export function Categories({
@@ -22,6 +22,9 @@ export function Categories({
   onOpenSearch: () => void;
   onOpenTool: (t: Tool) => void;
 }) {
+  const { tools } = useTools();
+  const goodStarts = GOOD_STARTS(tools);
+
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
       {/* header */}
@@ -43,7 +46,7 @@ export function Categories({
       </div>
 
       {/* grid */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
@@ -55,7 +58,7 @@ export function Categories({
               <span className="text-[15px] font-semibold text-ink">{c.label}</span>
             </div>
             <p className="mt-3 flex items-center gap-1.5 text-[13px] text-faint">
-              {countByCat(c.id)} curated apps
+              {countByCat(c.id, tools)} curated apps
               <ArrowRight className="h-3.5 w-3.5 text-accent transition-transform group-hover:translate-x-0.5" />
             </p>
           </button>
@@ -69,8 +72,8 @@ export function Categories({
           action="All apps"
           onAction={() => onNavigate("browse")}
         />
-        <div className="grid gap-x-8 md:grid-cols-2 xl:grid-cols-3">
-          {GOOD_STARTS.map((t) => (
+        <div className="grid grid-cols-1 gap-x-8 md:grid-cols-2 xl:grid-cols-3">
+          {goodStarts.map((t) => (
             <ToolRow
               key={t.id}
               tool={t}
@@ -83,7 +86,7 @@ export function Categories({
 
       {/* collection footnote */}
       <p className="border-t border-line pt-6 text-xs text-faint">
-        {TOOLS.length} apps tracked across {CATEGORIES.length} categories · Stars update weekly.
+        {tools.length} apps tracked across {CATEGORIES.length} categories · Stars update weekly.
       </p>
     </div>
   );

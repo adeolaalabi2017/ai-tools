@@ -33,6 +33,7 @@ import {
   type Platform,
   type Tool,
 } from "@/lib/aitools/data";
+import { useTools } from "./tools-provider";
 
 /* --------------------------- category icons --------------------------- */
 
@@ -146,6 +147,66 @@ export function SectionHeader({
   );
 }
 
+/* ------------------------------ vote chip ------------------------------ */
+
+/**
+ * Tiny upvote control. Rendered as a real <button> by default, or as a
+ * focusable <span role="button"> when nested inside another button
+ * (e.g. ToolRow) to keep the DOM valid.
+ */
+export function VoteChip({
+  id,
+  name,
+  as = "button",
+}: {
+  id: string;
+  name?: string;
+  as?: "button" | "span";
+}) {
+  const { votes, myVotes, toggleVote } = useTools();
+  const voted = myVotes.has(id);
+  const count = votes[id] ?? 0;
+  const label = `${voted ? "Remove vote from" : "Upvote"} ${name ?? id}`;
+  const classes = cn(
+    "inline-flex cursor-pointer select-none items-center gap-0.5 rounded-md border px-1.5 py-0.5 font-mono text-xs leading-none transition-colors",
+    voted
+      ? "border-accent/40 bg-accent-soft text-accent"
+      : "border-line text-faint hover:border-line2 hover:text-ink2",
+  );
+  const onToggle = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    toggleVote(id);
+  };
+
+  if (as === "span") {
+    return (
+      <span
+        role="button"
+        tabIndex={0}
+        aria-pressed={voted}
+        aria-label={label}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleVote(id);
+          }
+        }}
+        className={classes}
+      >
+        ▲ {count}
+      </span>
+    );
+  }
+
+  return (
+    <button type="button" aria-pressed={voted} aria-label={label} onClick={onToggle} className={classes}>
+      ▲ {count}
+    </button>
+  );
+}
+
 /* ------------------------------ tool row ------------------------------ */
 
 export function ToolRow({
@@ -183,6 +244,8 @@ export function ToolRow({
             {catLabel(tool.cat)}
             <span className="mx-1 opacity-50">·</span>
             {PLATFORM_LABEL[tool.platforms[0] ?? "web"]}
+            <span className="mx-1 opacity-50">·</span>
+            <VoteChip id={tool.id} name={tool.name} as="span" />
           </div>
         </div>
       </div>

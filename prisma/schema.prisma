@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Tool {
+  id              String   @id // slug, e.g. "opencode"
+  name            String
+  repo            String // "owner/repo"
+  desc            String
+  replaces        String
+  cat             String // CATEGORIES id
+  stars           Int      @default(0)
+  platforms       String   @default("web") // CSV: "web,mac,win"
+  selfHosted      Boolean  @default(false)
+  sourceAvailable Boolean  @default(false)
+  weeklyGain      Int?
+  createdAt       DateTime @default(now())
+  emoji           String   @default("🧩")
+  glyph           String? // 1-3 letter fallback icon
+  status          String   @default("curated") // "curated" | "community"
+  submitter       String? // display name / email of community submitter
+  toolVotes       Vote[]
+
+  @@index([cat])
+  @@index([status])
+  @@index([weeklyGain])
 }
 
-model Post {
+model Vote {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  toolId    String
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  voter     String // anonymous client token (localStorage)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@unique([toolId, voter])
+  @@index([voter])
 }

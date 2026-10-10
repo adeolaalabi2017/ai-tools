@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, CornerDownLeft } from "lucide-react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import {
   TOOLS,
@@ -11,6 +12,9 @@ import {
   type Tool,
   type ViewId,
 } from "@/lib/aitools/data";
+import { fetchTools } from "@/lib/aitools/api";
+import { useTools, apiToolToTool } from "./tools-provider";
+import { useDebounced } from "./use-debounced";
 import { AppIcon, Kbd, CategoryIcon } from "./ui";
 
 type PageItem = { kind: "page"; label: string; hint: string; view: ViewId };
@@ -59,6 +63,10 @@ function Palette({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const { getTool } = useTools();
+  const debouncedQ = useDebounced(q, 150);
+  const searching = debouncedQ.trim().length > 0;
+
   useEffect(() => {
     const t = setTimeout(() => inputRef.current?.focus(), 10);
     document.documentElement.style.overflow = "hidden";
@@ -78,12 +86,33 @@ function Palette({
     ).map((p) => ({ kind: "page" as const, label: p.label, hint: p.hint, view: p.view }));
   }, [q]);
 
+  /* server-backed app search once the user types; static top-stars list when empty */
+  const search = useQuery({
+    queryKey: ["tools", "search", debouncedQ],
+    queryFn: () => fetchTools({ q: debouncedQ, limit: 12 }),
+    placeholderData: keepPreviousData,
+    enabled: searching,
+  });
+
   const tools = useMemo<ToolItem[]>(() => {
-    return TOOLS.filter((t) => matchTool(t, q))
+    if (!searching) {
+      /* unchanged empty-query behavior: static catalog, top 8 by stars */
+      return TOOLS.filter((t) => matchTool(t, q))
+        .sort((a, b) => b.stars - a.stars)
+        .slice(0, 8)
+        .map((t) => ({ kind: "tool" as const, tool: t }));
+    }
+    if (search.data) {
+      return search.data.tools
+        .map((a) => getTool(a.id) ?? apiToolToTool(a))
+        .map((t) => ({ kind: "tool" as const, tool: t }));
+    }
+    /* graceful fallback while loading / if the API errors: static filter */
+    return TOOLS.filter((t) => matchTool(t, debouncedQ))
       .sort((a, b) => b.stars - a.stars)
       .slice(0, 8)
       .map((t) => ({ kind: "tool" as const, tool: t }));
-  }, [q]);
+  }, [searching, search.data, q, debouncedQ, getTool]);
 
   const items = useMemo<Item[]>(() => [...pages, ...tools], [pages, tools]);
 
@@ -92,6 +121,12 @@ function Palette({
   if (prevQ !== q) {
     setPrevQ(q);
     setIdx(0);
+  }
+  /* keep the highlight in range when async results arrive (adjust-during-render) */
+  const [prevItemsLen, setPrevItemsLen] = useState(items.length);
+  if (prevItemsLen !== items.length) {
+    setPrevItemsLen(items.length);
+    if (idx >= items.length) setIdx(0);
   }
 
   const activate = useCallback(

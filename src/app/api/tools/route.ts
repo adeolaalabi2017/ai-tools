@@ -20,12 +20,17 @@ export const dynamic = "force-dynamic";
 const SORTS = ["newest", "stars", "momentum", "votes", "name"] as const;
 type Sort = (typeof SORTS)[number];
 
+/** Whitelisted values for the optional `status` query param. */
+const STATUS_FILTERS = ["pending", "community", "curated"] as const;
+type StatusFilter = (typeof STATUS_FILTERS)[number];
+
 function buildOrderBy(sort: Sort): Prisma.ToolOrderByWithRelationInput[] {
   switch (sort) {
     case "stars":
       return [{ stars: "desc" }];
     case "votes":
-      return [{ toolVotes: { _count: "desc" } }];
+      // Deterministic tiebreak: equal vote counts fall back to stars.
+      return [{ toolVotes: { _count: "desc" } }, { stars: "desc" }];
     case "name":
       return [{ name: "asc" }];
     case "momentum":
@@ -46,6 +51,13 @@ export async function GET(request: NextRequest) {
     const rawSort = sp.get("sort") ?? "";
     const sort: Sort = (SORTS as readonly string[]).includes(rawSort) ? (rawSort as Sort) : "newest";
 
+    // Optional status filter: "pending" | "community" | "curated".
+    // Absent or invalid → public listing (everything except pending).
+    const rawStatus = sp.get("status") ?? "";
+    const statusFilter: StatusFilter | null = (STATUS_FILTERS as readonly string[]).includes(rawStatus)
+      ? (rawStatus as StatusFilter)
+      : null;
+
     const rawPage = Number.parseInt(sp.get("page") ?? "", 10);
     const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
     const rawLimit = Number.parseInt(sp.get("limit") ?? "", 10);
@@ -65,6 +77,12 @@ export async function GET(request: NextRequest) {
       if (labelCatIds.length > 0) or.push({ cat: { in: labelCatIds } });
     }
     if (or.length > 0) where.OR = or;
+
+    if (statusFilter) {
+      where.status = statusFilter;
+    } else {
+      where.status = { not: "pending" };
+    }
 
     if (cat) where.cat = cat;
     if ((PLATFORM_VALUES as readonly string[]).includes(platform)) {
@@ -128,7 +146,7 @@ export async function POST(request: NextRequest) {
         replaces: data.replaces,
         cat: data.cat,
         platforms: data.platforms.join(","),
-        status: "community",
+        status: "pending",
         stars: 0,
         weeklyGain: null,
         emoji: "🧩",

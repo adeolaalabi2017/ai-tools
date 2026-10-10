@@ -95,3 +95,69 @@ Stage Summary:
 - Fixed pre-existing mobile horizontal overflow (grid auto-track blowout) discovered during verification
 - Votes derived from Vote-table counts (no denormalized column) — response shape unchanged
 - All checks green: lint clean, dev.log healthy, browser-verified desktop + mobile
+
+---
+Task ID: 4-a
+Agent: full-stack-developer (backend)
+Task: Pending submission status + moderation endpoint + status filter
+
+Work Log:
+- Read worklog (Tasks 1–3, 2-b/2-c contracts), prisma/schema.prisma (Tool has no votes column — votes derived via _count.toolVotes), existing API routes, and src/lib/aitools/server.ts before making changes
+- POST /api/tools: community submissions now created with status "pending" (was "community") — validation, case-insensitive duplicate-repo 409 (matches rows in ANY status incl. pending), slug generation, and 201 {tool} shape all unchanged
+- GET /api/tools: added optional `status` query param whitelisted to pending|community|curated (invalid/absent treated as absent); absent → public listing with `status: { not: "pending" }`; exact filter otherwise; response shape unchanged
+- sort=votes made deterministic: orderBy [{toolVotes:{_count:"desc"}},{stars:"desc"}]
+- Created POST /api/tools/[id]/moderate (Next 16 async params, runtime nodejs): zod {action: approve|reject} → 400 {error:"Validation failed",issues}; approve: pending→community, community/curated idempotent no-op, 200 {action:"approve",tool}; reject: pending|community → delete row (Vote cascade), curated → 400 "Curated tools cannot be removed.", 200 {action:"reject",deleted:true}; unknown id → 404; try/catch → 500
+- Added moderateSchema to src/lib/aitools/server.ts (alongside submissionSchema/voteSchema) and imported it in the moderate route
+- Created prisma/seed-pending.ts (idempotent bun upsert of 2 demo pending submissions: nightowl — NightOwl/nightscout/nightowl/writing/web,mac — and promptdeck — PromptDeck/labs/promptdeck/devtools/web; both "QA Bot", 🧩, stars 0; re-run forces status back to pending)
+- Curl-tested all 8 scenarios + extras against the running dev server: baseline 64 curated / 0 pending / invalid status=bogus→absent; POST submission → 201 "pending", hidden from default GET (total 64) but in status=pending (total 1), duplicate repo 409 enforced against pending row; approve → 200 status community (default total 65), repeat approve idempotent; reject → 200 deleted:true, GET single 404, default total 64; reject curated opencode → 400 "Curated tools cannot be removed."; approve opencode → 200 no-op stays curated; bad action / missing body → 400 with zod issues; unknown id → 404; sort=votes ×3 → identical deterministic order (stars tiebreak visible)
+- Re-ran seed-pending twice to confirm idempotency; final DB state 64 curated + 2 pending, 0 community, 0 votes (verified via API: status=pending total 2, default total 64, status=curated 64, status=community 0, Vote count 0)
+- bun run lint clean; project tsc clean for src/ (only pre-existing examples/ + skills/ noise); tail of dev.log shows only healthy 2xx/4xx for the new/changed routes, no compile or runtime errors
+
+Stage Summary:
+- Submissions are now "pending" until moderated: POST /api/tools creates pending rows that are hidden from the default public listing, GET /api/tools?status=pending exposes the moderation queue (community/curated exact filters also added), and sort=votes gained a stars tiebreak for deterministic order
+- New moderation endpoint POST /api/tools/[id]/moderate: approve (pending→community, idempotent, returns serialized ApiTool) / reject (deletes pending|community rows only, curated protected with 400) — enables a frontend review queue
+- Contract notes for frontend (also in agent-ctx/4-a-full-stack-developer.md): new submissions no longer appear in browse/search until approved; moderateSchema exported from server.ts; seed demo queue via `bun prisma/seed-pending.ts`
+- Final DB state: 64 curated + 2 pending (nightowl, promptdeck), 0 community, 0 Vote rows; all curl tests green, lint clean, dev.log clean
+
+---
+Task ID: 4-b
+Agent: full-stack-developer (frontend)
+Task: Category detail view + moderation queue + vote sort
+
+Work Log:
+- Read worklog (Tasks 1–3) + studied home.tsx, data.ts, api.ts, browse-parts.tsx, tools-provider.tsx, browse/trending/categories/discover/submit, ui.tsx, nav.tsx, footer.tsx to lock patterns before coding
+- data.ts: extended ViewId union with "category" and "admin" (VIEW_PAGES untouched so the search palette stays as-is)
+- api.ts: added optional `status` to ToolsQueryParams (built into the query string) and `moderateTool(id, "approve"|"reject")` → POST /api/tools/[id]/moderate typed as ModerateResult {action, tool?, deleted?}; coded exactly against the fixed 4-a contract
+- Created views/category.tsx: back link "← All categories", mono eyebrow = category short, h1 = label, sub = blurb + live count (countByCat on the live merged list); reused FilterBar (q debounced 250ms, platform/filters/sort), CountRow, ToolCard grid, Show-more pagination (PAGE_SIZE 24, hidden when everything shown) exactly like browse.tsx; server query ["tools","category",catId,filters] with keepPreviousData + client-side fallback filter (incl. votes sort); sort options Momentum (default) / Most upvoted (votes) / Most stars / Newest; FilterBar chips re-wired: specific cat → openCategory (header stays in sync), "All apps" → browse
+- Created views/admin.tsx: header "MODERATION / Review queue" + live count, useQuery ["tools","pending"] → fetchTools({status:"pending",limit:999,sort:"newest"}) with refetchInterval 20s; rows show AppIcon, name, mono repo, desc, category chip, platforms, "Submitted by X · Oct 10, 2026" (UTC-safe formatter matching the app's existing "Oct 5, 2026" style); Approve (bg-solid + Check) / Remove (border-line + Trash2) with aria-labels, stopPropagation-safe cluster, spinner + disabled via local pendingAction state, optimistic row removal via setQueryData(["tools","pending"]) + invalidate ["tools","all"]; dashed empty state "Queue is clear." (+ Browse all apps via onNavigate), friendly query-error state with Retry, amber role=alert banner if a moderate call fails
+- home.tsx: added activeCategory state + openCategory() (sets cat + view "category" + scroll top); navigate() resets activeCategory; render CategoryView (keyed `category:${catId}` for remount animation) and AdminQueue; search-modal flow (browseWith/openTool) untouched
+- footer.tsx: added "Review queue" to the CONTRIBUTE column → navigate("admin")
+- discover.tsx: hero category chips and Categories section cards now call onOpenCategory ("More..." → categories, "All apps" chip → browse); dropped the now-unused onBrowseCategory prop
+- categories.tsx: 12 category cards → onOpenCategory ("Good places to start" action stays "All apps" → browse since it doesn't target a category)
+- browse.tsx + trending.tsx: added { value: "votes", label: "Most upvoted" } to sortOptions (browse: Newest first; trending: Momentum first) + votes case in the API-failure fallback sorts
+- submit.tsx: success panel copy changed to "“{name}” was sent to the editors." + "It will appear in the directory once approved." (everything else identical)
+- Fixed a discovered pre-existing mobile defect: the shared FilterBar dropdown cluster (flex, non-wrapping) pushed scrollWidth to 412px at 390px on Trending (default "Momentum") and 428px on Browse after picking "Most upvoted"; wrapped FilterBar at all three call sites (category/trending/browse — all in my file scope) with `[&>div>div:first-child>div:last-child]:flex-wrap`; desktop layout verified unchanged
+- Browser-verified with agent-browser: hero chip "Chat" → Category view with server data + "9 apps"; sort → Most upvoted no crash; back link, Categories card, and in-page chip switch all reach the right category; tool card → Browse pre-filtered; footer "Review queue" showed the 2 seeded pending rows; Approve PromptDeck → gone from queue, status "community" via API, listed in Browse (65 apps); Remove NightOwl → "Queue is clear." and tool absent from pending + public API; re-ran bun prisma/seed-pending.ts → queue auto-refetched to 2; full submit flow → "sent to the editors" + "once approved" copy, Lumifield hidden from public list but present in queue, then removed via queue; moderate endpoint initially 404 (backend still compiling) and was retried until live
+- Responsive + hygiene: 1440 clean on discover/category/browse/admin; 390 clean on all filter-bar views (incl. Most upvoted selected) and admin; footer sticky/push intact; zero console errors/warnings; bun run lint clean; dev.log healthy
+
+Stage Summary:
+- Shipped three features on the AIStore single-route app: (1) Category detail view ("category") with server-driven filtering, 4-way sort incl. Most upvoted, show-more pagination and live counts, reachable from hero chips, the Categories grid cards, and in-page chips; (2) Moderation queue ("admin") at footer "Review queue" with 20s auto-refresh, optimistic approve/remove wired to POST /api/tools/[id]/moderate, friendly empty/error states; (3) "Most upvoted" sort option in Browse + Trending and editorial-review submit copy
+- Files created: src/components/aitools/views/category.tsx, src/components/aitools/views/admin.tsx, agent-ctx/4-b-full-stack-developer.md; modified: src/lib/aitools/data.ts, src/lib/aitools/api.ts, src/components/aitools/home.tsx, footer.tsx, views/{discover,categories,browse,trending,submit}.tsx
+- Fixed a pre-existing mobile horizontal overflow in the shared FilterBar (call-site wrapper fix, documented in agent-ctx for a future fold-in)
+- Verification: all agent-browser scenarios green (category nav matrix, moderation approve/remove round-trip, submit→queue→reject flow, seed restore), zero console errors, no horizontal overflow at 1440/390, lint clean
+- Final DB state: 64 curated tools + 2 pending demo rows (nightowl, promptdeck), 0 votes, test submissions deleted (lumifield → 404)
+
+---
+Task ID: 5
+Agent: Z.ai Code (main agent)
+Task: Integration verification of phase 3 (category views, vote sorting, moderation queue)
+
+Work Log:
+- Confirmed both agent worklogs + API state (64 curated public, 2 pending demo rows: NightOwl + PromptDeck)
+- Browser E2E: hero chip "Chat" -> Category view ("AI Assistants", 9 apps, server-driven); sort dropdown -> "Most upvoted" works; footer "Review queue" -> shows both pending submissions with metadata (repo, category chip, submitter, date); Approve NightOwl -> optimistic removal + API status "community" + appears in Browse ("65 apps to explore"); restored demo state via reject + seed-pending (2 pending rows back)
+- Mobile 390 + desktop 1440: zero horizontal overflow on all views, footer intact, 0 console errors/warnings, lint clean
+- Final DB state: 64 curated + 2 pending demo submissions, 0 votes
+
+Stage Summary:
+- Phase 3 shipped and verified end-to-end: editorial submission flow (submit -> pending -> admin approve/reject), per-category detail views with server filtering + Most upvoted sort, moderation queue UI in the footer's CONTRIBUTE column
+- Demo-ready state: 2 pending submissions in the Review queue for immediate exploration

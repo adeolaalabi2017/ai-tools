@@ -30,12 +30,12 @@ import { FeaturedArt } from "../mockups";
 
 export function Discover({
   onNavigate,
-  onBrowseCategory,
+  onOpenCategory,
   onOpenSearch,
   onOpenTool,
 }: {
   onNavigate: (v: ViewId) => void;
-  onBrowseCategory: (cat: string | null) => void;
+  onOpenCategory: (cat: string) => void;
   onOpenSearch: (q?: string) => void;
   onOpenTool: (t: Tool) => void;
 }) {
@@ -81,7 +81,7 @@ export function Discover({
                 chip.cat === "__more"
                   ? onNavigate("categories")
                   : chip.cat
-                    ? onBrowseCategory(chip.cat)
+                    ? onOpenCategory(chip.cat)
                     : onNavigate("browse")
               }
               className="rounded-full border border-line bg-card/60 px-3.5 py-1.5 text-[13px] text-ink2 transition-colors hover:border-line2 hover:text-ink"
@@ -224,7 +224,7 @@ export function Discover({
           {CATEGORIES.map((c) => (
             <button
               key={c.id}
-              onClick={() => onBrowseCategory(c.id)}
+              onClick={() => onOpenCategory(c.id)}
               className="flex items-center gap-3 rounded-xl border border-line bg-card px-4 py-3.5 text-left transition-colors hover:border-line2 hover:bg-elev"
             >
               <CategoryIcon id={c.id} className="h-4 w-4 shrink-0 text-ink2" />

@@ -60,6 +60,7 @@ export function Trending({ onOpenTool }: { onOpenTool: (t: Tool) => void }) {
       if (sourceAvailable) list = list.filter((t) => t.sourceAvailable);
       list = list.filter((t) => matchTool(t, q));
       if (sort === "stars") list = [...list].sort((a, b) => b.stars - a.stars);
+      if (sort === "votes") list = [...list].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0));
       if (sort === "newest") list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       /* default: momentum (already sorted by weekly gain) */
       return list;
@@ -79,26 +80,31 @@ export function Trending({ onOpenTool }: { onOpenTool: (t: Tool) => void }) {
         </p>
       </header>
 
-      <FilterBar
-        q={q}
-        onQ={setQ}
-        category={category}
-        onCategory={setCategory}
-        platform={platform}
-        onPlatform={setPlatform}
-        selfHosted={selfHosted}
-        onSelfHosted={setSelfHosted}
-        sourceAvailable={sourceAvailable}
-        onSourceAvailable={setSourceAvailable}
-        sort={sort}
-        onSort={setSort}
-        sortOptions={[
-          { value: "momentum", label: "Momentum" },
-          { value: "stars", label: "Most stars" },
-          { value: "newest", label: "Newest" },
-        ]}
-        onFilters={onFilters}
-      />
+      {/* the shared FilterBar's dropdown cluster can't wrap by itself; let it
+          wrap on narrow screens so a long sort label never overflows the page */}
+      <div className="[&>div>div:first-child>div:last-child]:flex-wrap">
+        <FilterBar
+          q={q}
+          onQ={setQ}
+          category={category}
+          onCategory={setCategory}
+          platform={platform}
+          onPlatform={setPlatform}
+          selfHosted={selfHosted}
+          onSelfHosted={setSelfHosted}
+          sourceAvailable={sourceAvailable}
+          onSourceAvailable={setSourceAvailable}
+          sort={sort}
+          onSort={setSort}
+          sortOptions={[
+            { value: "momentum", label: "Momentum" },
+            { value: "votes", label: "Most upvoted" },
+            { value: "stars", label: "Most stars" },
+            { value: "newest", label: "Newest" },
+          ]}
+          onFilters={onFilters}
+        />
+      </div>
 
       <div className="mt-6">
         <CountRow count={total} selfHosted={selfHosted} onToggleSelfHosted={() => setSelfHosted((s) => !s)} />

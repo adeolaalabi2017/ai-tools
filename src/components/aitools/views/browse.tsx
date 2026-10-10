@@ -80,6 +80,7 @@ export function Browse({
       list = list.filter((t) => matchTool(t, q));
       if (sort === "newest") list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       if (sort === "stars") list = [...list].sort((a, b) => b.stars - a.stars);
+      if (sort === "votes") list = [...list].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0));
       if (sort === "momentum")
         list = [...list].sort((a, b) => (b.weeklyGain ?? -1) - (a.weeklyGain ?? -1));
       return list;
@@ -98,26 +99,31 @@ export function Browse({
         <p className="mt-2 text-[15px] text-mute">Sorted by repository creation date.</p>
       </header>
 
-      <FilterBar
-        q={q}
-        onQ={setQ}
-        category={category}
-        onCategory={setCategory}
-        platform={platform}
-        onPlatform={setPlatform}
-        selfHosted={selfHosted}
-        onSelfHosted={setSelfHosted}
-        sourceAvailable={sourceAvailable}
-        onSourceAvailable={setSourceAvailable}
-        sort={sort}
-        onSort={setSort}
-        sortOptions={[
-          { value: "newest", label: "Newest" },
-          { value: "stars", label: "Most stars" },
-          { value: "momentum", label: "Momentum" },
-        ]}
-        onFilters={onFilters}
-      />
+      {/* the shared FilterBar's dropdown cluster can't wrap by itself; let it
+          wrap on narrow screens so a long sort label never overflows the page */}
+      <div className="[&>div>div:first-child>div:last-child]:flex-wrap">
+        <FilterBar
+          q={q}
+          onQ={setQ}
+          category={category}
+          onCategory={setCategory}
+          platform={platform}
+          onPlatform={setPlatform}
+          selfHosted={selfHosted}
+          onSelfHosted={setSelfHosted}
+          sourceAvailable={sourceAvailable}
+          onSourceAvailable={setSourceAvailable}
+          sort={sort}
+          onSort={setSort}
+          sortOptions={[
+            { value: "newest", label: "Newest" },
+            { value: "votes", label: "Most upvoted" },
+            { value: "stars", label: "Most stars" },
+            { value: "momentum", label: "Momentum" },
+          ]}
+          onFilters={onFilters}
+        />
+      </div>
 
       <div className="mt-6">
         <CountRow count={total} selfHosted={selfHosted} onToggleSelfHosted={() => setSelfHosted((s) => !s)} />

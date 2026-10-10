@@ -8,9 +8,11 @@ import { Footer } from "./footer";
 import { SearchModal } from "./search-modal";
 import { Discover } from "./views/discover";
 import { Categories } from "./views/categories";
+import { CategoryView } from "./views/category";
 import { Trending } from "./views/trending";
 import { Browse } from "./views/browse";
 import { Submit } from "./views/submit";
+import { AdminQueue } from "./views/admin";
 
 export default function AIToolStore() {
   return (
@@ -27,6 +29,7 @@ function AIToolStoreApp() {
   const [searchSeed, setSearchSeed] = useState("");
   const [browseQuery, setBrowseQuery] = useState("");
   const [browseCategory, setBrowseCategory] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   /* ⌘K / Ctrl+K toggles the search palette from anywhere */
   useEffect(() => {
@@ -42,6 +45,7 @@ function AIToolStoreApp() {
 
   const navigate = useCallback((v: ViewId) => {
     setView(v);
+    setActiveCategory(null);
     /* arriving at the catalog from nav/footer starts unfiltered */
     if (v === "browse") {
       setBrowseQuery("");
@@ -62,6 +66,12 @@ function AIToolStoreApp() {
     window.scrollTo({ top: 0 });
   }, []);
 
+  const openCategory = useCallback((catId: string) => {
+    setActiveCategory(catId);
+    setView("category");
+    window.scrollTo({ top: 0 });
+  }, []);
+
   const openTool = useCallback(
     (t: Tool) => {
       browseWith(null, t.name);
@@ -74,11 +84,12 @@ function AIToolStoreApp() {
       <Nav view={view} onNavigate={navigate} onOpenSearch={() => openSearch()} />
 
       <main className="flex-1">
-        <div key={view} className="animate-rise">
+        <div key={view === "category" ? `category:${activeCategory ?? ""}` : view} className="animate-rise">
           {view === "discover" && (
             <Discover
               onNavigate={navigate}
               onBrowseCategory={(c) => browseWith(c)}
+              onOpenCategory={openCategory}
               onOpenSearch={openSearch}
               onOpenTool={openTool}
             />
@@ -86,9 +97,17 @@ function AIToolStoreApp() {
           {view === "categories" && (
             <Categories
               onNavigate={navigate}
-              onBrowseCategory={(c) => browseWith(c)}
+              onOpenCategory={openCategory}
               onOpenSearch={() => openSearch()}
               onOpenTool={openTool}
+            />
+          )}
+          {view === "category" && activeCategory && (
+            <CategoryView
+              catId={activeCategory}
+              onNavigate={navigate}
+              onOpenTool={openTool}
+              onOpenCategory={openCategory}
             />
           )}
           {view === "trending" && <Trending onOpenTool={openTool} />}
@@ -101,6 +120,7 @@ function AIToolStoreApp() {
             />
           )}
           {view === "submit" && <Submit onDiscover={() => navigate("discover")} />}
+          {view === "admin" && <AdminQueue onNavigate={navigate} />}
         </div>
       </main>
 

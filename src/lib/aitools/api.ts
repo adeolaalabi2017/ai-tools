@@ -38,6 +38,8 @@ export interface ToolsQueryParams {
   selfHosted?: boolean;
   sourceAvailable?: boolean;
   trending?: boolean;
+  /** Omit for public lists (curated + community). "pending" = moderation queue only. */
+  status?: string;
   sort?: "newest" | "stars" | "momentum" | "votes" | "name" | string;
   page?: number;
   limit?: number;
@@ -57,6 +59,13 @@ export interface ToolSubmitPayload {
 export interface VoteResult {
   votes: number;
   voted: boolean;
+}
+
+/** Response of POST /api/tools/[id]/moderate. */
+export interface ModerateResult {
+  action: string;
+  tool?: ApiTool;
+  deleted?: boolean;
 }
 
 /** Error carrying the HTTP status and validation issues (if any). */
@@ -82,6 +91,7 @@ function buildQuery(params: ToolsQueryParams): string {
   if (params.selfHosted) sp.set("selfHosted", "1");
   if (params.sourceAvailable) sp.set("sourceAvailable", "1");
   if (params.trending) sp.set("trending", "1");
+  if (params.status) sp.set("status", params.status);
   if (params.sort) sp.set("sort", params.sort);
   if (typeof params.page === "number") sp.set("page", String(params.page));
   if (typeof params.limit === "number") sp.set("limit", String(params.limit));
@@ -161,5 +171,17 @@ export async function voteTool(id: string, voter: string): Promise<VoteResult> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ voter }),
+  });
+}
+
+/** Editorial moderation: approve a pending submission or remove it entirely. */
+export async function moderateTool(
+  id: string,
+  action: "approve" | "reject",
+): Promise<ModerateResult> {
+  return request<ModerateResult>(`/api/tools/${encodeURIComponent(id)}/moderate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action }),
   });
 }

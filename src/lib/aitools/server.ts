@@ -116,3 +116,8 @@ export const voteSchema = z.object({
     .min(8, "Voter token must be 8–64 characters")
     .max(64, "Voter token must be 8–64 characters"),
 });
+
+/** Moderation body behind /api/tools/[id]/moderate. */
+export const moderateSchema = z.object({
+  action: z.enum(["approve", "reject"]),
+});

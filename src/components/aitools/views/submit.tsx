@@ -124,8 +124,10 @@ export function Submit({ onDiscover }: { onDiscover: () => void }) {
           </span>
           <h1 className="mt-5 text-2xl font-bold tracking-tight text-ink">Submission received</h1>
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-mute">
-            <span className="text-ink2">{createdName}</span> is live in the directory. Once it gathers enough
-            votes, our editors will take a closer look for a curated spot.
+            <span className="text-ink2">&ldquo;{createdName}&rdquo;</span> was sent to the editors.
+          </p>
+          <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-mute">
+            It will appear in the directory once approved.
           </p>
           <div className="mt-7 flex items-center justify-center gap-3">
             <button

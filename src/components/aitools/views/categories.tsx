@@ -13,12 +13,12 @@ import { CategoryIcon, SectionHeader, SourceBadge, ToolRow } from "../ui";
 
 export function Categories({
   onNavigate,
-  onBrowseCategory,
+  onOpenCategory,
   onOpenSearch,
   onOpenTool,
 }: {
   onNavigate: (v: ViewId) => void;
-  onBrowseCategory: (cat: string) => void;
+  onOpenCategory: (cat: string) => void;
   onOpenSearch: () => void;
   onOpenTool: (t: Tool) => void;
 }) {
@@ -50,7 +50,7 @@ export function Categories({
         {CATEGORIES.map((c) => (
           <button
             key={c.id}
-            onClick={() => onBrowseCategory(c.id)}
+            onClick={() => onOpenCategory(c.id)}
             className="group rounded-xl border border-line bg-card p-5 text-left transition-colors hover:border-line2 hover:bg-elev"
           >
             <div className="flex items-center gap-3">

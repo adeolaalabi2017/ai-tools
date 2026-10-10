@@ -2,7 +2,14 @@
 /*  AIStore — data layer                                               */
 /* ------------------------------------------------------------------ */
 
-export type ViewId = "discover" | "categories" | "trending" | "browse" | "submit";
+export type ViewId =
+  | "discover"
+  | "categories"
+  | "category"
+  | "trending"
+  | "browse"
+  | "submit"
+  | "admin";
 
 export type Platform = "web" | "mac" | "win" | "linux" | "ios" | "android";
 

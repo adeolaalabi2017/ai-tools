@@ -402,7 +402,7 @@ export function Wanted({
           <button
             type="button"
             onClick={() => setSigninNote(true)}
-            className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-solid px-4 text-sm font-medium text-solidfg transition-colors hover:bg-solidhover"
+            className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90"
           >
             <Github className="h-4 w-4" aria-hidden />
             Sign in with GitHub
@@ -457,7 +457,7 @@ export function Wanted({
                   <button
                     type="submit"
                     disabled={submitting || target.trim().length < 2}
-                    className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-solid px-5 text-sm font-medium text-solidfg transition-colors hover:bg-solidhover disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-accent px-5 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {submitting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
                     {submitting ? "Requesting…" : "Request"}

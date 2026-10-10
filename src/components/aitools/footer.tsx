@@ -19,7 +19,7 @@ export function Footer({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
   ];
 
   return (
-    <footer className="mt-auto border-t border-line">
+    <footer className="mt-auto border-t border-line bg-surface/60">
       <div className="mx-auto max-w-6xl px-5 py-14">
         <div className="flex flex-col justify-between gap-10 md:flex-row">
           <div className="max-w-xs">

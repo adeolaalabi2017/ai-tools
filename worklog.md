@@ -243,3 +243,24 @@ Stage Summary:
 - The "Wanted alternatives" request board is live: request → dedupe-as-vote → vote → status badges → connected projects, fully backed by Prisma with anonymous per-browser vote integrity
 - Duplicate handling matches the reference copy: repeated requests become votes so the strongest needs rise; fulfilled requests link into the existing tool catalog
 - Files: prisma/schema.prisma, prisma/seed-wants.ts (new), src/app/api/wants/route.ts (new), src/app/api/wants/[id]/vote/route.ts (new), src/lib/aitools/{server,api,data}.ts, src/components/aitools/{tools-provider,home,footer}.tsx, views/{wanted (new),submit}.tsx
+
+---
+Task ID: 10
+Agent: Z.ai Code (main agent)
+Task: Apply the 60/30/10 colour rule to the AIStore design (60% dominant canvas, 30% secondary containers, 10% accent for CTAs/links/icons)
+
+Work Log:
+- Audited colour usage across all aitools components: base/card/elev were near-identical neutral blacks (no distinct secondary layer), CTAs were neutral white while the green accent was confined to chips/badges, and found a latent bug — theme mapped `--color-accentsoft` but every component used `bg-accent-soft`, so all soft-green chip backgrounds were silently not rendering
+- Rewrote the AIStore token block in globals.css as an explicit 60/30/10 system with a cohesive green-cast ramp: dark 60% base #0a0c0b; 30% secondary surface #0e1310 / card #121714 / elev #1a221d / line #232d27 / line-2 #323e37; 10% accent #4ade80 unchanged. Light theme: base #f2f5f2, surface #e9efea, card #ffffff, elev #e7ede8, line #dce4dd, line-2 #c8d3ca, accent #16a34a; documented the role of each layer in comments
+- Fixed the theme mapping (`--color-accent-soft`) so accent-soft utilities compile; removed the now-unused --solid-bg/--solid-fg/--solid-hover tokens and their @theme entries; added a light-theme ::selection tint
+- Reassigned the 10% accent to primary CTAs per the rule: nav Submit (desktop + mobile), discover "Submit an app", admin "Approve(& feature)", wanted "Sign in with GitHub" + "Request", tool page "Get {name}", submit "Back to Discover" + "Submit project" — all now bg-accent text-zinc-950 hover:bg-accent/90
+- Unified the two remaining selected-chip styles (browse filter chips, submit platform chips) onto the accent-soft system (border-accent/40 bg-accent-soft text-accent), matching the existing active-chip pattern
+- Assigned the 30% layer structurally: sticky header bg-base/85 → bg-surface/85, footer → bg-surface/60
+- Verified in browser (agent-browser): computed styles confirm body #0a0c0b, header surface @85%, CTA rgb(74,222,128), active chips rgba(74,222,128,0.11); views checked — Discover, Browse (chips + rows), Categories (cards read as 30%), tool detail page (green Get CTA), Wanted board (green sign-in CTA, light theme), Submit; light theme toggle renders the tinted canvas + white cards correctly
+- Fixed during verification: bg-accent-soft still missing after token edit due to stale Tailwind dev scan cache — touching globals.css forced a rebuild; computed style then confirmed rgba(74,222,128,0.11)
+- Mobile 390px: zero horizontal overflow, accent-soft active chip and green Submit visible in the scrollable nav row; zero console errors; lint clean; dev.log clean (only routine Prisma queries)
+
+Stage Summary:
+- The palette now implements 60/30/10 verbatim: dominant canvas (60%), a distinct green-charcoal secondary layer for header/cards/containers (30%), and the green accent reserved for CTAs, links, active chips and key icons (10%) in both themes
+- Fixed a long-standing silent bug where bg-accent-soft produced no CSS (theme key mismatch) — all soft-green chip surfaces now actually render
+- Files: src/app/globals.css, src/components/aitools/{nav,footer,browse-parts}.tsx, views/{discover,admin,wanted,tool,submit}.tsx

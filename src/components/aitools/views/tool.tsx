@@ -294,7 +294,7 @@ export function ToolDetail({
             href={repoUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex h-10 items-center gap-2 rounded-lg bg-solid px-4 text-sm font-medium text-solidfg transition-colors hover:bg-solidhover"
+            className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90"
           >
             Get {tool.name}
             <ExternalLink className="h-3.5 w-3.5" />

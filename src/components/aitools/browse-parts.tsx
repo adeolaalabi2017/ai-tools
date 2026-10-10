@@ -127,7 +127,7 @@ export function FilterBar({
         className={cn(
           "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
           active
-            ? "border-solid bg-solid text-solidfg"
+            ? "border-accent/40 bg-accent-soft text-accent"
             : "border-line bg-transparent text-mute hover:border-line2 hover:text-ink",
         )}
       >

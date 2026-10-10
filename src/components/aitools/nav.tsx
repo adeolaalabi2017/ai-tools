@@ -29,7 +29,7 @@ export function Nav({
   onOpenSearch: () => void;
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-base/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-line bg-surface/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-5">
         <button
           onClick={() => onNavigate("discover")}
@@ -60,7 +60,7 @@ export function Nav({
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => onNavigate("submit")}
-            className="mr-1 hidden h-8 items-center rounded-full bg-solid px-3.5 text-[13px] font-medium text-solidfg transition-colors hover:bg-solidhover sm:flex"
+            className="mr-1 hidden h-8 items-center rounded-full bg-accent px-3.5 text-[13px] font-medium text-zinc-950 transition-colors hover:bg-accent/90 sm:flex"
           >
             Submit
           </button>
@@ -113,7 +113,7 @@ export function Nav({
         ))}
         <button
           onClick={() => onNavigate("submit")}
-          className="shrink-0 rounded-full bg-solid px-3 py-1.5 text-[13px] font-medium text-solidfg"
+          className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-[13px] font-medium text-zinc-950 transition-colors hover:bg-accent/90"
         >
           Submit
         </button>

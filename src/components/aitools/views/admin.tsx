@@ -316,7 +316,7 @@ function PendingRow({
             onClick={() => onApprove(feature)}
             disabled={anyBusy}
             aria-label={`Approve ${t.name}${feature ? " and feature it" : ""}`}
-            className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-solid px-3.5 text-[13px] font-medium text-solidfg transition-colors hover:bg-solidhover disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 items-center justify-center gap-1.5 rounded-lg bg-accent px-3.5 text-[13px] font-medium text-zinc-950 transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy === "approve" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
             {busy === "approve" ? "Approving…" : feature ? "Approve & feature" : "Approve"}

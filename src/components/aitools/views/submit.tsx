@@ -155,7 +155,7 @@ export function Submit({
             </button>
             <button
               onClick={onDiscover}
-              className="rounded-lg bg-solid px-4 py-2.5 text-sm font-medium text-solidfg transition-colors hover:bg-solidhover"
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90"
             >
               Back to Discover
             </button>
@@ -335,7 +335,7 @@ export function Submit({
                       className={cn(
                         "h-9 rounded-full border px-4 text-[13px] transition-colors",
                         active
-                          ? "border-solid bg-solid text-solidfg"
+                          ? "border-accent/40 bg-accent-soft text-accent"
                           : "border-line text-mute hover:border-line2 hover:text-ink",
                       )}
                     >
@@ -458,7 +458,7 @@ export function Submit({
             <button
               type="submit"
               disabled={!canSubmit || submitting}
-              className="rounded-lg bg-solid px-4 py-2.5 text-sm font-medium text-solidfg transition-colors hover:bg-solidhover disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? "Submitting…" : "Submit project"}
             </button>

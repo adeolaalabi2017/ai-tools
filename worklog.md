@@ -317,3 +317,21 @@ Stage Summary:
 - All moderation powers preserved & live: approve (± feature-on-approval), remove, featured toggle — same endpoints, optimistic UI, 20s queue polling
 - Shadcn semantic tokens now permanently aliased to 60-30-10 → any future shadcn/registry component drops in themed automatically
 - Key files: src/components/admin-dashboard.tsx (+14 adapted block components), src/components/admin-format.ts, src/app/globals.css (token bridge), src/components/aitools/home.tsx (admin route swap)
+
+---
+Task ID: 12-b
+Agent: Z.ai Code (main agent)
+Task: Post-context-break re-verification of the dashboard-3 admin panel (Tasks 11+12) in a fresh session
+
+Work Log:
+- Confirmed install artifacts intact: components.json carries the @efferd registry; admin-dashboard.tsx + 14 adapted block components + admin-format.ts present; home.tsx renders AdminDashboard full-viewport for view==="admin"; footer "Review queue" link routes to it
+- bun run lint: clean (no output)
+- agent-browser E2E: opened / → footer "Review queue" → admin console renders at 1440px in dark theme (sidebar w/ green "Review queue (1)" CTA, breadcrumb header, 4 KPIs: 65 live / 1 pending / 0 votes / 4 featured, Catalog growth area chart + 1.6% delta with working tooltip, Category donut, Review queue table for PromptDeck with feature-on-approval toggle + Approve + Remove, Featured picks list with star toggles, Recent additions feed)
+- Moderation re-verified end-to-end: OpenClaw feature toggle ON → GET /api/tools/openclaw {featured:true}; toggle OFF → {featured:false}; state restored to pre-test (4 featured)
+- Light theme verified: sage canvas, white cards, green accent preserved across sidebar CTA/icons/charts
+- Mobile 390px: KPIs stack single-column, zero horizontal overflow, sidebar collapses to working Sheet with full nav
+- dev.log tail: only 200s for the feature POST + tool/pending queries, no compile or runtime errors; only console noise is the known benign recharts width warning
+- Note found during verification: main region is its own scroll container (window.scrollY stays 0) — section scrolling must target .overflow-y-auto container; not a bug, documented here for future automation
+
+Stage Summary:
+- Tasks 11 + 12 hold up in a fresh session: install intact, admin panel fully functional, both themes + mobile verified, lint/dev.log clean; no code changes required this pass

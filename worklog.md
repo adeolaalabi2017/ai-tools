@@ -409,3 +409,27 @@ Stage Summary:
 - Ads are first-class: DB-backed small cards with placement/rotation/stats, an admin CRUD module with live preview, and non-intrusive public slots on Browse/Blog/Wanted
 - Submitters can brand their tools (logo, screenshot, header image) with previews at submit time; admins can edit the same URLs in the catalog; the detail page renders all three
 - Key files: prisma/schema.prisma + seed-ads.ts, src/lib/aitools/{server,api}.ts, src/app/api/{ads,analytics,tools}/…, src/components/{admin-dashboard,app-shared,app-shell,app-sidebar,app-header,nav-group,ads-manager,submission-view,traffic-chart,top-pages,module-summary,recent-conversations,catalog-manager}.tsx, src/components/aitools/{ad-slot,home}.tsx + views/{submit,tool,browse,blog,wanted}.tsx
+---
+Task ID: 15
+Agent: Z.ai Code (main agent)
+Task: Ensure every tool's logo is the ORIGINAL brand logo of the project — never an AI-generated or placeholder image
+
+Work Log:
+- Audited the icon pipeline: all 65 curated tools rendered emoji/glyph tiles (AppIcon); logoUrl was null everywhere in the DB; the only image logos were QA-leftover picsum photos (pixelforge)
+- Established the brand-authentic source: every curated tool has a GitHub repo, and the repo owner's avatar IS the project's own uploaded logo — resolved all 64 owners via github.com/{owner}.png, 63 exist (openwork-dev 404s)
+- data.ts: added BRAND_LOGOS (owner → canonical avatars.githubusercontent.com CDN URL, pinned at curation time so the browser skips the redirect), BRAND_ICON_URLS per-tool overrides, NO_BRAND_ICON set, githubAvatar() + brandLogoUrl() resolver with priority: explicit logoUrl override → per-tool brand icon → verified owner avatar → live redirect; null renders the emoji/glyph tile
+- Visually audited every personal-account owner avatar (downloaded + inspected): danny-avila (hiking photo), comfyanonymous (anime), AUTOMATIC1111 (banknote art), oobabooga (starry photo), mudler (anime), blakeblackshear (portrait), miurla (memoji), pablostanley (monster drawing), debpalash (portrait), ItzCrazyKns (anime), lllyasviel (cat) — none are the project's brand
+- Fixed the wrong-brand cases: comfyui/localai/frigate via their official site icons, librechat via the logo SVG its own repo ships (raw.githubusercontent.com/danny-avila/LibreChat/main/client/public/assets/logo.svg); sd-webui, tg-webui, morphic, perplexica, fooocus, voicestudio, yoinks have no official brand asset → intentionally render the emoji tile (a personal photo would misrepresent the brand)
+- Provider pitfall found by browser test: google.com/s2/favicons redirect and the t1.gstatic shard hang in the preview browser — switched the three favicon overrides to icons.duckduckgo.com/ip3/{domain}.ico, verified 200 + correct marks (240px llama, 180px frigate bird, 48px comfy C) loading in-browser
+- ui.tsx AppIcon + views/tool.tsx ToolIcon: render the resolved brand logo as <img> (lazy, no-referrer, object-cover, overflow-hidden rounding) with onError fallback to glyph/emoji; tracks the failed URL (not a boolean) so a changed logo retries without setState-in-effect (lint rule)
+- prisma/seed.ts: logoUrl stays override-only (t.logoUrl ?? null) — brand logos derive at render so map corrections propagate instantly; re-ran seed (64 updated)
+- Removed QA leftovers pixelforge + nightowl (fictional repos tester/pixelforge, nightscout/nightowl — tester resolves to a random person, so no honest logo exists); PromptDeck kept as the pending-review demo and shows the honest 🧩 tile
+- Submit form: Fetch now auto-prefills the Logo field with the repo owner's official avatar (only when empty; switching repos retracts the auto value but keeps user-typed URLs); hint copy updated
+- moderate route: documented that approval needs no logo backfill — render-time derivation guarantees the brand mark; logoUrl remains a pure override field
+- Verified in agent-browser: 22/22 logos load on Discover (only openwork-dev 404s → 🧰 tile), LibreChat detail shows the real gradient mark (512px), admin Catalog classifies 52 org avatars + 1 repo logo + 3 brand favicons + 7 intentional tiles + 1 redirect fallback, review dialog shows 🧩 for the fake pending repo, submit prefill + live preview work, light theme renders brands correctly, browser console clean, lint clean, tsc clean on touched files
+
+Stage Summary:
+- Every tool in AIStore now presents the project's ORIGINAL brand mark: 52 verified GitHub org avatars, 3 official site icons, 1 repo-shipped logo; 8 tools intentionally fall back to their emoji/glyph tile because no authentic brand logo exists (personal-photo owners or fictional repos)
+- Logo resolution is self-healing and centralized in brandLogoUrl(): override → per-tool icon → verified owner avatar → live redirect → emoji tile; DB logoUrl is reserved for explicit submitter/admin overrides
+- Submissions get the brand logo by default (auto-prefill from the repo) and reviewers see the same authentic marks everywhere (lists, detail, admin tables, review dialog)
+- Key files: src/lib/aitools/data.ts (BRAND_LOGOS/BRAND_ICON_URLS/NO_BRAND_ICON/brandLogoUrl/githubAvatar), src/components/aitools/ui.tsx (AppIcon), src/components/aitools/views/tool.tsx (ToolIcon), src/components/aitools/views/submit.tsx (auto-prefill), prisma/seed.ts

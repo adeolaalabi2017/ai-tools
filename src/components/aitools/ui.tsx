@@ -27,6 +27,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  brandLogoUrl,
   fmtK,
   PLATFORM_LABEL,
   catLabel,
@@ -59,20 +60,40 @@ export function CategoryIcon({ id, className }: { id: string; className?: string
 
 /* ----------------------------- app icon ------------------------------- */
 
+/**
+ * Tile icon for a tool. Renders the tool's ORIGINAL brand logo (the repo
+ * owner's own GitHub avatar, or an explicit logoUrl override) and degrades
+ * to the emoji/glyph tile only when no logo can be loaded.
+ */
 export function AppIcon({ tool, size = "md" }: { tool: Tool; size?: "sm" | "md" | "lg" }) {
   const dims =
     size === "sm" ? "h-6 w-6 rounded-[7px]" : size === "lg" ? "h-10 w-10 rounded-xl" : "h-9 w-9 rounded-lg";
   const glyphSize = size === "sm" ? "text-[12px]" : size === "lg" ? "text-[20px]" : "text-[16px]";
+  const logo = brandLogoUrl(tool);
+  /* remember which URL failed (not a boolean) so a changed logo retries without an effect */
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showLogo = Boolean(logo) && failedSrc !== logo;
   return (
     <span
       aria-hidden
       className={cn(
         dims,
-        "grid shrink-0 place-items-center border border-line bg-elev select-none",
+        "grid shrink-0 place-items-center overflow-hidden border border-line bg-elev select-none",
         size === "sm" && "rounded-md",
       )}
     >
-      {tool.glyph ? (
+      {showLogo && logo ? (
+        <img
+          src={logo}
+          alt=""
+          draggable={false}
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-cover"
+          onError={() => setFailedSrc(logo)}
+        />
+      ) : tool.glyph ? (
         <span className={cn("font-mono font-bold leading-none tracking-tight text-ink", size === "sm" ? "text-[9px]" : "text-[11px]")}>
           {tool.glyph}
         </span>

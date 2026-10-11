@@ -5,7 +5,7 @@
 /*  Renders entirely from useTools() data; no dedicated API call.       */
 /* ------------------------------------------------------------------ */
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import {
   Bookmark,
   Check,
@@ -17,7 +17,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PLATFORM_LABEL, catById, fmtK, type Tool, type ViewId } from "@/lib/aitools/data";
+import { PLATFORM_LABEL, brandLogoUrl, catById, fmtK, type Tool, type ViewId } from "@/lib/aitools/data";
 import { useTools } from "../tools-provider";
 import { AppIcon, FeaturedBadge } from "../ui";
 import { FeaturedArt } from "../mockups";
@@ -140,14 +140,26 @@ function fullDate(iso: string): string {
 /* --------------------------- small components --------------------------- */
 
 function ToolIcon({ tool }: { tool: Tool }) {
+  /* original brand logo (repo owner avatar or explicit override), emoji fallback.
+     Track the failed URL rather than a boolean so a changed logo retries without an effect. */
+  const logo = brandLogoUrl(tool);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showLogo = Boolean(logo) && failedSrc !== logo;
   return (
     <span
       aria-hidden
       className="grid h-16 w-16 shrink-0 select-none place-items-center overflow-hidden rounded-xl border border-line bg-elev"
     >
-      {tool.logoUrl ? (
-         
-        <img src={tool.logoUrl} alt="" className="h-full w-full object-cover" />
+      {showLogo && logo ? (
+        <img
+          src={logo}
+          alt=""
+          draggable={false}
+          decoding="async"
+          referrerPolicy="no-referrer"
+          className="h-full w-full object-cover"
+          onError={() => setFailedSrc(logo)}
+        />
       ) : tool.glyph ? (
         <span className="font-mono text-lg font-bold leading-none tracking-tight text-ink">
           {tool.glyph}

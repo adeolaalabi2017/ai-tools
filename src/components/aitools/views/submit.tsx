@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { Check, ChevronDown, Github } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { CATEGORIES } from "@/lib/aitools/data";
+import { CATEGORIES, githubAvatar } from "@/lib/aitools/data";
 import { ApiError, submitTool } from "@/lib/aitools/api";
 import { Dropdown } from "../ui";
 
@@ -56,6 +56,8 @@ export function Submit({
   const [repoError, setRepoError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Logo URL we auto-filled from the repo owner's avatar (so repo edits can retract it). */
+  const autoLogo = useRef<string | null>(null);
 
   const repoValid = useMemo(() => GITHUB_RE.test(repo.trim()), [repo]);
 
@@ -74,6 +76,11 @@ export function Submit({
       if (m) {
         setName((n) => n || prettyName(m[2]));
         setAlt((a) => a || "ChatGPT");
+        /* prefill the logo with the project's original brand mark (the repo
+           owner's own GitHub avatar) unless the submitter typed one already */
+        const avatar = githubAvatar(`${m[1]}/${m[2]}`);
+        autoLogo.current = avatar;
+        setLogoUrl((l) => (l.trim() ? l : avatar));
         setFetchState("done");
       } else {
         setFetchState("error");
@@ -157,6 +164,7 @@ export function Submit({
                 setLogoUrl("");
                 setScreenshotUrl("");
                 setHeaderUrl("");
+                autoLogo.current = null;
               }}
               className="rounded-lg border border-line bg-elev px-4 py-2.5 text-sm text-ink2 transition-colors hover:border-line2 hover:text-ink"
             >
@@ -226,6 +234,9 @@ export function Submit({
                     setRepo(e.target.value);
                     setFetchState("idle");
                     setRepoError(null);
+                    /* switching repos retracts the auto-filled logo but keeps a user-typed URL */
+                    setLogoUrl((l) => (l.trim() && l.trim() === autoLogo.current ? "" : l));
+                    autoLogo.current = null;
                   }}
                   placeholder="github.com/owner/repo"
                   className="h-full min-w-0 flex-1 bg-transparent font-mono text-[13px] text-ink outline-none placeholder:text-faint"
@@ -253,8 +264,8 @@ export function Submit({
               {fetchState === "error"
                 ? "Enter a valid github.com/owner/repo URL."
                 : fetchState === "done"
-                  ? "Fetched from GitHub — name, description, and website filled in."
-                  : "Name, description, and website fill in from GitHub."}
+                  ? "Fetched from GitHub — name, description, website, and logo filled in."
+                  : "Name, description, website, and logo fill in from GitHub."}
             </p>
             {repoError && <p className="mt-2 text-xs font-medium text-amber-500">{repoError}</p>}
           </div>
@@ -363,8 +374,8 @@ export function Submit({
             <p className="font-mono text-xs text-faint">03</p>
             <h2 className="mt-1 text-[15px] font-semibold text-ink">Branding</h2>
             <p className="mt-2 text-[13px] leading-relaxed text-faint">
-              Optional: a logo, a screenshot, and a header image. Paste direct image URLs — previews render as you
-              type.
+              The logo is prefilled with the project's official GitHub avatar — paste a different URL to override.
+              Screenshot and header are optional: paste direct image URLs and previews render as you type.
             </p>
           </div>
           <div className="grid gap-5">

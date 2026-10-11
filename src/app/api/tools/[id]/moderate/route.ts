@@ -43,6 +43,11 @@ export async function POST(
       // Idempotent: pending → community; community/curated stay untouched.
       // An explicit `featured` flag ("Feature on AIStore" toggle) is applied
       // whenever provided — including on idempotent re-approvals.
+      //
+      // Logo note: the UI derives every tool's original brand logo from its
+      // repo (see brandLogoUrl in lib/aitools/data), so an approved tool
+      // always shows the project's real mark even when logoUrl is null —
+      // logoUrl is reserved for explicit submitter/admin overrides.
       if (tool.status === "pending" || parsed.data.featured !== undefined) {
         const updated = await db.tool.update({
           where: { id },

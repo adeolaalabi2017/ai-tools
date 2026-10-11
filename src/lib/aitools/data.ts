@@ -160,6 +160,147 @@ export const TOOLS: Tool[] = [
 
 /* ------------------------------ helpers ------------------------------ */
 
+/**
+ * Verified original brand logos for the curated catalog.
+ *
+ * Every curated entry points at a real GitHub repository, and the repo
+ * owner's avatar IS the brand's own logo (uploaded by the project itself).
+ * These URLs were resolved once from `https://github.com/{owner}.png` at
+ * curation time and pinned to the canonical `avatars.githubusercontent.com`
+ * CDN form so the browser gets a cached, redirect-free image.
+ *
+ * Keyed by repo owner. Owners missing here (e.g. `openwork-dev`) fall back
+ * to the live redirect URL below; if that 404s the UI degrades to the
+ * emoji/glyph tile.
+ */
+const BRAND_LOGOS: Record<string, string> = {
+  "1Panel-dev": "https://avatars.githubusercontent.com/u/109613420?s=128&v=4",
+  activepieces: "https://avatars.githubusercontent.com/u/99494700?s=128&v=4",
+  "Aider-AI": "https://avatars.githubusercontent.com/u/172139148?s=128&v=4",
+  "All-Hands-AI": "https://avatars.githubusercontent.com/u/169105795?s=128&v=4",
+  "AppFlowy-IO": "https://avatars.githubusercontent.com/u/86002201?s=128&v=4",
+  AUTOMATIC1111: "https://avatars.githubusercontent.com/u/20920490?s=128&v=4",
+  BerriAI: "https://avatars.githubusercontent.com/u/121462774?s=128&v=4",
+  blakeblackshear: "https://avatars.githubusercontent.com/u/569905?s=128&v=4",
+  "chroma-core": "https://avatars.githubusercontent.com/u/105881770?s=128&v=4",
+  cline: "https://avatars.githubusercontent.com/u/184127137?s=128&v=4",
+  comfyanonymous: "https://avatars.githubusercontent.com/u/121283862?s=128&v=4",
+  continuedev: "https://avatars.githubusercontent.com/u/127876214?s=128&v=4",
+  "coqui-ai": "https://avatars.githubusercontent.com/u/75583352?s=128&v=4",
+  crewAIInc: "https://avatars.githubusercontent.com/u/170677839?s=128&v=4",
+  "danny-avila": "https://avatars.githubusercontent.com/u/110412045?s=128&v=4",
+  debpalash: "https://avatars.githubusercontent.com/u/4178343?s=128&v=4",
+  excalidraw: "https://avatars.githubusercontent.com/u/59452120?s=128&v=4",
+  firecrawl: "https://avatars.githubusercontent.com/u/135057108?s=128&v=4",
+  FlowiseAI: "https://avatars.githubusercontent.com/u/128289781?s=128&v=4",
+  Helicone: "https://avatars.githubusercontent.com/u/114524975?s=128&v=4",
+  "heygen-com": "https://avatars.githubusercontent.com/u/65394575?s=128&v=4",
+  huginn: "https://avatars.githubusercontent.com/u/23225142?s=128&v=4",
+  infiniflow: "https://avatars.githubusercontent.com/u/69962740?s=128&v=4",
+  "invoke-ai": "https://avatars.githubusercontent.com/u/113954515?s=128&v=4",
+  ItzCrazyKns: "https://avatars.githubusercontent.com/u/95534749?s=128&v=4",
+  "khoj-ai": "https://avatars.githubusercontent.com/u/134046886?s=128&v=4",
+  "langflow-ai": "https://avatars.githubusercontent.com/u/85702467?s=128&v=4",
+  langfuse: "https://avatars.githubusercontent.com/u/134601687?s=128&v=4",
+  langgenius: "https://avatars.githubusercontent.com/u/127165244?s=128&v=4",
+  LibreTranslate: "https://avatars.githubusercontent.com/u/77352747?s=128&v=4",
+  lllyasviel: "https://avatars.githubusercontent.com/u/19834515?s=128&v=4",
+  "lm-sys": "https://avatars.githubusercontent.com/u/126381704?s=128&v=4",
+  lobehub: "https://avatars.githubusercontent.com/u/131470832?s=128&v=4",
+  menloresearch: "https://avatars.githubusercontent.com/u/176367161?s=128&v=4",
+  "Mintplex-Labs": "https://avatars.githubusercontent.com/u/134426827?s=128&v=4",
+  miurla: "https://avatars.githubusercontent.com/u/3412179?s=128&v=4",
+  mudler: "https://avatars.githubusercontent.com/u/2420543?s=128&v=4",
+  "myshell-ai": "https://avatars.githubusercontent.com/u/127754094?s=128&v=4",
+  "n8n-io": "https://avatars.githubusercontent.com/u/45487711?s=128&v=4",
+  "nomic-ai": "https://avatars.githubusercontent.com/u/102670180?s=128&v=4",
+  ollama: "https://avatars.githubusercontent.com/u/151674099?s=128&v=4",
+  "onyx-dot-app": "https://avatars.githubusercontent.com/u/131946000?s=128&v=4",
+  oobabooga: "https://avatars.githubusercontent.com/u/112222186?s=128&v=4",
+  "open-notebook": "https://avatars.githubusercontent.com/u/82913746?s=128&v=4",
+  "open-webui": "https://avatars.githubusercontent.com/u/158137808?s=128&v=4",
+  openai: "https://avatars.githubusercontent.com/u/14957082?s=128&v=4",
+  openclaw: "https://avatars.githubusercontent.com/u/252820863?s=128&v=4",
+  "OpenCut-app": "https://avatars.githubusercontent.com/u/217499887?s=128&v=4",
+  openscreen: "https://avatars.githubusercontent.com/u/882763?s=128&v=4",
+  openwhispr: "https://avatars.githubusercontent.com/u/254803777?s=128&v=4",
+  pablostanley: "https://avatars.githubusercontent.com/u/7430988?s=128&v=4",
+  paperclipai: "https://avatars.githubusercontent.com/u/264498616?s=128&v=4",
+  pingdotgg: "https://avatars.githubusercontent.com/u/89191727?s=128&v=4",
+  qdrant: "https://avatars.githubusercontent.com/u/73504361?s=128&v=4",
+  reorproject: "https://avatars.githubusercontent.com/u/152097434?s=128&v=4",
+  "Significant-Gravitas": "https://avatars.githubusercontent.com/u/130738209?s=128&v=4",
+  SillyTavern: "https://avatars.githubusercontent.com/u/134869877?s=128&v=4",
+  sst: "https://avatars.githubusercontent.com/u/229003257?s=128&v=4",
+  "suno-ai": "https://avatars.githubusercontent.com/u/99442120?s=128&v=4",
+  "vllm-project": "https://avatars.githubusercontent.com/u/136984999?s=128&v=4",
+  weaviate: "https://avatars.githubusercontent.com/u/37794290?s=128&v=4",
+  "windmill-labs": "https://avatars.githubusercontent.com/u/98025271?s=128&v=4",
+  "zylon-ai": "https://avatars.githubusercontent.com/u/143802295?s=128&v=4",
+};
+
+/** Owner avatar URL derived from an "owner/repo" string (live GitHub redirect). */
+export const githubAvatar = (repo: string, size = 128): string =>
+  `https://github.com/${(repo.split("/")[0] ?? "").trim()}.png?size=${size}`;
+
+/**
+ * Per-tool brand icons for the few tools whose repo owner's avatar is NOT
+ * the project's brand (personal accounts, umbrella orgs). Each URL was
+ * visually verified to be the project's own mark:
+ *  - comfy.org / localai.io / frigate.video official icons via DuckDuckGo's
+ *    favicon CDN (reachable everywhere; Google's /s2/favicons redirect and
+ *    some gstatic shards stall certain browsers)
+ *  - LibreChat's logo is the asset the project itself ships in its repo
+ */
+const BRAND_ICON_URLS: Record<string, string> = {
+  comfyui: "https://icons.duckduckgo.com/ip3/comfy.org.ico",
+  localai: "https://icons.duckduckgo.com/ip3/localai.io.ico",
+  frigate: "https://icons.duckduckgo.com/ip3/frigate.video.ico",
+  librechat:
+    "https://raw.githubusercontent.com/danny-avila/LibreChat/main/client/public/assets/logo.svg",
+};
+
+/**
+ * Tools whose repo owner's avatar is a personal photo (not the project's
+ * brand) and which publish no official domain/brand asset to pull instead.
+ * These intentionally render the emoji/glyph tile — a personal photo would
+ * misrepresent the brand.
+ */
+const NO_BRAND_ICON = new Set([
+  "sd-webui",
+  "tg-webui",
+  "morphic",
+  "perplexica",
+  "fooocus",
+  "voicestudio",
+  "yoinks",
+]);
+
+/**
+ * The logo to render for a tool, in priority order:
+ *   1. an explicit `logoUrl` (submitter/admin override — must win)
+ *   2. the tool's verified brand icon (BRAND_ICON_URLS), when the owner
+ *      avatar would be wrong
+ *   3. the verified brand logo for the repo owner (BRAND_LOGOS)
+ *   4. the live GitHub owner-avatar redirect (still the real brand asset)
+ * Returns null when no authentic brand mark exists (or the owner avatar is
+ * known to misrepresent the brand); the UI then falls back to the
+ * emoji/glyph tile.
+ */
+export function brandLogoUrl(t: {
+  id?: string;
+  logoUrl?: string | null;
+  repo?: string | null;
+}): string | null {
+  const custom = t.logoUrl?.trim();
+  if (custom) return custom;
+  if (t.id && NO_BRAND_ICON.has(t.id)) return null;
+  if (t.id && BRAND_ICON_URLS[t.id]) return BRAND_ICON_URLS[t.id];
+  const owner = t.repo?.split("/")[0]?.trim();
+  if (!owner) return null;
+  return BRAND_LOGOS[owner] ?? githubAvatar(owner);
+}
+
 export const fmtK = (n: number): string => {
   if (n >= 1000) {
     const k = n / 1000;

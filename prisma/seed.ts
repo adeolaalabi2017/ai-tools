@@ -26,6 +26,10 @@ async function main() {
       glyph: t.glyph ?? null,
       status: "curated",
       featured: Boolean(t.featured),
+      /* logoUrl is an explicit override only (submitter/admin). The original
+         brand logo is derived at render time — see brandLogoUrl() in
+         src/lib/aitools/data.ts — so seeding stays mapping-fresh. */
+      logoUrl: t.logoUrl ?? null,
     };
     const existing = await prisma.tool.findUnique({ where: { id: t.id } });
     if (existing) {

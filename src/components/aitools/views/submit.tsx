@@ -47,6 +47,9 @@ export function Submit({
   const [docs, setDocs] = useState("");
   const [audience, setAudience] = useState("");
   const [selfHosting, setSelfHosting] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("");
+  const [screenshotUrl, setScreenshotUrl] = useState("");
+  const [headerUrl, setHeaderUrl] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [createdName, setCreatedName] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -98,6 +101,9 @@ export function Submit({
         cat: category,
         platforms,
         homepage: website.trim() || undefined,
+        logoUrl: logoUrl.trim() || undefined,
+        screenshotUrl: screenshotUrl.trim() || undefined,
+        headerUrl: headerUrl.trim() || undefined,
       });
       setCreatedName(created.name || name.trim());
       /* let every list know a new tool exists */
@@ -148,6 +154,9 @@ export function Submit({
                 setCreatedName("");
                 setRepoError(null);
                 setFormError(null);
+                setLogoUrl("");
+                setScreenshotUrl("");
+                setHeaderUrl("");
               }}
               className="rounded-lg border border-line bg-elev px-4 py-2.5 text-sm text-ink2 transition-colors hover:border-line2 hover:text-ink"
             >
@@ -348,10 +357,48 @@ export function Submit({
           </div>
         </section>
 
-        {/* 03 — more details */}
+        {/* 03 — branding */}
         <section className="grid grid-cols-1 gap-4 border-t border-line py-10 md:grid-cols-[200px_1fr] md:gap-10">
           <div>
             <p className="font-mono text-xs text-faint">03</p>
+            <h2 className="mt-1 text-[15px] font-semibold text-ink">Branding</h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-faint">
+              Optional: a logo, a screenshot, and a header image. Paste direct image URLs — previews render as you
+              type.
+            </p>
+          </div>
+          <div className="grid gap-5">
+            <ImageField
+              id="logo"
+              label="Logo"
+              placeholder="https://…/logo.png (square works best)"
+              value={logoUrl}
+              onChange={setLogoUrl}
+              previewClass="h-14 w-14 rounded-xl"
+            />
+            <ImageField
+              id="screenshot"
+              label="Screenshot"
+              placeholder="https://…/screenshot.png (app window or UI)"
+              value={screenshotUrl}
+              onChange={setScreenshotUrl}
+              previewClass="h-16 w-28 rounded-lg"
+            />
+            <ImageField
+              id="header"
+              label="Header image"
+              placeholder="https://…/banner.png (wide banner, ~3:1)"
+              value={headerUrl}
+              onChange={setHeaderUrl}
+              previewClass="h-14 w-36 rounded-lg"
+            />
+          </div>
+        </section>
+
+        {/* 04 — more details */}
+        <section className="grid grid-cols-1 gap-4 border-t border-line py-10 md:grid-cols-[200px_1fr] md:gap-10">
+          <div>
+            <p className="font-mono text-xs text-faint">04</p>
             <h2 className="mt-1 text-[15px] font-semibold text-ink">More details</h2>
             <p className="mt-2 text-[13px] leading-relaxed text-faint">
               Optional: Website, docs, audience, and self-hosting.
@@ -482,6 +529,77 @@ function Step({ n, label }: { n: number; label: string }) {
       </span>
       {label}
     </span>
+  );
+}
+
+const HTTP_URL_RE = /^https?:\/\/\S+$/i;
+
+/** URL input with a live thumbnail preview (plain <img> — arbitrary remote hosts). */
+function ImageField({
+  id,
+  label,
+  placeholder,
+  value,
+  onChange,
+  previewClass,
+}: {
+  id: string;
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  previewClass: string;
+}) {
+  const trimmed = value.trim();
+  const looksValid = HTTP_URL_RE.test(trimmed);
+  const [failed, setFailed] = useState(false);
+  const showPreview = looksValid && !failed;
+
+  return (
+    <div className="flex items-start gap-4">
+      <span
+        aria-hidden
+        className={cn(
+          "grid shrink-0 place-items-center overflow-hidden border border-dashed border-line2 bg-card",
+          previewClass,
+        )}
+      >
+        {showPreview ? (
+           
+          <img
+            src={trimmed}
+            alt=""
+            className="h-full w-full object-cover"
+            onError={() => setFailed(true)}
+            onLoad={() => setFailed(false)}
+          />
+        ) : (
+          <span className="text-[10px] text-faint">{failed ? "can't load" : "preview"}</span>
+        )}
+      </span>
+      <div className="min-w-0 flex-1">
+        <label htmlFor={id} className="block text-[13px] font-medium text-ink2">
+          {label} <span className="font-normal text-faint">(URL)</span>
+        </label>
+        <input
+          id={id}
+          type="url"
+          value={value}
+          onChange={(e) => {
+            setFailed(false);
+            onChange(e.target.value);
+          }}
+          placeholder={placeholder}
+          className={cn(
+            "mt-2 h-11 w-full rounded-lg border bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint",
+            trimmed && !looksValid ? "border-amber-500/60" : "border-line focus:border-line2",
+          )}
+        />
+        {trimmed && !looksValid && (
+          <p className="mt-1.5 text-xs text-amber-500">Enter a full http(s) image URL.</p>
+        )}
+      </div>
+    </div>
   );
 }
 

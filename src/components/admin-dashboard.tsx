@@ -1,23 +1,32 @@
 "use client";
 
-import { useMemo, useState } from "react";
+/* ------------------------------------------------------------------ */
+/*  AIStore Admin — module-based console.                              */
+/*  Overview  = traffic analytics + summaries of every other module,   */
+/*  Review / Catalog / Wanted / Blog / Ads = standalone wide modules.  */
+/* ------------------------------------------------------------------ */
+
+import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangleIcon } from "lucide-react";
 import {
+  fetchAllAds,
+  fetchAnalytics,
+  fetchPosts,
   fetchTools,
+  fetchWants,
   featureTool,
   moderateTool,
   type ApiTool,
   type ToolsPage,
 } from "@/lib/aitools/api";
-import { CATEGORIES, catLabel, fmtK, type Tool, type ViewId } from "@/lib/aitools/data";
+import { catLabel, fmtK, type Tool, type ViewId } from "@/lib/aitools/data";
 import { useTools } from "@/components/aitools/tools-provider";
-import { AppShell } from "@/components/app-shell";
+import { AppShell, scrollToSection } from "@/components/app-shell";
+import type { AdminModule } from "@/components/app-shared";
 import { DashboardStats, statIcons, type AdminStat } from "@/components/stats";
 import { CatalogGrowthChart, type CatalogGrowthRow } from "@/components/conversation-volume-chart";
 import { CategoryShareChart, type CategoryShareDatum } from "@/components/channel-breakdown-chart";
-import { MonthlyAdditionsChart, type MonthlyAdditionsRow } from "@/components/csat-responses-chart";
-import { CategoryStarsChart, type CategoryStarsRow } from "@/components/first-reply-time-chart";
 import { ReviewQueueTable } from "@/components/recent-conversations";
 import { FeaturedPicks } from "@/components/team-on-duty";
 import { ModerationActivity } from "@/components/support-activity";
@@ -25,6 +34,11 @@ import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { BlogManager } from "@/components/blog-manager";
 import { WantsManager } from "@/components/wants-manager";
 import { CatalogManager } from "@/components/catalog-manager";
+import { AdsManager } from "@/components/ads-manager";
+import { TrafficCard } from "@/components/traffic-chart";
+import { TopPagesCard } from "@/components/top-pages";
+import { ModuleSummaries } from "@/components/module-summary";
+import { SubmissionDialog } from "@/components/submission-view";
 
 type Action = "approve" | "reject";
 type PendingAction = { id: string; action: Action } | null;
@@ -60,6 +74,9 @@ function toApiTool(t: Tool): ApiTool {
     status: t.status ?? "curated",
     submitter: t.submitter ?? null,
     featured: Boolean(t.featured),
+    logoUrl: t.logoUrl ?? null,
+    screenshotUrl: t.screenshotUrl ?? null,
+    headerUrl: t.headerUrl ?? null,
   };
 }
 
@@ -84,13 +101,26 @@ function median(nums: number[]): number {
 
 export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
   const queryClient = useQueryClient();
-  const { tools, loading } = useTools();
+  const { tools } = useTools();
+
+  /* ------------------------------- module nav ------------------------------- */
+  const [module, setModule] = useState<AdminModule>("overview");
+  const openModule = useCallback((next: AdminModule, section?: string) => {
+    setModule(next);
+    if (section) {
+      /* wait for the module to render, then scroll inside the admin container */
+      window.setTimeout(() => scrollToSection(section), 60);
+    } else {
+      document.getElementById("admin-scroll")?.scrollTo({ top: 0 });
+    }
+  }, []);
 
   /* ---------------------------- moderation state ---------------------------- */
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [featureBusyId, setFeatureBusyId] = useState<string | null>(null);
   const [featureDrafts, setFeatureDrafts] = useState<Record<string, boolean>>({});
   const [actionError, setActionError] = useState<string | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
   const pendingQuery = useQuery({
     queryKey: ["tools", "pending"],
@@ -98,6 +128,36 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
     refetchInterval: 20_000,
   });
   const pendingRows: ApiTool[] = pendingQuery.data?.tools ?? [];
+  const viewing = useMemo(
+    () => pendingRows.find((t) => t.id === viewingId) ?? null,
+    [pendingRows, viewingId],
+  );
+
+  /* ----------------------- summaries for the overview ----------------------- */
+  const wantsQuery = useQuery({
+    queryKey: ["wants", "admin"],
+    queryFn: () => fetchWants("votes"),
+    staleTime: 15_000,
+  });
+  const postsQuery = useQuery({
+    queryKey: ["posts", "admin"],
+    queryFn: () => fetchPosts({ all: true }),
+    staleTime: 15_000,
+  });
+  const adsQuery = useQuery({
+    queryKey: ["ads", "all"],
+    queryFn: fetchAllAds,
+    staleTime: 15_000,
+  });
+
+  /* 14-day traffic for the KPI stats — same cache as the Traffic card */
+  const analytics14 = useQuery({
+    queryKey: ["analytics", 14],
+    queryFn: () => fetchAnalytics(14),
+    staleTime: 30_000,
+  });
+  const trafficViews = analytics14.data?.totalViews ?? 0;
+  const trafficVisitors = analytics14.data?.uniqueVisitors ?? 0;
 
   /* ------------------------------ derived data ------------------------------ */
   const approved = useMemo(() => {
@@ -127,6 +187,18 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
         tone: pendingCount > 0 ? "warn" : "default",
       },
       {
+        label: "Visitors (14d)",
+        value: fmtK(trafficVisitors),
+        footnote: "unique sessions",
+        icon: statIcons.visitors,
+      },
+      {
+        label: "Pageviews (14d)",
+        value: fmtK(trafficViews),
+        footnote: "public pages",
+        icon: statIcons.views,
+      },
+      {
         label: "Community votes",
         value: fmtK(votesTotal),
         footnote: "across the catalog",
@@ -139,7 +211,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
         icon: statIcons.featured,
       },
     ];
-  }, [approved, pendingQuery.data, pendingRows.length]);
+  }, [approved, pendingQuery.data, pendingRows.length, trafficVisitors, trafficViews]);
 
   const growthData: CatalogGrowthRow[] = useMemo(() => {
     const perMonth = new Map<string, number>();
@@ -192,49 +264,6 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
     return rows;
   }, [approved]);
 
-  const additionsData: MonthlyAdditionsRow[] = useMemo(() => {
-    const now = new Date();
-    const buckets: MonthlyAdditionsRow[] = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-      buckets.push({ month: MONTHS[d.getUTCMonth()], community: 0, curated: 0 });
-    }
-    const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 11, 1));
-    /* numeric month distance from the window start — never compare date strings */
-    const keyOf = (iso: string) => {
-      const d = new Date(iso);
-      if (Number.isNaN(d.getTime())) return null;
-      const months =
-        (d.getUTCFullYear() - first.getUTCFullYear()) * 12 +
-        (d.getUTCMonth() - first.getUTCMonth());
-      return months >= 0 && months <= 11 ? months : null;
-    };
-    for (const t of approved) {
-      const idx = keyOf(t.createdAt);
-      if (idx === null) continue;
-      if (t.status === "community") buckets[idx].community += 1;
-      else buckets[idx].curated += 1;
-    }
-    return buckets;
-  }, [approved]);
-
-  const starsData: CategoryStarsRow[] = useMemo(() => {
-    const byCat = new Map<string, number[]>();
-    for (const t of approved) {
-      const arr = byCat.get(t.cat) ?? [];
-      arr.push(t.stars);
-      byCat.set(t.cat, arr);
-    }
-    return [...byCat.entries()]
-      .map(([cat, arr]) => ({
-        cat,
-        label: catLabel(cat),
-        median: median(arr),
-      }))
-      .sort((a, b) => b.median - a.median)
-      .slice(0, 8);
-  }, [approved]);
-
   /* ------------------------------- moderation ------------------------------- */
   const approve = async (id: string, featured: boolean) => {
     if (pendingAction) return;
@@ -254,6 +283,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
       );
       /* approved tools must show up in every public list */
       void queryClient.invalidateQueries({ queryKey: ["tools", "all"] });
+      if (viewingId === id) setViewingId(null);
     } catch {
       setActionError("Couldn't approve the submission. Please try again.");
     } finally {
@@ -276,6 +306,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
             }
           : old,
       );
+      if (viewingId === id) setViewingId(null);
     } catch {
       setActionError("Couldn't remove the submission. Please try again.");
     } finally {
@@ -318,60 +349,101 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
     [approved],
   );
 
-  const empty = !loading && tools.length === 0;
+  const empty = tools.length === 0;
+
+  const reviewModule = (
+    <>
+      <ReviewQueueTable
+        busy={pendingAction}
+        featureBusyId={featureBusyId}
+        featureDrafts={featureDrafts}
+        onApprove={(id, featured) => void approve(id, featured)}
+        onRemove={(id) => void remove(id)}
+        onToggleFeatureDraft={(id) =>
+          setFeatureDrafts((d) => ({ ...d, [id]: !(d[id] ?? false) }))
+        }
+        onView={(t) => setViewingId(t.id)}
+        tools={pendingRows}
+      />
+      <SubmissionDialog
+        busy={pendingAction}
+        featureDraft={viewing ? (featureDrafts[viewing.id] ?? false) : false}
+        onApprove={(id, featured) => void approve(id, featured)}
+        onClose={() => setViewingId(null)}
+        onRemove={(id) => void remove(id)}
+        onToggleFeatureDraft={() =>
+          viewing &&
+          setFeatureDrafts((d) => ({ ...d, [viewing.id]: !(d[viewing.id] ?? false) }))
+        }
+        tool={viewing}
+      />
+    </>
+  );
 
   return (
-    <AppShell onNavigate={onNavigate} pendingCount={pendingRows.length}>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" id="admin-top">
-        {empty ? <DashboardSkeleton /> : <DashboardStats stats={stats} />}
-        {empty ? null : (
-          <>
-            <CatalogGrowthChart data={growthData} />
-            <CategoryShareChart data={shareData} />
-            <MonthlyAdditionsChart data={additionsData} />
-            <CategoryStarsChart data={starsData} />
-            <ReviewQueueTable
-              busy={pendingAction}
-              className="scroll-mt-20"
-              featureBusyId={featureBusyId}
-              featureDrafts={featureDrafts}
-              id="admin-queue"
-              onApprove={(id, featured) => void approve(id, featured)}
-              onRemove={(id) => void remove(id)}
-              onToggleFeatureDraft={(id) =>
-                setFeatureDrafts((d) => ({ ...d, [id]: !(d[id] ?? false) }))
-              }
-              onViewCatalog={() => onNavigate("browse")}
-              tools={pendingRows}
-            />
-            <FeaturedPicks
-              className="scroll-mt-20"
-              id="admin-featured"
-              featureBusyId={featureBusyId}
-              onToggleFeatured={(id, f) => void toggleFeatured(id, f)}
-              tools={approved}
-            />
-            <ModerationActivity
-              className="scroll-mt-20"
-              id="admin-activity"
-              onViewCatalog={() => onNavigate("browse")}
-              tools={recentAdditions}
-            />
-            <WantsManager className="scroll-mt-20" id="admin-wants" />
-            <CatalogManager className="scroll-mt-20" id="admin-catalog" />
-            <BlogManager className="scroll-mt-20" id="admin-blog" />
-          </>
-        )}
-      </div>
+    <AppShell module={module} onModule={openModule} onNavigate={onNavigate} pendingCount={pendingRows.length}>
       {actionError && (
         <p
-          className="mt-2 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
           role="alert"
         >
           <AlertTriangleIcon className="size-4 shrink-0" />
           {actionError}
         </p>
       )}
+
+      {module === "overview" && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" id="admin-top">
+            {empty ? <DashboardSkeleton /> : <DashboardStats stats={stats} />}
+          </div>
+
+          {/* analytics: users / pages */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <TrafficCard className="lg:col-span-2" />
+            <TopPagesCard days={14} />
+          </div>
+
+          {/* summary of the other modules */}
+          <ModuleSummaries
+            data={{
+              pending: pendingQuery.data ? pendingQuery.data.total : pendingRows.length,
+              wantsOpen: (wantsQuery.data?.wants ?? []).filter((w) => w.status === "open").length,
+              postsPublished: (postsQuery.data?.posts ?? []).filter((p) => p.status === "published")
+                .length,
+              adsActive: (adsQuery.data?.ads ?? []).filter((a) => a.active).length,
+              adImpressions: (adsQuery.data?.ads ?? []).reduce((acc, a) => acc + a.impressions, 0),
+              adClicks: (adsQuery.data?.ads ?? []).reduce((acc, a) => acc + a.clicks, 0),
+            }}
+            onOpenModule={(m) => openModule(m)}
+          />
+
+          {/* catalog trends + daily moderation surface */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <CatalogGrowthChart className="xl:col-span-2" data={growthData} />
+            <CategoryShareChart data={shareData} />
+            <FeaturedPicks
+              className="scroll-mt-20"
+              featureBusyId={featureBusyId}
+              id="admin-featured"
+              onToggleFeatured={(id, f) => void toggleFeatured(id, f)}
+              tools={approved}
+            />
+          </div>
+          <ModerationActivity
+            className="scroll-mt-20"
+            id="admin-activity"
+            onViewCatalog={() => openModule("catalog")}
+            tools={recentAdditions}
+          />
+        </div>
+      )}
+
+      {module === "review" && reviewModule}
+      {module === "catalog" && <CatalogManager />}
+      {module === "wants" && <WantsManager />}
+      {module === "blog" && <BlogManager />}
+      {module === "ads" && <AdsManager />}
     </AppShell>
   );
 }

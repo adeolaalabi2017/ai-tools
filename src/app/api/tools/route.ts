@@ -152,6 +152,9 @@ export async function POST(request: NextRequest) {
         emoji: "🧩",
         glyph: null,
         submitter: data.submitter || null,
+        logoUrl: data.logoUrl ?? null,
+        screenshotUrl: data.screenshotUrl ?? null,
+        headerUrl: data.headerUrl ?? null,
       },
       include: { _count: { select: { toolVotes: true } } },
     });

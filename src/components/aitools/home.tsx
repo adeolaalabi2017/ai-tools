@@ -17,6 +17,7 @@ import { Wanted } from "./views/wanted";
 import { Blog } from "./views/blog";
 import { PostView } from "./views/post";
 import type { ApiPost } from "@/lib/aitools/api";
+import { trackPageView } from "@/lib/aitools/api";
 import { AdminDashboard } from "@/components/admin-dashboard";
 
 export default function AIToolStore() {
@@ -25,6 +26,24 @@ export default function AIToolStore() {
       <AIToolStoreApp />
     </ToolsProvider>
   );
+}
+
+/** Anonymous, cookie-less session token for page analytics (client-only). */
+function ensureSessionToken(): string | null {
+  try {
+    const KEY = "aistore-sid";
+    let sid = window.localStorage.getItem(KEY);
+    if (!sid) {
+      sid =
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `sid-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+      window.localStorage.setItem(KEY, sid);
+    }
+    return sid;
+  } catch {
+    return null;
+  }
 }
 
 function AIToolStoreApp() {
@@ -85,6 +104,13 @@ function AIToolStoreApp() {
     setView("post");
     window.scrollTo({ top: 0 });
   }, []);
+
+  /* anonymous page-view beacon on every public view change (admin excluded) */
+  useEffect(() => {
+    if (view === "admin") return;
+    const sid = ensureSessionToken();
+    if (sid) trackPageView(view, sid);
+  }, [view]);
 
   /* the admin console takes over the whole viewport — no site chrome */
   if (view === "admin") {

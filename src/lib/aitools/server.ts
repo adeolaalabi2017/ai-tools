@@ -26,6 +26,9 @@ export interface ApiTool {
   status: string;
   submitter: string | null;
   featured: boolean;
+  logoUrl: string | null;
+  screenshotUrl: string | null;
+  headerUrl: string | null;
 }
 
 /** Structural type of a Prisma `Tool` row as read from SQLite. */
@@ -47,6 +50,9 @@ export interface DbTool {
   status: string;
   submitter: string | null;
   featured: boolean;
+  logoUrl: string | null;
+  screenshotUrl: string | null;
+  headerUrl: string | null;
 }
 
 /**
@@ -73,6 +79,9 @@ export function serializeTool(t: DbTool, votes: number): ApiTool {
     status: t.status,
     submitter: t.submitter,
     featured: t.featured,
+    logoUrl: t.logoUrl,
+    screenshotUrl: t.screenshotUrl,
+    headerUrl: t.headerUrl,
   };
 }
 
@@ -85,6 +94,25 @@ export function slugify(name: string): string {
 }
 
 const CATEGORY_IDS: readonly string[] = CATEGORIES.map((c) => c.id);
+
+/**
+ * Optional http(s) URL field.
+ * - omitted / undefined → "don't touch" on PATCH
+ * - "" or null → null (clear the image)
+ * - non-empty → must look like an http(s) URL
+ */
+const optionalUrl = z
+  .union([
+    z.literal(""),
+    z.null(),
+    z
+      .string()
+      .trim()
+      .max(500, "URL must be 500 characters or fewer")
+      .refine((v) => /^https?:\/\/\S+$/i.test(v), "Must be a valid http(s) URL"),
+  ])
+  .optional()
+  .transform((v) => (v === undefined ? undefined : v === null || v === "" ? null : v));
 
 export const isCategoryId = (id: string): boolean => CATEGORY_IDS.includes(id);
 
@@ -109,6 +137,9 @@ export const submissionSchema = z.object({
   platforms: z.array(z.enum(PLATFORM_VALUES)).min(1).default(["web"]),
   submitter: z.string().trim().max(120).optional(),
   homepage: z.string().trim().optional(), // accepted but not persisted (no column)
+  logoUrl: optionalUrl, // branding: small square logo
+  screenshotUrl: optionalUrl, // branding: product screenshot
+  headerUrl: optionalUrl, // branding: wide header/banner image
 });
 
 /** Upvote toggle body. */
@@ -218,6 +249,9 @@ export const toolUpdateSchema = z.object({
   selfHosted: z.boolean().optional(),
   sourceAvailable: z.boolean().optional(),
   emoji: z.string().trim().min(1, "Emoji required").max(8, "Emoji must be 8 characters or fewer").optional(),
+  logoUrl: optionalUrl,
+  screenshotUrl: optionalUrl,
+  headerUrl: optionalUrl,
 });
 
 /* ------------------------------- posts -------------------------------- */
@@ -284,3 +318,110 @@ export const postCreateSchema = z.object({
 
 /** Body for PATCH /api/posts/[id] — partial update. Slug is immutable. */
 export const postUpdateSchema = postCreateSchema.partial();
+
+/* -------------------------------- ads --------------------------------- */
+
+export const AD_PLACEMENTS = ["browse", "blog", "wanted"] as const;
+
+/** Wire format returned by every /api/ads endpoint. */
+export interface ApiAd {
+  id: string;
+  name: string;
+  headline: string;
+  body: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  imageUrl: string | null;
+  emoji: string;
+  placement: (typeof AD_PLACEMENTS)[number] | string;
+  active: boolean;
+  weight: number;
+  impressions: number;
+  clicks: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Structural type of a Prisma `Ad` row as read from SQLite. */
+export interface DbAd {
+  id: string;
+  name: string;
+  headline: string;
+  body: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  imageUrl: string | null;
+  emoji: string;
+  placement: string;
+  active: boolean;
+  weight: number;
+  impressions: number;
+  clicks: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export function serializeAd(a: DbAd): ApiAd {
+  return {
+    id: a.id,
+    name: a.name,
+    headline: a.headline,
+    body: a.body,
+    ctaLabel: a.ctaLabel,
+    ctaUrl: a.ctaUrl,
+    imageUrl: a.imageUrl,
+    emoji: a.emoji,
+    placement: a.placement,
+    active: a.active,
+    weight: a.weight,
+    impressions: a.impressions,
+    clicks: a.clicks,
+    createdAt: a.createdAt.toISOString(),
+    updatedAt: a.updatedAt.toISOString(),
+  };
+}
+
+const adPlacement = z.enum(AD_PLACEMENTS);
+
+/** Body for POST /api/ads (admin create). */
+export const adCreateSchema = z.object({
+  name: z.string().trim().min(2, "Label must be 2–60 characters").max(60, "Label must be 2–60 characters"),
+  headline: z.string().trim().min(2, "Headline must be 2–60 characters").max(60, "Headline must be 2–60 characters"),
+  body: z.string().trim().min(2, "Body must be 2–120 characters").max(120, "Body must be 2–120 characters"),
+  ctaLabel: z.string().trim().min(1, "CTA label required").max(24, "CTA label must be 24 characters or fewer").default("Learn more"),
+  ctaUrl: z
+    .string()
+    .trim()
+    .max(500, "URL must be 500 characters or fewer")
+    .refine((v) => /^https?:\/\/\S+$/i.test(v), "Must be a valid http(s) URL"),
+  imageUrl: optionalUrl,
+  emoji: z.string().trim().max(8, "Emoji must be 8 characters or fewer").optional(),
+  placement: adPlacement.default("browse"),
+  active: z.boolean().optional(),
+  weight: z.number().int().min(1, "Weight must be 1–10").max(10, "Weight must be 1–10").optional(),
+});
+
+/** Body for PATCH /api/ads/[id] — partial update. */
+export const adUpdateSchema = adCreateSchema.partial();
+
+/** Body for POST /api/ads/[id]/track — fire-and-forget stats. */
+export const adTrackSchema = z.object({
+  type: z.enum(["impression", "click"]),
+});
+
+/* ----------------------------- analytics ------------------------------ */
+
+/** Body for POST /api/analytics — one page view beacon. */
+export const pageViewSchema = z.object({
+  path: z.string().trim().min(1).max(40),
+  session: z.string().trim().min(8).max(64),
+});
+
+/** Aggregate shape returned by GET /api/analytics. */
+export interface AnalyticsSummary {
+  /** Pageviews for each of the last `days` days, oldest first (ISO date keys). */
+  series: { date: string; views: number; visitors: number }[];
+  totalViews: number;
+  uniqueVisitors: number;
+  topPages: { path: string; views: number }[];
+}

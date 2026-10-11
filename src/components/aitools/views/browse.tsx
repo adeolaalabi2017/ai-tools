@@ -8,6 +8,7 @@ import { fetchTools } from "@/lib/aitools/api";
 import { useTools, apiToolToTool } from "../tools-provider";
 import { useDebounced } from "../use-debounced";
 import { CountRow, FilterBar, ToolCard } from "../browse-parts";
+import { AdSlot } from "../ad-slot";
 import { EmptyState } from "./trending";
 
 const PAGE_SIZE = 24;
@@ -133,7 +134,12 @@ export function Browse({
         <div className="mt-10 font-mono text-sm text-faint">Loading apps…</div>
       ) : shown.length > 0 ? (
         <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
-          {shown.map((t) => (
+          {shown.slice(0, 6).map((t) => (
+            <ToolCard key={t.id} tool={t} showWeekly onClick={() => onOpenTool(t)} />
+          ))}
+          {/* one small sponsored card between the first rows — never breaks the grid rhythm */}
+          <AdSlot placement="browse" className="self-start" />
+          {shown.slice(6).map((t) => (
             <ToolCard key={t.id} tool={t} showWeekly onClick={() => onOpenTool(t)} />
           ))}
         </div>

@@ -123,8 +123,8 @@ export function WantsManager({ className, ...props }: React.ComponentProps<typeo
             <p className="text-sm text-muted-foreground">No requests on the board.</p>
           </div>
         ) : (
-          <div className="thin-scroll max-h-105 overflow-auto">
-            <Table className="min-w-[640px]">
+          <div className="thin-scroll max-h-[62vh] overflow-auto">
+            <Table className="min-w-[820px]">
               <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="pl-6">Request</TableHead>

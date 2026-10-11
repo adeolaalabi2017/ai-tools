@@ -64,6 +64,9 @@ export async function PATCH(
           ? { sourceAvailable: data.sourceAvailable }
           : {}),
         ...(data.emoji !== undefined ? { emoji: data.emoji } : {}),
+        ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
+        ...(data.screenshotUrl !== undefined ? { screenshotUrl: data.screenshotUrl } : {}),
+        ...(data.headerUrl !== undefined ? { headerUrl: data.headerUrl } : {}),
       },
       include: { _count: { select: { toolVotes: true } } },
     });

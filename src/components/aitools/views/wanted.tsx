@@ -23,6 +23,7 @@ import type { Tool, ViewId } from "@/lib/aitools/data";
 import { createWant, fetchWants, voteWant, type ApiWant, type WantsPage } from "@/lib/aitools/api";
 import { ensureVoterToken, useTools } from "../tools-provider";
 import { Dropdown } from "../ui";
+import { AdSlot } from "../ad-slot";
 
 /* --------------------------- my want votes --------------------------- */
 /*  localStorage-backed external store — same pattern as myVotes in the */
@@ -575,6 +576,9 @@ export function Wanted({
             </>
           )}
         </div>
+
+        {/* small sponsored card — sits below the board, out of the reading flow */}
+        <AdSlot placement="wanted" className="mt-10 max-w-xl" />
 
         <p className="mt-4 text-xs leading-relaxed text-faint">
           Editors review the board and connect fulfilled requests with projects from the collection.

@@ -143,9 +143,12 @@ function ToolIcon({ tool }: { tool: Tool }) {
   return (
     <span
       aria-hidden
-      className="grid h-16 w-16 shrink-0 select-none place-items-center rounded-xl border border-line bg-elev"
+      className="grid h-16 w-16 shrink-0 select-none place-items-center overflow-hidden rounded-xl border border-line bg-elev"
     >
-      {tool.glyph ? (
+      {tool.logoUrl ? (
+         
+        <img src={tool.logoUrl} alt="" className="h-full w-full object-cover" />
+      ) : tool.glyph ? (
         <span className="font-mono text-lg font-bold leading-none tracking-tight text-ink">
           {tool.glyph}
         </span>
@@ -278,6 +281,18 @@ export function ToolDetail({
           {tool.name}
         </span>
       </nav>
+
+      {/* --------------------------- header image --------------------------- */}
+      {tool.headerUrl && (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-line bg-card">
+          { }
+          <img
+            src={tool.headerUrl}
+            alt={`${tool.name} header image`}
+            className="h-40 w-full object-cover sm:h-56"
+          />
+        </div>
+      )}
 
       {/* -------------------------------- header -------------------------------- */}
       <header className="mt-7 flex flex-wrap items-start gap-5">
@@ -412,13 +427,22 @@ export function ToolDetail({
             <span className="w-[46px] shrink-0" aria-hidden />
           </div>
           <div className="dotgrid relative grid min-h-[clamp(300px,55vh,520px)] place-items-center overflow-hidden p-8">
-            <div className="origin-center scale-[1.1] sm:scale-[1.35] lg:scale-[1.6]">
-              <FeaturedArt kind={art} />
-            </div>
+            {tool.screenshotUrl ? (
+               
+              <img
+                src={tool.screenshotUrl}
+                alt={`${tool.name} screenshot`}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="origin-center scale-[1.1] sm:scale-[1.35] lg:scale-[1.6]">
+                <FeaturedArt kind={art} />
+              </div>
+            )}
           </div>
           <div className="border-t border-line px-4 py-2.5">
             <p className="truncate text-center font-mono text-[10px] uppercase tracking-wide text-faint">
-              {tool.name} · {cat.label} workspace
+              {tool.screenshotUrl ? `${tool.name} · submitted screenshot` : `${tool.name} · ${cat.label} workspace`}
             </p>
           </div>
         </div>

@@ -23,6 +23,9 @@ export interface ApiTool {
   status: "curated" | "community" | string;
   submitter: string | null;
   featured: boolean;
+  logoUrl: string | null;
+  screenshotUrl: string | null;
+  headerUrl: string | null;
 }
 
 export interface ToolsPage {
@@ -55,6 +58,9 @@ export interface ToolSubmitPayload {
   platforms: string[];
   submitter?: string;
   homepage?: string;
+  logoUrl?: string;
+  screenshotUrl?: string;
+  headerUrl?: string;
 }
 
 export interface VoteResult {
@@ -206,6 +212,9 @@ export interface ToolUpdatePayload {
   selfHosted?: boolean;
   sourceAvailable?: boolean;
   emoji?: string;
+  logoUrl?: string | null;
+  screenshotUrl?: string | null;
+  headerUrl?: string | null;
 }
 
 export async function updateTool(id: string, payload: ToolUpdatePayload): Promise<{ tool: ApiTool }> {
@@ -361,4 +370,107 @@ export async function voteWant(id: string, voter: string): Promise<VoteResult> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ voter }),
   });
+}
+
+/* -------------------------------- ads --------------------------------- */
+
+/** Wire format of a house/sponsored ad (mirrors the server ApiAd). */
+export interface ApiAd {
+  id: string;
+  name: string;
+  headline: string;
+  body: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  imageUrl: string | null;
+  emoji: string;
+  placement: "browse" | "blog" | "wanted" | string;
+  active: boolean;
+  weight: number;
+  impressions: number;
+  clicks: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type AdPlacement = "browse" | "blog" | "wanted";
+
+export interface AdPayload {
+  name: string;
+  headline: string;
+  body: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  imageUrl?: string | null;
+  emoji?: string;
+  placement: AdPlacement;
+  active?: boolean;
+  weight?: number;
+}
+
+/** Public slot: active ads for one placement (weighted rotation server-side). */
+export async function fetchAds(placement: AdPlacement, limit = 1): Promise<{ ads: ApiAd[] }> {
+  return request<{ ads: ApiAd[] }>(`/api/ads?placement=${placement}&limit=${limit}`);
+}
+
+/** Admin list: every ad with its stats. */
+export async function fetchAllAds(): Promise<{ ads: ApiAd[]; total: number }> {
+  return request<{ ads: ApiAd[]; total: number }>(`/api/ads?all=1`);
+}
+
+export async function createAd(payload: AdPayload): Promise<ApiAd> {
+  const body = await request<{ ad: ApiAd }>(`/api/ads`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return body.ad;
+}
+
+export async function updateAd(id: string, payload: Partial<AdPayload>): Promise<ApiAd> {
+  const body = await request<{ ad: ApiAd }>(`/api/ads/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return body.ad;
+}
+
+export async function deleteAd(id: string): Promise<{ deleted: boolean }> {
+  return request<{ deleted: boolean }>(`/api/ads/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
+/** Fire-and-forget stats beacon — never throws. */
+export function trackAd(id: string, type: "impression" | "click"): void {
+  void fetch(`/api/ads/${encodeURIComponent(id)}/track`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type }),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
+/* ----------------------------- analytics ------------------------------ */
+
+export interface AnalyticsSummary {
+  series: { date: string; views: number; visitors: number }[];
+  totalViews: number;
+  uniqueVisitors: number;
+  topPages: { path: string; views: number }[];
+}
+
+export async function fetchAnalytics(days = 14): Promise<AnalyticsSummary> {
+  return request<AnalyticsSummary>(`/api/analytics?days=${days}`);
+}
+
+/** Record one page view — fire-and-forget, never throws. */
+export function trackPageView(path: string, session: string): void {
+  void fetch(`/api/analytics`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path, session }),
+    keepalive: true,
+  }).catch(() => undefined);
 }

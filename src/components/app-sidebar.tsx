@@ -14,8 +14,8 @@ import {
 } from "@/components/ui/sidebar";
 import { NavGroup } from "@/components/nav-group";
 import {
+  AdminModuleOpen,
   AdminNavigate,
-  AdminSection,
   footerNavLinks,
   navGroups,
 } from "@/components/app-shared";
@@ -23,19 +23,21 @@ import { LatestChange } from "@/components/latest-change";
 
 export function AppSidebar({
   pendingCount = 0,
+  module: activeModule,
   onNavigate,
-  onSection,
+  onModule,
 }: {
   pendingCount?: number;
+  module?: string;
   onNavigate: AdminNavigate;
-  onSection: AdminSection;
+  onModule: AdminModuleOpen;
 }) {
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader className="h-14 justify-center">
         <SidebarMenuButton
           tooltip="AIStore Admin"
-          onClick={() => onSection("admin-top")}
+          onClick={() => onModule("overview")}
         >
           <span className="grid size-6 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground">
             <SparklesIcon className="size-3.5" />
@@ -51,7 +53,7 @@ export function AppSidebar({
           <SidebarMenuItem className="flex items-center gap-2">
             <SidebarMenuButton
               className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
-              onClick={() => onSection("admin-queue")}
+              onClick={() => onModule("review")}
               tooltip="Review queue"
             >
               <ListChecksIcon />
@@ -79,7 +81,7 @@ export function AppSidebar({
             key={`sidebar-group-${index}`}
             {...group}
             onNavigate={onNavigate}
-            onSection={onSection}
+            onModule={onModule}
           />
         ))}
       </SidebarContent>

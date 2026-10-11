@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { AppBreadcrumbs } from "@/components/app-breadcrumbs";
 import { CustomSidebarTrigger } from "@/components/custom-sidebar-trigger";
 import { NavUser } from "@/components/nav-user";
-import type { AdminNavigate } from "@/components/app-shared";
+import { MODULE_META, type AdminModule, type AdminNavigate } from "@/components/app-shared";
 
 function toggleTheme() {
   const next =
@@ -18,7 +18,13 @@ function toggleTheme() {
   } catch {}
 }
 
-export function AppHeader({ onNavigate }: { onNavigate: AdminNavigate }) {
+export function AppHeader({
+  onNavigate,
+  module = "overview",
+}: {
+  onNavigate: AdminNavigate;
+  module?: AdminModule;
+}) {
   return (
     <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-surface/85 px-4 backdrop-blur md:px-6">
       <div className="flex items-center gap-3">
@@ -29,7 +35,7 @@ export function AppHeader({ onNavigate }: { onNavigate: AdminNavigate }) {
         />
         <AppBreadcrumbs
           page={{
-            title: "Admin · Overview",
+            title: `Admin · ${MODULE_META[module].title}`,
             icon: <ShieldCheckIcon className="text-primary" />,
           }}
         />

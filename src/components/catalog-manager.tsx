@@ -11,7 +11,7 @@ import { Loader2Icon, PenLineIcon, SearchIcon, ServerIcon, StarIcon } from "luci
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { featureTool, updateTool, type ApiTool } from "@/lib/aitools/api";
-import { CATEGORIES, PLATFORM_LABEL, catLabel, fmtK, type Platform } from "@/lib/aitools/data";
+import { CATEGORIES, PLATFORM_LABEL, catLabel, fmtK, type Platform, type Tool } from "@/lib/aitools/data";
 import { useTools } from "@/components/aitools/tools-provider";
 import { AppIcon } from "@/components/aitools/ui";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +57,7 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
 
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [editing, setEditing] = useState<ApiTool | null>(null);
+  const [editing, setEditing] = useState<Tool | null>(null);
   const [rowBusyId, setRowBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,6 +69,9 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
   const [selfHosted, setSelfHosted] = useState(false);
   const [sourceAvailable, setSourceAvailable] = useState(false);
   const [emoji, setEmoji] = useState("🧩");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [screenshotUrl, setScreenshotUrl] = useState("");
+  const [headerUrl, setHeaderUrl] = useState("");
   const [busy, setBusy] = useState(false);
 
   const filtered = useMemo(() => {
@@ -85,7 +88,7 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
       .sort((a, b) => b.stars - a.stars);
   }, [tools, q, statusFilter]);
 
-  const openEdit = (t: ApiTool) => {
+  const openEdit = (t: Tool) => {
     setError(null);
     setDesc(t.desc);
     setReplaces(t.replaces);
@@ -94,6 +97,9 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
     setSelfHosted(Boolean(t.selfHosted));
     setSourceAvailable(Boolean(t.sourceAvailable));
     setEmoji(t.emoji);
+    setLogoUrl(t.logoUrl ?? "");
+    setScreenshotUrl(t.screenshotUrl ?? "");
+    setHeaderUrl(t.headerUrl ?? "");
     setEditing(t);
   };
 
@@ -119,6 +125,9 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
         selfHosted,
         sourceAvailable,
         emoji,
+        logoUrl: logoUrl.trim(),
+        screenshotUrl: screenshotUrl.trim(),
+        headerUrl: headerUrl.trim(),
       });
       patchCache(editing.id, {
         desc: tool.desc,
@@ -128,6 +137,9 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
         selfHosted: tool.selfHosted,
         sourceAvailable: tool.sourceAvailable,
         emoji: tool.emoji,
+        logoUrl: tool.logoUrl,
+        screenshotUrl: tool.screenshotUrl,
+        headerUrl: tool.headerUrl,
       });
       setEditing(null);
     } catch (err) {
@@ -147,7 +159,7 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
     }
   };
 
-  const toggleFeatured = async (t: ApiTool) => {
+  const toggleFeatured = async (t: Tool) => {
     if (rowBusyId) return;
     setRowBusyId(t.id);
     const next = !t.featured;
@@ -161,7 +173,7 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
     }
   };
 
-  const setCategory = async (t: ApiTool, nextCat: string) => {
+  const setCategory = async (t: Tool, nextCat: string) => {
     if (rowBusyId || nextCat === t.cat) return;
     setRowBusyId(t.id);
     const prev = t.cat;
@@ -210,8 +222,8 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="thin-scroll max-h-105 overflow-auto">
-          <Table className="min-w-[640px]">
+        <div className="thin-scroll max-h-[62vh] overflow-auto">
+          <Table className="min-w-[820px]">
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="pl-6">Tool</TableHead>
@@ -358,6 +370,36 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
                   onChange={(e) => setEmoji(e.target.value)}
                   value={emoji}
                 />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Branding images</Label>
+              <div className="grid gap-2">
+                <Input
+                  aria-label="Logo URL"
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="Logo URL — https://…/logo.png"
+                  type="url"
+                  value={logoUrl}
+                />
+                <Input
+                  aria-label="Screenshot URL"
+                  onChange={(e) => setScreenshotUrl(e.target.value)}
+                  placeholder="Screenshot URL — https://…/screenshot.png"
+                  type="url"
+                  value={screenshotUrl}
+                />
+                <Input
+                  aria-label="Header image URL"
+                  onChange={(e) => setHeaderUrl(e.target.value)}
+                  placeholder="Header image URL — https://…/banner.png"
+                  type="url"
+                  value={headerUrl}
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Shown on the tool page: logo next to the title, screenshot in the frame, header as the banner.
+                  Clear a field to remove that image.
+                </p>
               </div>
             </div>
             <div className="space-y-1.5">

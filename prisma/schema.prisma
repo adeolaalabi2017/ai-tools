@@ -25,6 +25,9 @@ model Tool {
   status          String   @default("curated") // "curated" | "community" | "pending"
   submitter       String? // display name / email of community submitter
   featured        Boolean  @default(false) // editorial pick — toggled by moderators
+  logoUrl         String? // small square branding image (submitted or curated)
+  screenshotUrl   String? // product screenshot shown on the detail page
+  headerUrl       String? // wide banner shown at the top of the detail page
   toolVotes       Vote[]
 
   @@index([cat])
@@ -88,4 +91,38 @@ model Post {
   updatedAt   DateTime  @updatedAt
 
   @@index([status])
+}
+
+// House ads / sponsored slots — small, non-intrusive cards shown on the
+// public site. Stats (impressions/clicks) feed the admin Ads module.
+model Ad {
+  id          String   @id @default(cuid())
+  name        String // internal label, e.g. "Acme Cloud — spring"
+  headline    String // card title, ≤60 chars
+  body        String // one-line copy, ≤120 chars
+  ctaLabel    String @default("Learn more")
+  ctaUrl      String // destination (opens in a new tab)
+  imageUrl    String? // optional small square image; emoji fallback
+  emoji       String   @default("✨")
+  placement   String   @default("browse") // "browse" | "blog" | "wanted"
+  active      Boolean  @default(false)
+  weight      Int      @default(1) // higher = picked more often in rotation
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([placement, active])
+}
+
+// Anonymous, cookie-less page analytics for the admin Overview.
+// One row per SPA view change; `session` is a random localStorage token.
+model PageView {
+  id        String   @id @default(cuid())
+  path      String // SPA view id, e.g. "discover" / "tool" / "blog"
+  session   String // anonymous visitor token (not a fingerprint)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([path])
 }

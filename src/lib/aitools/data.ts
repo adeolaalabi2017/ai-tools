@@ -71,6 +71,10 @@ export interface Tool {
   votes?: number;
   status?: "curated" | "community" | string;
   submitter?: string | null;
+  /* branding images (community submissions + admin edits) */
+  logoUrl?: string | null;
+  screenshotUrl?: string | null;
+  headerUrl?: string | null;
 }
 
 const T = (

@@ -8,6 +8,7 @@ import {
   LayoutGridIcon,
   LayoutListIcon,
   ListChecksIcon,
+  MegaphoneIcon,
   NewspaperIcon,
   PlusIcon,
   StarIcon,
@@ -17,6 +18,18 @@ import {
 import type { ReactNode } from "react";
 import type { ViewId } from "@/lib/aitools/data";
 
+/** Standalone admin modules — each gets its own full-width page. */
+export type AdminModule = "overview" | "review" | "catalog" | "wants" | "blog" | "ads";
+
+export const MODULE_META: Record<AdminModule, { title: string }> = {
+  overview: { title: "Overview" },
+  review: { title: "Review queue" },
+  catalog: { title: "All tools" },
+  wants: { title: "Wanted board" },
+  blog: { title: "Blog" },
+  ads: { title: "Ads" },
+};
+
 export type SidebarNavItem = {
   title: string;
   path?: string;
@@ -24,7 +37,9 @@ export type SidebarNavItem = {
   isActive?: boolean;
   /** SPA view to open (renders a button instead of an anchor). */
   view?: ViewId;
-  /** In-page section anchor on the admin dashboard (e.g. "admin-queue"). */
+  /** Standalone admin module this item opens. */
+  module?: AdminModule;
+  /** Optional in-page section to scroll to after switching module. */
   section?: string;
   subItems?: SidebarNavItem[];
 };
@@ -36,15 +51,15 @@ export type SidebarNavGroup = {
 
 /** Fired when a nav item wants to open an SPA view. */
 export type AdminNavigate = (v: ViewId) => void;
-/** Fired when a nav item wants to scroll to a dashboard section. */
-export type AdminSection = (id: string) => void;
+/** Fired when a nav item wants to open an admin module (optionally at a section). */
+export type AdminModuleOpen = (module: AdminModule, section?: string) => void;
 
 export const navGroups: SidebarNavGroup[] = [
   {
     items: [
       {
         title: "Overview",
-        section: "admin-top",
+        module: "overview",
         icon: <LayoutGridIcon />,
         isActive: true,
       },
@@ -55,21 +70,23 @@ export const navGroups: SidebarNavGroup[] = [
     items: [
       {
         title: "Review queue",
-        section: "admin-queue",
+        module: "review",
         icon: <ListChecksIcon />,
       },
       {
         title: "Wanted requests",
-        section: "admin-wants",
+        module: "wants",
         icon: <TargetIcon />,
       },
       {
         title: "Featured picks",
+        module: "overview",
         section: "admin-featured",
         icon: <StarIcon />,
       },
       {
         title: "Activity",
+        module: "overview",
         section: "admin-activity",
         icon: <ActivityIcon />,
       },
@@ -80,7 +97,7 @@ export const navGroups: SidebarNavGroup[] = [
     items: [
       {
         title: "All tools",
-        section: "admin-catalog",
+        module: "catalog",
         icon: <LayoutListIcon />,
       },
     ],
@@ -90,8 +107,13 @@ export const navGroups: SidebarNavGroup[] = [
     items: [
       {
         title: "Blog",
-        section: "admin-blog",
+        module: "blog",
         icon: <NewspaperIcon />,
+      },
+      {
+        title: "Ads",
+        module: "ads",
+        icon: <MegaphoneIcon />,
       },
     ],
   },
@@ -117,13 +139,4 @@ export const footerNavLinks: SidebarNavItem[] = [
     view: "submit",
     icon: <PlusIcon />,
   },
-];
-
-export const navLinks: SidebarNavItem[] = [
-  ...navGroups.flatMap((group) =>
-    group.items.flatMap((item) =>
-      item.subItems?.length ? [item, ...item.subItems] : [item],
-    ),
-  ),
-  ...footerNavLinks,
 ];

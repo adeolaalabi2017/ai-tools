@@ -225,8 +225,8 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
             </p>
           </div>
         ) : (
-          <div className="thin-scroll max-h-105 overflow-auto">
-            <Table className="min-w-[560px]">
+          <div className="thin-scroll max-h-[62vh] overflow-auto">
+            <Table className="min-w-[760px]">
               <TableHeader className="sticky top-0 z-10 bg-card">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="pl-6">Title</TableHead>

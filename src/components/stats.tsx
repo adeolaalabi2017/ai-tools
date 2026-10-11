@@ -1,6 +1,14 @@
 "use client";
 
-import { FolderGit2Icon, ListChecksIcon, StarIcon, VoteIcon } from "lucide-react";
+import {
+  EyeIcon,
+  FolderGit2Icon,
+  ListChecksIcon,
+  MousePointerClickIcon,
+  StarIcon,
+  UsersIcon,
+  VoteIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Card,
@@ -52,4 +60,7 @@ export const statIcons = {
   pending: <ListChecksIcon />,
   votes: <VoteIcon />,
   featured: <StarIcon />,
+  visitors: <UsersIcon />,
+  views: <MousePointerClickIcon />,
+  eye: <EyeIcon />,
 };

@@ -13,6 +13,7 @@ import type { ViewId } from "@/lib/aitools/data";
 import { fetchPosts, type ApiPost } from "@/lib/aitools/api";
 import { fmtDateShort } from "@/components/admin-format";
 import { readMinutes } from "../md";
+import { AdSlot } from "../ad-slot";
 
 export function Blog({
   onNavigate,
@@ -114,6 +115,9 @@ export function Blog({
           )}
         </>
       )}
+
+      {/* small sponsored card — kept compact so it never interrupts reading */}
+      {!loading && posts.length > 0 && <AdSlot placement="blog" className="mt-10 max-w-xl" />}
 
       {/* footer CTA */}
       <div className="mt-16 flex flex-col items-start justify-between gap-4 rounded-xl border border-line bg-card p-6 sm:flex-row sm:items-center">

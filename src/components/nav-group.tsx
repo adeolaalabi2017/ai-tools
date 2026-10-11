@@ -17,8 +17,8 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import type {
+  AdminModuleOpen,
   AdminNavigate,
-  AdminSection,
   SidebarNavGroup,
 } from "@/components/app-shared";
 
@@ -26,10 +26,10 @@ export function NavGroup({
   label,
   items,
   onNavigate,
-  onSection,
+  onModule,
 }: SidebarNavGroup & {
   onNavigate?: AdminNavigate;
-  onSection?: AdminSection;
+  onModule?: AdminModuleOpen;
 }) {
   return (
     <SidebarGroup>
@@ -81,10 +81,10 @@ export function NavGroup({
                   {item.icon}
                   <span>{item.title}</span>
                 </SidebarMenuButton>
-              ) : item.section && onSection ? (
+              ) : item.module && onModule ? (
                 <SidebarMenuButton
                   isActive={item.isActive}
-                  onClick={() => onSection(item.section as string)}
+                  onClick={() => onModule(item.module as never, item.section)}
                   tooltip={item.title}
                 >
                   {item.icon}

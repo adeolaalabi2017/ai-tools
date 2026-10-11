@@ -58,9 +58,10 @@ export async function PATCH(
       },
     });
     const withVotes = await wantWithVotes(id);
-    return NextResponse.json({
-      want: serializeWant(withVotes ?? updated, (withVotes ?? updated).baseVotes + (withVotes ?? updated)._count.wantVotes),
-    });
+    const votes = withVotes
+      ? withVotes.baseVotes + withVotes._count.wantVotes
+      : updated.baseVotes;
+    return NextResponse.json({ want: serializeWant(withVotes ?? updated, votes) });
   } catch (error) {
     console.error("[PATCH /api/wants/:id]", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

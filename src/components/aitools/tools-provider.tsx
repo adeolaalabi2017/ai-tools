@@ -112,6 +112,9 @@ export function staticToolToApi(t: Tool): ApiTool {
     status: t.status ?? "curated",
     submitter: t.submitter ?? null,
     featured: Boolean(t.featured),
+    logoUrl: t.logoUrl ?? null,
+    screenshotUrl: t.screenshotUrl ?? null,
+    headerUrl: t.headerUrl ?? null,
   };
 }
 
@@ -146,6 +149,9 @@ export function apiToolToTool(api: ApiTool, base?: Tool): Tool {
     featured: api.featured,
     rating: base?.rating,
     featuredArt: base?.featuredArt,
+    logoUrl: api.logoUrl,
+    screenshotUrl: api.screenshotUrl,
+    headerUrl: api.headerUrl,
   };
 }
 

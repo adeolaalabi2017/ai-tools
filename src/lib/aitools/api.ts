@@ -42,6 +42,8 @@ export interface ToolsQueryParams {
   selfHosted?: boolean;
   sourceAvailable?: boolean;
   trending?: boolean;
+  /** Editors' picks only — the moderator-toggled `featured` badge. */
+  featured?: boolean;
   /** Omit for public lists (curated + community). "pending" = moderation queue only. */
   status?: string;
   sort?: "newest" | "stars" | "momentum" | "votes" | "name" | string;
@@ -98,6 +100,7 @@ function buildQuery(params: ToolsQueryParams): string {
   if (params.selfHosted) sp.set("selfHosted", "1");
   if (params.sourceAvailable) sp.set("sourceAvailable", "1");
   if (params.trending) sp.set("trending", "1");
+  if (params.featured) sp.set("featured", "1");
   if (params.status) sp.set("status", params.status);
   if (params.sort) sp.set("sort", params.sort);
   if (typeof params.page === "number") sp.set("page", String(params.page));

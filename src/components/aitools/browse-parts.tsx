@@ -15,7 +15,7 @@ import { AppIcon, Dropdown, FeaturedBadge, PlatformRow, WeeklyGain, CategoryIcon
 
 /* ------------------------------ filter bar ----------------------------- */
 
-export type SortId = "momentum" | "newest" | "stars";
+export type SortId = "momentum" | "newest" | "stars" | "votes" | "name";
 
 export function FilterBar({
   q,
@@ -28,6 +28,8 @@ export function FilterBar({
   onSelfHosted,
   sourceAvailable,
   onSourceAvailable,
+  featured,
+  onFeatured,
   sort,
   onSort,
   sortOptions,
@@ -43,6 +45,8 @@ export function FilterBar({
   onSelfHosted: (v: boolean) => void;
   sourceAvailable: boolean;
   onSourceAvailable: (v: boolean) => void;
+  featured: boolean;
+  onFeatured: (v: boolean) => void;
   sort: string;
   onSort: (v: string) => void;
   sortOptions: { value: string; label: string }[];
@@ -84,6 +88,7 @@ export function FilterBar({
             options={[
               { value: "selfhosted", label: "Self-hosted only", checked: selfHosted },
               { value: "sourceavail", label: "Source-available only", checked: sourceAvailable },
+              { value: "featured", label: "Editors' picks only", checked: featured },
             ]}
           />
           <Dropdown value={sort} onChange={onSort} options={sortOptions} />

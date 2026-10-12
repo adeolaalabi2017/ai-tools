@@ -27,6 +27,7 @@ export function CategoryView({
   const [platform, setPlatform] = useState("all");
   const [selfHosted, setSelfHosted] = useState(false);
   const [sourceAvailable, setSourceAvailable] = useState(false);
+  const [featured, setFeatured] = useState(false);
   const [sort, setSort] = useState("momentum");
   const [visible, setVisible] = useState(PAGE_SIZE);
 
@@ -36,7 +37,7 @@ export function CategoryView({
   const cat = catById(catId);
 
   /* resetting the page window whenever filters change (adjust-during-render) */
-  const filterKey = `${q}|${platform}|${selfHosted}|${sourceAvailable}|${sort}`;
+  const filterKey = `${q}|${platform}|${selfHosted}|${sourceAvailable}|${featured}|${sort}`;
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (prevFilterKey !== filterKey) {
     setPrevFilterKey(filterKey);
@@ -46,6 +47,7 @@ export function CategoryView({
   const onFilters = (v: string) => {
     if (v === "selfhosted") setSelfHosted((s) => !s);
     if (v === "sourceavail") setSourceAvailable((s) => !s);
+    if (v === "featured") setFeatured((f) => !f);
   };
 
   /* server-driven listing; previous data stays on screen while switching filters */
@@ -54,7 +56,7 @@ export function CategoryView({
       "tools",
       "category",
       catId,
-      { q: debouncedQ, platform, selfHosted, sourceAvailable, sort },
+      { q: debouncedQ, platform, selfHosted, sourceAvailable, featured, sort },
     ],
     queryFn: () =>
       fetchTools({
@@ -63,6 +65,7 @@ export function CategoryView({
         platform: platform !== "all" ? platform : undefined,
         selfHosted: selfHosted || undefined,
         sourceAvailable: sourceAvailable || undefined,
+        featured: featured || undefined,
         sort,
         limit: 999,
       }),
@@ -80,16 +83,18 @@ export function CategoryView({
       if (platform !== "all") list = list.filter((t) => t.platforms.includes(platform as Platform));
       if (selfHosted) list = list.filter((t) => t.selfHosted);
       if (sourceAvailable) list = list.filter((t) => t.sourceAvailable);
+      if (featured) list = list.filter((t) => t.featured);
       list = list.filter((t) => matchTool(t, q));
       if (sort === "newest") list = [...list].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       if (sort === "stars") list = [...list].sort((a, b) => b.stars - a.stars);
       if (sort === "votes") list = [...list].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0));
+      if (sort === "name") list = [...list].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
       if (sort === "momentum")
         list = [...list].sort((a, b) => (b.weeklyGain ?? -1) - (a.weeklyGain ?? -1));
       return list;
     }
     return [];
-  }, [page, isError, liveTools, getTool, catId, platform, selfHosted, sourceAvailable, q, sort]);
+  }, [page, isError, liveTools, getTool, catId, platform, selfHosted, sourceAvailable, featured, q, sort]);
 
   const total = page ? page.total : isError ? results.length : 0;
   const shown = results.slice(0, visible);
@@ -135,6 +140,8 @@ export function CategoryView({
           onSelfHosted={setSelfHosted}
           sourceAvailable={sourceAvailable}
           onSourceAvailable={setSourceAvailable}
+          featured={featured}
+          onFeatured={setFeatured}
           sort={sort}
           onSort={setSort}
           sortOptions={[
@@ -142,6 +149,7 @@ export function CategoryView({
             { value: "votes", label: "Most upvoted" },
             { value: "stars", label: "Most stars" },
             { value: "newest", label: "Newest" },
+            { value: "name", label: "Name (A–Z)" },
           ]}
           onFilters={onFilters}
         />

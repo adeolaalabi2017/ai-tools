@@ -91,6 +91,8 @@ export async function GET(request: NextRequest) {
     if (sp.get("selfHosted") === "1") where.selfHosted = true;
     if (sp.get("sourceAvailable") === "1") where.sourceAvailable = true;
     if (sp.get("trending") === "1") where.weeklyGain = { not: null };
+    // Editors' picks only — the moderator-toggled `featured` badge.
+    if (sp.get("featured") === "1") where.featured = true;
 
     const [total, rows] = await Promise.all([
       db.tool.count({ where }),

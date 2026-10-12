@@ -52,28 +52,28 @@ describe("isAdminAuthorized", () => {
     expect(isAdminAuthorized(bare)).toBe(false);
   });
 
-  it("fails closed when ADMIN_TOKEN is not configured", () => {
+  it("fails closed when ADMIN_TOKEN is not configured", async () => {
     delete process.env.ADMIN_TOKEN;
     const req = jsonRequest("/api/auth/admin", { token: TOKEN });
     expect(isAdminAuthorized(req)).toBe(false);
-    expect(requireAdmin(req)?.status).toBe(503);
+    expect((await requireAdmin(req))?.status).toBe(503);
   });
 });
 
 describe("requireAdmin response contract", () => {
-  it("returns null when authorized", () => {
-    expect(requireAdmin(jsonRequest("/x", { token: TOKEN }))).toBeNull();
+  it("returns null when authorized", async () => {
+    expect(await requireAdmin(jsonRequest("/x", { token: TOKEN }))).toBeNull();
   });
 
   it("returns 401 with a JSON error when not authorized", async () => {
-    const res = requireAdmin(jsonRequest("/x", { token: "wrong" }))!;
+    const res = (await requireAdmin(jsonRequest("/x", { token: "wrong" })))!;
     expect(res.status).toBe(401);
     expect((await readJson(res)).error).toBeTruthy();
   });
 
-  it("returns 503 (not 401) when the server has no token configured", () => {
+  it("returns 503 (not 401) when the server has no token configured", async () => {
     delete process.env.ADMIN_TOKEN;
-    const res = requireAdmin(jsonRequest("/x"))!;
+    const res = (await requireAdmin(jsonRequest("/x")))!;
     expect(res.status).toBe(503);
   });
 });

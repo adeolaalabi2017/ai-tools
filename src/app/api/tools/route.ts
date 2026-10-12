@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     // The moderation queue (pending submissions) is admin-only; the
     // community/curated filters just narrow the public listing.
     if (statusFilter === "pending") {
-      const denied = requireAdmin(request);
+      const denied = await requireAdmin(request);
       if (denied) return denied;
     }
 
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const limited = enforceRateLimit("tool-submit", request, SUBMIT_POLICY);
+    const limited = await enforceRateLimit("tool-submit", request, SUBMIT_POLICY);
     if (limited) return limited;
 
     const body: unknown = await request.json().catch(() => undefined);

@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   try {
     /* traffic summaries are for the admin Overview — the public POST
        beacon below stays open */
-    const denied = requireAdmin(request);
+    const denied = await requireAdmin(request);
     if (denied) return denied;
 
     const rawDays = Number.parseInt(request.nextUrl.searchParams.get("days") ?? "14", 10);

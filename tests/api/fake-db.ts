@@ -97,6 +97,13 @@ export interface FakePageView {
   createdAt: Date;
 }
 
+export interface FakeRateEvent {
+  id: string;
+  bucket: string;
+  ip: string;
+  createdAt: Date;
+}
+
 type Row = Record<string, unknown>;
 type Where = Row | undefined;
 
@@ -114,6 +121,7 @@ function matchesWhere(tool: FakeTool, where: Where): boolean {
         in?: string[];
         not?: unknown;
         gte?: Date | number;
+        lt?: Date | number;
       };
       if (c.contains !== undefined) {
         /* mirrors Prisma: `contains` is case-sensitive unless mode: "insensitive" */
@@ -126,6 +134,11 @@ function matchesWhere(tool: FakeTool, where: Where): boolean {
         const a = value instanceof Date ? value.getTime() : Number(value);
         const b = c.gte instanceof Date ? c.gte.getTime() : Number(c.gte);
         return a >= b;
+      }
+      if (c.lt !== undefined) {
+        const a = value instanceof Date ? value.getTime() : Number(value);
+        const b = c.lt instanceof Date ? c.lt.getTime() : Number(c.lt);
+        return a < b;
       }
       if ("not" in c) {
         if (c.not === null) return value !== null && value !== undefined;
@@ -215,6 +228,7 @@ export function createFakeDb() {
   const wants: FakeWant[] = [];
   const wantVotes: FakeWantVote[] = [];
   const pageViews: FakePageView[] = [];
+  const rateEvents: FakeRateEvent[] = [];
   let voteSeq = 0;
   let rowSeq = 0;
 
@@ -541,6 +555,38 @@ export function createFakeDb() {
     },
   };
 
+  const rateEventModel = {
+    async count(args: { where?: Where }) {
+      return rateEvents.filter((e) => matchesWhere(e as unknown as FakeTool, args.where)).length;
+    },
+    async findMany(args: { where?: Where; orderBy?: unknown; take?: number }) {
+      let rows = rateEvents.filter((e) => matchesWhere(e as unknown as FakeTool, args.where));
+      if (args.orderBy) {
+        rows = [...rows].sort((x, y) =>
+          compare(x as unknown as FakeTool, y as unknown as FakeTool, args.orderBy, votes),
+        );
+      }
+      return args.take !== undefined ? rows.slice(0, args.take) : rows;
+    },
+    async create(args: { data: { bucket: string; ip: string } }) {
+      const ev: FakeRateEvent = {
+        id: `rate-${++rowSeq}`,
+        bucket: args.data.bucket,
+        ip: args.data.ip,
+        createdAt: new Date(),
+      };
+      rateEvents.push(ev);
+      return ev;
+    },
+    async deleteMany(args: { where?: Where }) {
+      const before = rateEvents.length;
+      const keep = rateEvents.filter((e) => !matchesWhere(e as unknown as FakeTool, args.where));
+      rateEvents.length = 0;
+      rateEvents.push(...keep);
+      return { count: before - keep.length };
+    },
+  };
+
   const db = {
     tool: toolModel,
     vote: voteModel,
@@ -549,6 +595,7 @@ export function createFakeDb() {
     want: wantModel,
     wantVote: wantVoteModel,
     pageView: pageViewModel,
+    rateEvent: rateEventModel,
     /* interactive transaction: routes use the callback form */
     async $transaction<T>(fn: (tx: typeof db) => Promise<T>): Promise<T> {
       return fn(db);
@@ -677,6 +724,7 @@ export function createFakeDb() {
       wants.length = 0;
       wantVotes.length = 0;
       pageViews.length = 0;
+      rateEvents.length = 0;
     },
     rawTools: tools,
     rawVotes: votes,
@@ -685,8 +733,15 @@ export function createFakeDb() {
     rawWants: wants,
     rawWantVotes: wantVotes,
     rawPageViews: pageViews,
+    rawRateEvents: rateEvents,
   };
 }
 
-/** Singleton shared by the @/lib/db mock and the test file. */
-export const fake = createFakeDb();
+/**
+ * Singleton shared by the @/lib/db mock and the test files. Backed by
+ * globalThis so it survives vi.resetModules() — that lets tests simulate a
+ * process restart while the store (like the real DB) keeps its rows.
+ */
+export const fake: ReturnType<typeof createFakeDb> =
+  (globalThis as { __fakeDb?: ReturnType<typeof createFakeDb> }).__fakeDb ??=
+    createFakeDb();

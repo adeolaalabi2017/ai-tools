@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     if (sp.get("all") === "1") {
       /* the full list (incl. paused ads + stats) is the admin module */
-      const denied = requireAdmin(request);
+      const denied = await requireAdmin(request);
       if (denied) return denied;
 
       const rows = await db.ad.findMany({ orderBy: { createdAt: "desc" } });
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const denied = requireAdmin(request);
+    const denied = await requireAdmin(request);
     if (denied) return denied;
 
     const body: unknown = await request.json().catch(() => undefined);

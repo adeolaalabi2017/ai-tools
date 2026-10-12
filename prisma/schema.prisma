@@ -126,3 +126,16 @@ model PageView {
   @@index([createdAt])
   @@index([path])
 }
+
+// Rate-limiting hits, one row per counted request. Sliding-window counters
+// live in the database (not process memory) so throttling and admin
+// lockouts survive deploys and work across instances. Rows are pruned
+// once they age past every policy window.
+model RateEvent {
+  id        String   @id @default(cuid())
+  bucket    String // surface, e.g. "admin-auth" / "tool-vote"
+  ip        String // from X-Forwarded-For (set by the Caddy proxy)
+  createdAt DateTime @default(now())
+
+  @@index([bucket, ip, createdAt])
+}

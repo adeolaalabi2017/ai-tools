@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const limited = enforceRateLimit("want-submit", request, SUBMIT_POLICY);
+    const limited = await enforceRateLimit("want-submit", request, SUBMIT_POLICY);
     if (limited) return limited;
     const body: unknown = await request.json().catch(() => undefined);
     const parsed = wantRequestSchema.safeParse(body);

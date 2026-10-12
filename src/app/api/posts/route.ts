@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     // Drafts (and the admin CMS list) are moderator-only.
     if (all) {
-      const denied = requireAdmin(request);
+      const denied = await requireAdmin(request);
       if (denied) return denied;
     }
 
@@ -48,7 +48,7 @@ async function uniqueSlug(title: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const denied = requireAdmin(request);
+    const denied = await requireAdmin(request);
     if (denied) return denied;
 
     const body: unknown = await request.json().catch(() => undefined);

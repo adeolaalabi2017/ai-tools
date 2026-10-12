@@ -41,14 +41,14 @@ export function isAdminAuthorized(request: Request): boolean {
  * Gate for moderator-only endpoints. Returns the error response to send
  * back, or `null` when the caller is authorized:
  *
- *   const denied = requireAdmin(request);
+ *   const denied = await requireAdmin(request);
  *   if (denied) return denied;
  *
  * Fails closed when ADMIN_TOKEN is unset on the server (503) so a fresh
  * deploy never ships an open moderation surface. Failed attempts are rate
  * limited per IP (see rate-limit.ts) to slow token guessing.
  */
-export function requireAdmin(request: Request): NextResponse | null {
+export async function requireAdmin(request: Request): Promise<NextResponse | null> {
   const expected = process.env.ADMIN_TOKEN?.trim();
   if (!expected) {
     return NextResponse.json(
@@ -56,16 +56,16 @@ export function requireAdmin(request: Request): NextResponse | null {
       { status: 503 },
     );
   }
-  const limited = rateLimitExceeded(AUTH_BUCKET, request, ADMIN_AUTH_POLICY);
+  const limited = await rateLimitExceeded(AUTH_BUCKET, request, ADMIN_AUTH_POLICY);
   if (limited) return limited;
   if (!isAdminAuthorized(request)) {
-    recordFailure(AUTH_BUCKET, request, ADMIN_AUTH_POLICY);
+    await recordFailure(AUTH_BUCKET, request);
     return NextResponse.json(
       { error: "Admin authorization required." },
       { status: 401 },
     );
   }
-  clearFailures(AUTH_BUCKET, request);
+  await clearFailures(AUTH_BUCKET, request);
   return null;
 }
 

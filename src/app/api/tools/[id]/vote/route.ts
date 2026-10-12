@@ -14,7 +14,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const limited = enforceRateLimit("tool-vote", request, VOTE_POLICY);
+    const limited = await enforceRateLimit("tool-vote", request, VOTE_POLICY);
     if (limited) return limited;
     const { id } = await params;
 

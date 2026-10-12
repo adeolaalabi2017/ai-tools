@@ -53,9 +53,6 @@ cd "$BUILD_DIR" || exit 1
 
 ls -lah
 
-DEFAULT_PACKAGED_DB_PATH="/app/db/custom.db"
-DEFAULT_PACKAGED_DATABASE_URL="file:$DEFAULT_PACKAGED_DB_PATH"
-
 # Python 依赖在构建阶段安装进部署产物，不复用 Sandbox 的 /home/z/.venv。
 # Next.js 及其启动的子进程都会继承这组路径。
 if [ -d "/app/python-runtime/site-packages" ]; then
@@ -75,19 +72,21 @@ if [ -f "./next-service-dist/server.js" ]; then
     export NODE_ENV=production
     export PORT="${PORT:-3000}"
     export HOSTNAME="${HOSTNAME:-0.0.0.0}"
-    export DATABASE_URL="${DATABASE_URL:-$DEFAULT_PACKAGED_DATABASE_URL}"
 
-    if [ "$DATABASE_URL" = "$DEFAULT_PACKAGED_DATABASE_URL" ]; then
-        if [ ! -f "$DEFAULT_PACKAGED_DB_PATH" ]; then
-            echo "❌ 未找到打包后的数据库文件 $DEFAULT_PACKAGED_DB_PATH"
-            echo "   为避免生产环境启动到空数据库，启动已终止"
-            exit 1
-        fi
-
-        echo "🗄️  当前使用打包数据库: $DEFAULT_PACKAGED_DB_PATH"
-    else
-        echo "🗄️  当前使用外部指定数据库: $DATABASE_URL"
+    # 数据库: 本项目使用 PostgreSQL（Neon），DATABASE_URL 必须由部署环境注入。
+    if [ -z "${DATABASE_URL:-}" ]; then
+        echo "❌ DATABASE_URL 未设置"
+        echo "   本项目使用 PostgreSQL，无法回退到打包的 SQLite 文件"
+        echo "   为避免生产环境启动到空数据库，启动已终止"
+        exit 1
     fi
+    case "$DATABASE_URL" in
+        file:*)
+            echo "❌ DATABASE_URL 指向本地文件（file:...），但 schema 已切换为 PostgreSQL"
+            exit 1
+            ;;
+    esac
+    echo "🗄️  当前使用外部指定数据库"
     
     # 后台启动 Next.js
     bun server.js &

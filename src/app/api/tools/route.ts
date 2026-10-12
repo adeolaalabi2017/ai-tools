@@ -36,7 +36,10 @@ function buildOrderBy(sort: Sort): Prisma.ToolOrderByWithRelationInput[] {
     case "name":
       return [{ name: "asc" }];
     case "momentum":
-      return [{ weeklyGain: "desc" }, { stars: "desc" }];
+      /* NULLS LAST is explicit: Postgres defaults to NULLS FIRST on DESC,
+         which would lead the momentum list with tools that have no momentum
+         (and would diverge from the client-side fallbacks). */
+      return [{ weeklyGain: { sort: "desc", nulls: "last" } }, { stars: "desc" }];
     default:
       return [{ createdAt: "desc" }];
   }
@@ -76,11 +79,13 @@ export async function GET(request: NextRequest) {
     const or: Prisma.ToolWhereInput[] = [];
 
     if (q) {
+      /* mode: "insensitive" is explicit — Prisma `contains` is case-sensitive
+         on Postgres (it was insensitive on SQLite) */
       or.push(
-        { name: { contains: q } },
-        { repo: { contains: q } },
-        { desc: { contains: q } },
-        { replaces: { contains: q } },
+        { name: { contains: q, mode: "insensitive" } },
+        { repo: { contains: q, mode: "insensitive" } },
+        { desc: { contains: q, mode: "insensitive" } },
+        { replaces: { contains: q, mode: "insensitive" } },
       );
       const labelCatIds = matchingCategoryIds(q);
       if (labelCatIds.length > 0) or.push({ cat: { in: labelCatIds } });
@@ -137,9 +142,12 @@ export async function POST(request: NextRequest) {
     }
     const data = parsed.data;
 
-    // Duplicate repo check (case-insensitive, trimmed).
+    // Duplicate repo check (case-insensitive, trimmed). The `contains`
+    // prefilter is case-insensitive too, or case-variant repos would slip by.
     const repoNorm = data.repo.toLowerCase();
-    const candidates = await db.tool.findMany({ where: { repo: { contains: data.repo } } });
+    const candidates = await db.tool.findMany({
+      where: { repo: { contains: data.repo, mode: "insensitive" } },
+    });
     if (candidates.some((t) => t.repo.trim().toLowerCase() === repoNorm)) {
       return NextResponse.json({ error: "This repository is already listed." }, { status: 409 });
     }

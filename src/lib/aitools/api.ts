@@ -2,7 +2,10 @@
 /*  AIStore — typed client for the /api/tools backend                  */
 /*  Relative URLs only (same origin). Never throws on parse — throws   */
 /*  ApiError for non-2xx so callers can branch on status.              */
+/*  The admin bearer token (if signed in) rides along on every call.   */
 /* ------------------------------------------------------------------ */
+
+import { getAdminToken } from "./admin-session";
 
 export interface ApiTool {
   id: string;

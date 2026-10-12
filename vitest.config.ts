@@ -9,7 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/api/**/*.test.ts"],
+    include: ["tests/**/*.test.ts"],
     /* route handlers + rate limiter keep module-level state; isolate each file */
     isolate: true,
   },

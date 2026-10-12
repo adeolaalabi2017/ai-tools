@@ -137,8 +137,10 @@ export function apiToolToTool(api: ApiTool, base?: Tool): Tool {
     cat: api.cat,
     stars: api.stars,
     platforms: api.platforms as Tool["platforms"],
-    selfHosted: api.selfHosted || base?.selfHosted,
-    sourceAvailable: api.sourceAvailable || base?.sourceAvailable,
+    /* ?? not ||: an explicit false from the DB must beat the static entry,
+       or admin un-flags (self-hosted, source-available) never take effect */
+    selfHosted: api.selfHosted ?? base?.selfHosted,
+    sourceAvailable: api.sourceAvailable ?? base?.sourceAvailable,
     weeklyGain: api.weeklyGain ?? base?.weeklyGain,
     createdAt: api.createdAt,
     emoji: api.emoji,

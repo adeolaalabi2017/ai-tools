@@ -161,11 +161,15 @@ export function PostCard({
       <span
         aria-hidden
         className={cn(
-          "grid shrink-0 place-items-center rounded-xl border border-line bg-elev select-none",
+          "grid shrink-0 place-items-center overflow-hidden rounded-xl border border-line bg-elev select-none",
           lead ? "h-20 w-20 text-4xl lg:h-28 lg:w-28 lg:text-6xl" : "h-14 w-14 text-2xl",
         )}
       >
-        {post.coverEmoji}
+        {post.coverUrl ? (
+          <img src={post.coverUrl} alt="" className="h-full w-full object-cover" />
+        ) : (
+          post.coverEmoji
+        )}
       </span>
       <div className={cn("mt-4 flex min-w-0 flex-1 flex-col lg:mt-0", lead && "lg:py-1")}>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-faint">

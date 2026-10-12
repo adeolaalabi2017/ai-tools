@@ -31,6 +31,8 @@ export const ADMIN_AUTH_POLICY: RatePolicy = { limit: 10, windowMs: 15 * 60_000 
 export const SUBMIT_POLICY: RatePolicy = { limit: 10, windowMs: 60 * 60_000 };
 /** Vote toggles per IP — high enough for enthusiastic browsing. */
 export const VOTE_POLICY: RatePolicy = { limit: 120, windowMs: 60 * 60_000 };
+/** Image uploads per IP (admins bypass) — covers branding + covers. */
+export const UPLOAD_POLICY: RatePolicy = { limit: 20, windowMs: 60 * 60_000 };
 
 /* rows older than this can never fall inside a policy window again */
 const PRUNE_AFTER_MS = 24 * 60 * 60_000;

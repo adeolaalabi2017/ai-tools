@@ -264,6 +264,7 @@ export interface ApiPost {
   author: string;
   tags: string[];
   coverEmoji: string;
+  coverUrl: string | null;
   status: "draft" | "published" | string;
   publishedAt: string | null;
   createdAt: string;
@@ -282,7 +283,27 @@ export interface PostPayload {
   author?: string;
   tags?: string[];
   coverEmoji?: string;
+  coverUrl?: string | null;
   status?: "draft" | "published";
+}
+
+export interface UploadResult {
+  url: string;
+  mime: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * Upload an image (tool branding or blog cover). Accepts PNG/JPEG/GIF/WebP
+ * up to 2MB — the server sniffs magic bytes and rejects anything else.
+ * Returns the app-relative URL to store in logoUrl/screenshotUrl/headerUrl/
+ * coverUrl. Throws ApiError (413/400/429) on rejection.
+ */
+export async function uploadImage(file: File): Promise<UploadResult> {
+  const form = new FormData();
+  form.append("file", file);
+  return request<UploadResult>("/api/upload", { method: "POST", body: form });
 }
 
 /** Public list returns published posts only; `all: true` includes drafts (admin CMS). */

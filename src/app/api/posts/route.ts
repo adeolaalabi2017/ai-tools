@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
         author: data.author?.trim() || "AIStore Editors",
         tags: (data.tags ?? []).join(","),
         coverEmoji: data.coverEmoji?.trim() || "📝",
+        coverUrl: data.coverUrl ?? null,
         status: data.status ?? "draft",
         ...(data.status === "published" ? { publishedAt: now } : {}),
       },

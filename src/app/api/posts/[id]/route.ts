@@ -87,6 +87,7 @@ export async function PATCH(
         ...(data.coverEmoji !== undefined
           ? { coverEmoji: data.coverEmoji.trim() || "📝" }
           : {}),
+        ...(data.coverUrl !== undefined ? { coverUrl: data.coverUrl } : {}),
         ...(data.status !== undefined
           ? {
               status: data.status,

@@ -51,6 +51,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { UploadButton } from "@/components/aitools/image-upload";
 
 type FormState = {
   title: string;
@@ -59,6 +60,7 @@ type FormState = {
   author: string;
   tags: string; // comma separated in the form
   coverEmoji: string;
+  coverUrl: string;
 };
 
 const EMPTY_FORM: FormState = {
@@ -68,6 +70,7 @@ const EMPTY_FORM: FormState = {
   author: "AIStore Editors",
   tags: "",
   coverEmoji: "📝",
+  coverUrl: "",
 };
 
 function toForm(p: ApiPost): FormState {
@@ -78,6 +81,7 @@ function toForm(p: ApiPost): FormState {
     author: p.author,
     tags: p.tags.join(", "),
     coverEmoji: p.coverEmoji,
+    coverUrl: p.coverUrl ?? "",
   };
 }
 
@@ -132,6 +136,7 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
       author: form.author,
       tags: tagsList(),
       coverEmoji: form.coverEmoji,
+      coverUrl: form.coverUrl.trim() || null,
       status,
     };
     try {
@@ -241,9 +246,17 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
                   <TableRow className="h-14" key={p.id}>
                     <TableCell className="max-w-64 pl-6">
                       <div className="flex min-w-0 items-center gap-2.5">
-                        <span aria-hidden className="text-lg select-none">
-                          {p.coverEmoji}
-                        </span>
+                        {p.coverUrl ? (
+                          <img
+                            src={p.coverUrl}
+                            alt=""
+                            className="h-9 w-9 shrink-0 rounded-md border border-border object-cover"
+                          />
+                        ) : (
+                          <span aria-hidden className="text-lg select-none">
+                            {p.coverEmoji}
+                          </span>
+                        )}
                         <div className="min-w-0">
                           <p className="truncate font-medium text-sm">{p.title}</p>
                           <p className="truncate font-mono text-[11px] text-muted-foreground">
@@ -373,6 +386,23 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
               <p className="text-right font-mono text-[10px] text-muted-foreground">
                 {form.excerpt.length}/280
               </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="post-cover-url">Cover image</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="post-cover-url"
+                  placeholder="https://…/cover.png or upload"
+                  value={form.coverUrl}
+                  onChange={(e) => set("coverUrl", e.target.value)}
+                  className="min-w-0 flex-1"
+                />
+                <UploadButton
+                  label="Upload"
+                  className="h-9 shrink-0"
+                  onUploaded={(url) => set("coverUrl", url)}
+                />
+              </div>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">

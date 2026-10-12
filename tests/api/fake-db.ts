@@ -47,6 +47,7 @@ export interface FakePost {
   author: string;
   tags: string;
   coverEmoji: string;
+  coverUrl: string | null;
   status: string;
   publishedAt: Date | null;
   createdAt: Date;
@@ -379,6 +380,7 @@ export function createFakeDb() {
         author: "AIStore Editors",
         tags: "",
         coverEmoji: "📝",
+        coverUrl: null,
         status: "draft",
         publishedAt: null,
         createdAt: now,
@@ -652,6 +654,7 @@ export function createFakeDb() {
           author: row.author ?? "AIStore Editors",
           tags: row.tags ?? "",
           coverEmoji: row.coverEmoji ?? "📝",
+          coverUrl: row.coverUrl ?? null,
           status: row.status ?? "draft",
           publishedAt: row.publishedAt ?? null,
           createdAt: row.createdAt ?? now,

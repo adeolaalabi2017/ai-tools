@@ -84,7 +84,8 @@ model Post {
   content     String // markdown body
   author      String    @default("AIStore Editors")
   tags        String    @default("") // CSV, e.g. "changelog,featured"
-  coverEmoji  String    @default("📝")
+  coverEmoji  String    @default("📝") // fallback when no cover image
+  coverUrl    String? // uploaded cover image (/uploads/… or http(s))
   status      String    @default("draft") // "draft" | "published"
   publishedAt DateTime?
   createdAt   DateTime  @default(now())

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { CATEGORIES, githubAvatar } from "@/lib/aitools/data";
 import { ApiError, submitTool } from "@/lib/aitools/api";
 import { Dropdown } from "../ui";
+import { UploadButton } from "../image-upload";
 
 const PLATFORM_CHIPS = [
   { id: "web", label: "Web" },
@@ -543,7 +544,8 @@ function Step({ n, label }: { n: number; label: string }) {
   );
 }
 
-const HTTP_URL_RE = /^https?:\/\/\S+$/i;
+/* app-hosted uploads (/uploads/…) are valid image refs alongside URLs */
+const IMAGE_REF_RE = /^(https?:\/\/\S+|\/uploads\/[\w.-]+)$/i;
 
 /** URL input with a live thumbnail preview (plain <img> — arbitrary remote hosts). */
 function ImageField({
@@ -562,7 +564,7 @@ function ImageField({
   previewClass: string;
 }) {
   const trimmed = value.trim();
-  const looksValid = HTTP_URL_RE.test(trimmed);
+  const looksValid = IMAGE_REF_RE.test(trimmed);
   const [failed, setFailed] = useState(false);
   const showPreview = looksValid && !failed;
 
@@ -590,24 +592,36 @@ function ImageField({
       </span>
       <div className="min-w-0 flex-1">
         <label htmlFor={id} className="block text-[13px] font-medium text-ink2">
-          {label} <span className="font-normal text-faint">(URL)</span>
+          {label} <span className="font-normal text-faint">(URL or upload)</span>
         </label>
-        <input
-          id={id}
-          type="url"
-          value={value}
-          onChange={(e) => {
-            setFailed(false);
-            onChange(e.target.value);
-          }}
-          placeholder={placeholder}
-          className={cn(
-            "mt-2 h-11 w-full rounded-lg border bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint",
-            trimmed && !looksValid ? "border-amber-500/60" : "border-line focus:border-line2",
-          )}
-        />
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            id={id}
+            type="url"
+            value={value}
+            onChange={(e) => {
+              setFailed(false);
+              onChange(e.target.value);
+            }}
+            placeholder={placeholder}
+            className={cn(
+              "h-11 min-w-0 flex-1 rounded-lg border bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint",
+              trimmed && !looksValid ? "border-amber-500/60" : "border-line focus:border-line2",
+            )}
+          />
+          <UploadButton
+            label="Upload"
+            className="h-11 shrink-0"
+            onUploaded={(url) => {
+              setFailed(false);
+              onChange(url);
+            }}
+          />
+        </div>
         {trimmed && !looksValid && (
-          <p className="mt-1.5 text-xs text-amber-500">Enter a full http(s) image URL.</p>
+          <p className="mt-1.5 text-xs text-amber-500">
+            Enter a full http(s) image URL, or upload a file.
+          </p>
         )}
       </div>
     </div>

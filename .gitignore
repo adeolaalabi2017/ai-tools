@@ -55,3 +55,6 @@ server.log
 /skills/
 # agent tooling artifacts
 .openchamber/
+
+# runtime image uploads (generated filenames — never commit)
+public/uploads/

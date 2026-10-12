@@ -177,6 +177,27 @@ const optionalUrl = z
   .optional()
   .transform((v) => (v === undefined ? undefined : v === null || v === "" ? null : v));
 
+/**
+ * Optional image reference: same semantics as optionalUrl, but also
+ * accepts an app-hosted upload (/uploads/<name> — no query/fragment, no
+ * traversal). Anything else (javascript:, //, relative paths) is rejected.
+ */
+const optionalImageUrl = z
+  .union([
+    z.literal(""),
+    z.null(),
+    z
+      .string()
+      .trim()
+      .max(500, "URL must be 500 characters or fewer")
+      .refine(
+        (v) => /^https?:\/\/\S+$/i.test(v) || /^\/uploads\/[\w.-]+$/.test(v),
+        "Must be an http(s) URL or an uploaded image",
+      ),
+  ])
+  .optional()
+  .transform((v) => (v === undefined ? undefined : v === null || v === "" ? null : v));
+
 export const isCategoryId = (id: string): boolean => CATEGORY_IDS.includes(id);
 
 /** Category ids whose label contains the lowercased query — OR-ed into text search. */
@@ -329,6 +350,7 @@ export interface ApiPost {
   author: string;
   tags: string[];
   coverEmoji: string;
+  coverUrl: string | null;
   status: "draft" | "published" | string;
   publishedAt: string | null;
   createdAt: string;
@@ -345,6 +367,7 @@ export interface DbPost {
   author: string;
   tags: string; // CSV
   coverEmoji: string;
+  coverUrl: string | null;
   status: string;
   publishedAt: Date | null;
   createdAt: Date;
@@ -361,6 +384,7 @@ export function serializePost(p: DbPost): ApiPost {
     author: p.author,
     tags: p.tags.split(",").map((s) => s.trim()).filter(Boolean),
     coverEmoji: p.coverEmoji,
+    coverUrl: p.coverUrl,
     status: p.status,
     publishedAt: p.publishedAt ? p.publishedAt.toISOString() : null,
     createdAt: p.createdAt.toISOString(),
@@ -376,6 +400,7 @@ export const postCreateSchema = z.object({
   author: z.string().trim().max(80, "Author must be 80 characters or fewer").optional(),
   tags: z.array(z.string().trim().min(1).max(24, "Tags must be 24 characters or fewer")).max(6, "At most 6 tags").optional(),
   coverEmoji: z.string().trim().max(8, "Cover must be 8 characters or fewer").optional(),
+  coverUrl: optionalImageUrl,
   status: z.enum(["draft", "published"]).optional(),
 });
 

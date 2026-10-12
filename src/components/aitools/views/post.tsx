@@ -84,9 +84,13 @@ export function PostView({
         <div className="flex items-center gap-4">
           <span
             aria-hidden
-            className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-line bg-elev text-4xl select-none"
+            className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl border border-line bg-elev text-4xl select-none"
           >
-            {current.coverEmoji}
+            {current.coverUrl ? (
+              <img src={current.coverUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              current.coverEmoji
+            )}
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-faint">

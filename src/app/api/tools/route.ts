@@ -6,12 +6,14 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import {
   matchingCategoryIds,
+  requireAdmin,
   serializeTool,
   slugify,
   submissionSchema,
   PLATFORM_VALUES,
   type ApiTool,
 } from "@/lib/aitools/server";
+import { enforceRateLimit, SUBMIT_POLICY } from "@/lib/aitools/rate-limit";
 import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -57,6 +59,13 @@ export async function GET(request: NextRequest) {
     const statusFilter: StatusFilter | null = (STATUS_FILTERS as readonly string[]).includes(rawStatus)
       ? (rawStatus as StatusFilter)
       : null;
+
+    // The moderation queue (pending submissions) is admin-only; the
+    // community/curated filters just narrow the public listing.
+    if (statusFilter === "pending") {
+      const denied = requireAdmin(request);
+      if (denied) return denied;
+    }
 
     const rawPage = Number.parseInt(sp.get("page") ?? "", 10);
     const page = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1;
@@ -115,6 +124,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const limited = enforceRateLimit("tool-submit", request, SUBMIT_POLICY);
+    if (limited) return limited;
+
     const body: unknown = await request.json().catch(() => undefined);
     const parsed = submissionSchema.safeParse(body);
     if (!parsed.success) {

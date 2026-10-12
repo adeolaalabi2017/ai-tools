@@ -6,7 +6,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { pageViewSchema, type AnalyticsSummary } from "@/lib/aitools/server";
+import { pageViewSchema, requireAdmin, type AnalyticsSummary } from "@/lib/aitools/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +33,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    /* traffic summaries are for the admin Overview — the public POST
+       beacon below stays open */
+    const denied = requireAdmin(request);
+    if (denied) return denied;
+
     const rawDays = Number.parseInt(request.nextUrl.searchParams.get("days") ?? "14", 10);
     const days = Number.isFinite(rawDays) && rawDays > 0 ? Math.min(rawDays, MAX_DAYS) : 14;
 

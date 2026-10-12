@@ -13,6 +13,7 @@ import {
   wantRequestSchema,
   type ApiWant,
 } from "@/lib/aitools/server";
+import { enforceRateLimit, SUBMIT_POLICY } from "@/lib/aitools/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,6 +53,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const limited = enforceRateLimit("want-submit", request, SUBMIT_POLICY);
+    if (limited) return limited;
     const body: unknown = await request.json().catch(() => undefined);
     const parsed = wantRequestSchema.safeParse(body);
     if (!parsed.success) {

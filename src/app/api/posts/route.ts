@@ -1,13 +1,13 @@
 /* ------------------------------------------------------------------ */
 /*  /api/posts — blog content managed from the admin CMS               */
 /*  GET  → published posts (public). `?all=1` returns drafts too       */
-/*         (admin CMS list — no auth gate in this build yet).          */
-/*  POST → create a post (draft or published).                         */
+/*         (admin CMS list — gated behind the admin token).            */
+/*  POST → create a post (draft or published). Admin only.             */
 /* ------------------------------------------------------------------ */
 
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { postCreateSchema, serializePost, slugify } from "@/lib/aitools/server";
+import { postCreateSchema, requireAdmin, serializePost, slugify } from "@/lib/aitools/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,6 +15,12 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const all = request.nextUrl.searchParams.get("all") === "1";
+
+    // Drafts (and the admin CMS list) are moderator-only.
+    if (all) {
+      const denied = requireAdmin(request);
+      if (denied) return denied;
+    }
 
     const rows = await db.post.findMany({
       where: all ? undefined : { status: "published" },
@@ -42,6 +48,9 @@ async function uniqueSlug(title: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
+    const denied = requireAdmin(request);
+    if (denied) return denied;
+
     const body: unknown = await request.json().catch(() => undefined);
     const parsed = postCreateSchema.safeParse(body);
     if (!parsed.success) {

@@ -9,7 +9,12 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { postUpdateSchema, serializePost } from "@/lib/aitools/server";
+import {
+  isAdminAuthorized,
+  postUpdateSchema,
+  requireAdmin,
+  serializePost,
+} from "@/lib/aitools/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +26,7 @@ async function findPost(idOrSlug: string) {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -32,6 +37,10 @@ export async function GET(
     }
     /* slug lookups must never leak drafts */
     if (post.status !== "published" && post.id !== id) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+    /* draft-by-id is the admin editing path — moderators only */
+    if (post.status !== "published" && !isAdminAuthorized(request)) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
     return NextResponse.json({ post: serializePost(post) });
@@ -46,6 +55,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const denied = requireAdmin(request);
+    if (denied) return denied;
+
     const { id } = await params;
     const existing = await db.post.findUnique({ where: { id } });
     if (!existing) {
@@ -94,10 +106,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const denied = requireAdmin(request);
+    if (denied) return denied;
+
     const { id } = await params;
     const existing = await db.post.findUnique({ where: { id } });
     if (!existing) {

@@ -1,10 +1,73 @@
 /* ------------------------------------------------------------------ */
 /*  AIStore — shared server-side API helpers                           */
 /*  Serializer, slugify, and zod schemas behind /api/tools             */
+/*  Plus the admin bearer-token gate for moderator-only endpoints.     */
 /* ------------------------------------------------------------------ */
 
+import { createHash, timingSafeEqual } from "crypto";
+import { NextResponse } from "next/server";
 import { z } from "zod";
 import { CATEGORIES } from "@/lib/aitools/data";
+import {
+  ADMIN_AUTH_POLICY,
+  clearFailures,
+  rateLimitExceeded,
+  recordFailure,
+} from "./rate-limit";
+
+/** Rate-limit bucket for failed admin sign-ins (shared by all admin routes). */
+const AUTH_BUCKET = "admin-auth";
+
+/* ------------------------------ admin auth ---------------------------- */
+
+function safeEqual(a: string, b: string): boolean {
+  /* hash both sides first so the comparison is fixed-length and constant-time */
+  const ha = createHash("sha256").update(a).digest();
+  const hb = createHash("sha256").update(b).digest();
+  return timingSafeEqual(ha, hb);
+}
+
+/** True when the request carries a valid `Authorization: Bearer <ADMIN_TOKEN>`. */
+export function isAdminAuthorized(request: Request): boolean {
+  const expected = process.env.ADMIN_TOKEN?.trim();
+  if (!expected) return false;
+  const header = request.headers.get("authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  if (!token) return false;
+  return safeEqual(token, expected);
+}
+
+/**
+ * Gate for moderator-only endpoints. Returns the error response to send
+ * back, or `null` when the caller is authorized:
+ *
+ *   const denied = requireAdmin(request);
+ *   if (denied) return denied;
+ *
+ * Fails closed when ADMIN_TOKEN is unset on the server (503) so a fresh
+ * deploy never ships an open moderation surface. Failed attempts are rate
+ * limited per IP (see rate-limit.ts) to slow token guessing.
+ */
+export function requireAdmin(request: Request): NextResponse | null {
+  const expected = process.env.ADMIN_TOKEN?.trim();
+  if (!expected) {
+    return NextResponse.json(
+      { error: "Admin access is not configured on this server." },
+      { status: 503 },
+    );
+  }
+  const limited = rateLimitExceeded(AUTH_BUCKET, request, ADMIN_AUTH_POLICY);
+  if (limited) return limited;
+  if (!isAdminAuthorized(request)) {
+    recordFailure(AUTH_BUCKET, request, ADMIN_AUTH_POLICY);
+    return NextResponse.json(
+      { error: "Admin authorization required." },
+      { status: 401 },
+    );
+  }
+  clearFailures(AUTH_BUCKET, request);
+  return null;
+}
 
 /** Wire format returned by every /api/tools endpoint (mirrors the frontend Tool type). */
 export interface ApiTool {

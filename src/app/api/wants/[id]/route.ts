@@ -7,7 +7,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { serializeWant, wantAdminSchema } from "@/lib/aitools/server";
+import { serializeWant, requireAdmin, wantAdminSchema } from "@/lib/aitools/server";
 
 export const runtime = "nodejs";
 
@@ -23,6 +23,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const denied = requireAdmin(request);
+    if (denied) return denied;
+
     const { id } = await params;
     const existing = await db.want.findUnique({ where: { id } });
     if (!existing) {
@@ -69,10 +72,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const denied = requireAdmin(request);
+    if (denied) return denied;
+
     const { id } = await params;
     const existing = await db.want.findUnique({ where: { id } });
     if (!existing) {

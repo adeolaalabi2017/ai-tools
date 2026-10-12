@@ -138,9 +138,14 @@ async function readErrorBody(res: Response): Promise<{ error?: string; issues?: 
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  /* admin endpoints check the bearer token; harmless on public routes */
+  const token = getAdminToken();
+  const headers = new Headers(init?.headers);
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
   let res: Response;
   try {
-    res = await fetch(url, init);
+    res = await fetch(url, { ...init, headers });
   } catch (cause) {
     throw new ApiError(0, "Network request failed", [], { cause });
   }
@@ -152,6 +157,22 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 /* ------------------------------ endpoints ----------------------------- */
+
+/**
+ * Checks a candidate admin token against the server before storing it.
+ * Returns the HTTP status (0 = network failure): 200 ok, 401 wrong token,
+ * 503 admin not configured on the server.
+ */
+export async function verifyAdminToken(token: string): Promise<number> {
+  try {
+    const res = await fetch("/api/auth/admin", {
+      headers: { Authorization: `Bearer ${token.trim()}` },
+    });
+    return res.status;
+  } catch {
+    return 0;
+  }
+}
 
 export async function fetchTools(params: ToolsQueryParams = {}): Promise<ToolsPage> {
   return request<ToolsPage>(`/api/tools${buildQuery(params)}`);

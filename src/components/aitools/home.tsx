@@ -19,6 +19,7 @@ import { PostView } from "./views/post";
 import type { ApiPost } from "@/lib/aitools/api";
 import { trackPageView } from "@/lib/aitools/api";
 import { AdminDashboard } from "@/components/admin-dashboard";
+import { AdminGate } from "@/components/admin-gate";
 
 export default function AIToolStore() {
   return (
@@ -116,7 +117,9 @@ function AIToolStoreApp() {
   if (view === "admin") {
     return (
       <div className="bg-base text-ink">
-        <AdminDashboard onNavigate={navigate} />
+        <AdminGate>
+          <AdminDashboard onNavigate={navigate} />
+        </AdminGate>
         <SearchModal
           open={searchOpen}
           initialQuery={searchSeed}

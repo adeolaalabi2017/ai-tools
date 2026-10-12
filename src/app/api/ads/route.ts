@@ -9,6 +9,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import {
   adCreateSchema,
+  requireAdmin,
   serializeAd,
   AD_PLACEMENTS,
   type ApiAd,
@@ -22,6 +23,10 @@ export async function GET(request: NextRequest) {
     const sp = request.nextUrl.searchParams;
 
     if (sp.get("all") === "1") {
+      /* the full list (incl. paused ads + stats) is the admin module */
+      const denied = requireAdmin(request);
+      if (denied) return denied;
+
       const rows = await db.ad.findMany({ orderBy: { createdAt: "desc" } });
       const ads: ApiAd[] = rows.map(serializeAd);
       return NextResponse.json({ ads, total: ads.length });
@@ -68,6 +73,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const denied = requireAdmin(request);
+    if (denied) return denied;
+
     const body: unknown = await request.json().catch(() => undefined);
     const parsed = adCreateSchema.safeParse(body);
     if (!parsed.success) {

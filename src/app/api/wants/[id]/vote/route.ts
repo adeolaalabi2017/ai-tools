@@ -5,6 +5,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { serializeWant, wantVoteSchema } from "@/lib/aitools/server";
+import { enforceRateLimit, VOTE_POLICY } from "@/lib/aitools/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +15,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const limited = enforceRateLimit("want-vote", request, VOTE_POLICY);
+    if (limited) return limited;
     const { id } = await params;
 
     const body: unknown = await request.json().catch(() => undefined);

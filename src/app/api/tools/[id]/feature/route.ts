@@ -9,7 +9,7 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { featureSchema, serializeTool } from "@/lib/aitools/server";
+import { featureSchema, requireAdmin, serializeTool } from "@/lib/aitools/server";
 
 export const runtime = "nodejs";
 
@@ -18,6 +18,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const denied = requireAdmin(request);
+    if (denied) return denied;
+
     const { id } = await params;
 
     const body: unknown = await request.json().catch(() => undefined);

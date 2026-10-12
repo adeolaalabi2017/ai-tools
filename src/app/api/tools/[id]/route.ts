@@ -7,12 +7,17 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { serializeTool, toolUpdateSchema } from "@/lib/aitools/server";
+import {
+  isAdminAuthorized,
+  requireAdmin,
+  serializeTool,
+  toolUpdateSchema,
+} from "@/lib/aitools/server";
 
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -22,6 +27,11 @@ export async function GET(
       include: { _count: { select: { toolVotes: true } } },
     });
     if (!tool) {
+      return NextResponse.json({ error: "Tool not found" }, { status: 404 });
+    }
+    // Pending submissions are unlisted: their slugs are guessable, so only
+    // moderators may read them before approval (404 otherwise, like missing).
+    if (tool.status === "pending" && !isAdminAuthorized(request)) {
       return NextResponse.json({ error: "Tool not found" }, { status: 404 });
     }
     return NextResponse.json({ tool: serializeTool(tool, tool._count.toolVotes) });
@@ -36,6 +46,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const denied = requireAdmin(request);
+    if (denied) return denied;
+
     const { id } = await params;
     const existing = await db.tool.findUnique({ where: { id } });
     if (!existing) {

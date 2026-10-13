@@ -158,17 +158,18 @@ describe("POST /api/posts", () => {
 });
 
 describe("PATCH /api/posts/[id]", () => {
-  it("401 anonymously; edits content; slug never changes", async () => {
+  it("401 anonymously; edits content; slug follows the rename policy", async () => {
     const anon = await updatePost(
       jsonRequest("/api/posts/post-1", { method: "PATCH", body: { title: "Hacked" }, ip: nextIp() }),
       withId("post-1"),
     );
     expect(anon.status).toBe(401);
 
+    /* retitling alone never moves the URL */
     const res = await updatePost(
       jsonRequest("/api/posts/post-1", {
         method: "PATCH",
-        body: { title: "Hello world v2", slug: "hijacked-slug" },
+        body: { title: "Hello world v2" },
         token: TOKEN,
         ip: nextIp(),
       }),
@@ -177,7 +178,7 @@ describe("PATCH /api/posts/[id]", () => {
     expect(res.status).toBe(200);
     const { post } = (await readJson(res)) as { post: { title: string; slug: string } };
     expect(post.title).toBe("Hello world v2");
-    expect(post.slug).toBe("hello-world"); // immutable — public links stay stable
+    expect(post.slug).toBe("hello-world"); // stable URL, deliberate renames are PATCH-only
   });
 
   it("first publish stamps publishedAt; re-publish keeps the original date", async () => {
@@ -205,6 +206,137 @@ describe("PATCH /api/posts/[id]", () => {
       withId("ghost"),
     );
     expect(res.status).toBe(404);
+  });
+});
+
+describe("slug rename policy", () => {
+  beforeEach(() => {
+    fake.seedPosts([{ id: "post-rename", slug: "old-name", title: "Old name", status: "published", publishedAt: new Date("2026-01-01") }]);
+  });
+
+  it("renames when explicitly requested and the old URL keeps resolving", async () => {
+    const res = await updatePost(
+      jsonRequest("/api/posts/post-rename", {
+        method: "PATCH",
+        body: { slug: "new-name" },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+      withId("post-rename"),
+    );
+    expect(res.status).toBe(200);
+    const { post } = (await readJson(res)) as { post: { slug: string } };
+    expect(post.slug).toBe("new-name");
+
+    /* old public URL still resolves to the published post */
+    expect((await getPost(jsonRequest("/api/posts/old-name", { ip: nextIp() }), withId("old-name"))).status).toBe(200);
+    expect((await getPost(jsonRequest("/api/posts/new-name", { ip: nextIp() }), withId("new-name"))).status).toBe(200);
+  });
+
+  it("normalize: input is slugified, not trusted verbatim", async () => {
+    const res = await updatePost(
+      jsonRequest("/api/posts/post-rename", {
+        method: "PATCH",
+        body: { slug: "My Cool Post!!" },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+      withId("post-rename"),
+    );
+    expect(((await readJson(res)) as { post: { slug: string } }).post.slug).toBe("my-cool-post");
+  });
+
+  it("400 on gibberish slugs", async () => {
+    const res = await updatePost(
+      jsonRequest("/api/posts/post-rename", {
+        method: "PATCH",
+        body: { slug: "!!!" },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+      withId("post-rename"),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("409 on a clash with another post's slug or retired slug", async () => {
+    fake.seedPosts([
+      { id: "post-holder", slug: "taken", title: "Taken" },
+      { id: "post-retired", slug: "retired-current", previousSlugs: "former-home" },
+    ]);
+
+    const clash = await updatePost(
+      jsonRequest("/api/posts/post-rename", {
+        method: "PATCH",
+        body: { slug: "taken" },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+      withId("post-rename"),
+    );
+    expect(clash.status).toBe(409);
+
+    const retiredClash = await updatePost(
+      jsonRequest("/api/posts/post-rename", {
+        method: "PATCH",
+        body: { slug: "former-home" },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+      withId("post-rename"),
+    );
+    expect(retiredClash.status).toBe(409);
+  });
+
+  it("same-slug PATCH is a no-op (nothing retired)", async () => {
+    const res = await updatePost(
+      jsonRequest("/api/posts/post-rename", {
+        method: "PATCH",
+        body: { slug: "old-name" },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+      withId("post-rename"),
+    );
+    expect(res.status).toBe(200);
+    expect(fake.rawPosts.find((p) => p.id === "post-rename")?.previousSlugs).toBe("");
+  });
+
+  it("renaming back and forth keeps every public URL valid", async () => {
+    const patch = (slug: string) =>
+      updatePost(
+        jsonRequest("/api/posts/post-rename", { method: "PATCH", body: { slug }, token: TOKEN, ip: nextIp() }),
+        withId("post-rename"),
+      );
+    expect((await patch("new-name")).status).toBe(200);
+    expect((await patch("old-name")).status).toBe(200); // restore from the retired list
+
+    const row = fake.rawPosts.find((p) => p.id === "post-rename");
+    expect(row?.slug).toBe("old-name");
+    expect(row?.previousSlugs.split(",")).toEqual(["new-name"]); // single history entry, no dupes
+    for (const slug of ["old-name", "new-name"]) {
+      expect((await getPost(jsonRequest(`/api/posts/${slug}`, { ip: nextIp() }), withId(slug))).status).toBe(200);
+    }
+  });
+
+  it("drafts never leak through old or new slugs", async () => {
+    fake.seedPosts([{ id: "post-draft-r", slug: "draft-old", title: "Draft", status: "draft" }]);
+    await updatePost(
+      jsonRequest("/api/posts/post-draft-r", {
+        method: "PATCH",
+        body: { slug: "draft-new" },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+      withId("post-draft-r"),
+    );
+    /* slug lookups expose published rows only — old or new, admin or not */
+    for (const slug of ["draft-old", "draft-new"]) {
+      expect((await getPost(jsonRequest(`/api/posts/${slug}`, { token: TOKEN, ip: nextIp() }), withId(slug))).status).toBe(404);
+      expect((await getPost(jsonRequest(`/api/posts/${slug}`, { ip: nextIp() }), withId(slug))).status).toBe(404);
+    }
+    /* the id remains the admin editing path */
+    expect((await getPost(jsonRequest("/api/posts/post-draft-r", { token: TOKEN, ip: nextIp() }), withId("post-draft-r"))).status).toBe(200);
   });
 });
 

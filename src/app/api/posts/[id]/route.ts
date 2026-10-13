@@ -14,15 +14,23 @@ import {
   postUpdateSchema,
   requireAdmin,
   serializePost,
+  slugify,
 } from "@/lib/aitools/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 async function findPost(idOrSlug: string) {
-  return db.post.findFirst({
+  const direct = await db.post.findFirst({
     where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
   });
+  if (direct) return direct;
+  /* retired slugs keep resolving: find candidates by contains, then exact
+     CSV membership in JS (contains alone would match substrings) */
+  const candidates = await db.post.findMany({
+    where: { previousSlugs: { contains: idOrSlug } },
+  });
+  return candidates.find((p) => p.previousSlugs.split(",").includes(idOrSlug)) ?? null;
 }
 
 export async function GET(
@@ -74,9 +82,41 @@ export async function PATCH(
     }
     const data = parsed.data;
 
+    /* slug rename: explicit on PATCH, never a side effect of retitling.
+       Old public URLs must survive, so the retired slug is remembered. */
+    let slugUpdate: { slug: string; previousSlugs: string } | undefined;
+    if (data.slug !== undefined) {
+      const desired = slugify(data.slug);
+      if (desired.length < 2 || desired.length > 80) {
+        return NextResponse.json(
+          { error: "Validation failed", issues: ["Slug needs 2–80 letters or digits"] },
+          { status: 400 },
+        );
+      }
+      if (desired !== existing.slug) {
+        /* clash against other posts' live slugs or retired slug lists */
+        const clash = await db.post.findUnique({ where: { slug: desired } });
+        if (clash && clash.id !== id) {
+          return NextResponse.json({ error: "Slug already in use." }, { status: 409 });
+        }
+        const prevMatches = await db.post.findMany({
+          where: { previousSlugs: { contains: desired } },
+        });
+        if (prevMatches.some((p) => p.id !== id && p.previousSlugs.split(",").includes(desired))) {
+          return NextResponse.json({ error: "Slug already in use." }, { status: 409 });
+        }
+        /* retire the current slug; resurrect the desired one if it was retired */
+        const prevSet = new Set(existing.previousSlugs.split(",").filter(Boolean));
+        prevSet.add(existing.slug);
+        prevSet.delete(desired);
+        slugUpdate = { slug: desired, previousSlugs: [...prevSet].join(",") };
+      }
+    }
+
     const post = await db.post.update({
       where: { id },
       data: {
+        ...(slugUpdate !== undefined ? slugUpdate : {}),
         ...(data.title !== undefined ? { title: data.title } : {}),
         ...(data.excerpt !== undefined ? { excerpt: data.excerpt } : {}),
         ...(data.content !== undefined ? { content: data.content } : {}),

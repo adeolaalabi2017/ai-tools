@@ -55,6 +55,7 @@ import { UploadButton } from "@/components/aitools/image-upload";
 
 type FormState = {
   title: string;
+  slug: string;
   excerpt: string;
   content: string;
   author: string;
@@ -65,6 +66,7 @@ type FormState = {
 
 const EMPTY_FORM: FormState = {
   title: "",
+  slug: "",
   excerpt: "",
   content: "",
   author: "AIStore Editors",
@@ -76,6 +78,7 @@ const EMPTY_FORM: FormState = {
 function toForm(p: ApiPost): FormState {
   return {
     title: p.title,
+    slug: p.slug,
     excerpt: p.excerpt,
     content: p.content,
     author: p.author,
@@ -138,6 +141,10 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
       coverEmoji: form.coverEmoji,
       coverUrl: form.coverUrl.trim() || null,
       status,
+      /* explicit slug rename is PATCH-only; unchanged slugs no-op server-side */
+      ...(editing.post && form.slug.trim() !== editing.post.slug
+        ? { slug: form.slug.trim() }
+        : {}),
     };
     try {
       if (editing.post) {
@@ -373,6 +380,25 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
                 value={form.title}
               />
             </div>
+            {editing?.post && (
+              <div className="space-y-1.5">
+                <Label htmlFor="post-slug">URL slug</Label>
+                <div className="flex items-center gap-2">
+                  <span className="select-none font-mono text-[12px] text-faint">/blog/</span>
+                  <Input
+                    id="post-slug"
+                    className="font-mono text-sm"
+                    maxLength={120}
+                    onChange={(e) => set("slug", e.target.value)}
+                    placeholder={form.slug}
+                    value={form.slug}
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Public URL: /blog/{form.slug || "…"} · retired slugs keep resolving, so old links never break.
+                </p>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="post-excerpt">Excerpt</Label>
               <Textarea

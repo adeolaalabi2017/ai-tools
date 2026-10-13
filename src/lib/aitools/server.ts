@@ -404,8 +404,11 @@ export const postCreateSchema = z.object({
   status: z.enum(["draft", "published"]).optional(),
 });
 
-/** Body for PATCH /api/posts/[id] — partial update. Slug is immutable. */
-export const postUpdateSchema = postCreateSchema.partial();
+/** Body for PATCH /api/posts/[id] — partial update. */
+export const postUpdateSchema = postCreateSchema.partial().extend({
+  /** Renaming: raw input is slugified by the route; old slugs keep resolving. */
+  slug: z.string().trim().max(120).optional(),
+});
 
 /* -------------------------------- ads --------------------------------- */
 

@@ -77,19 +77,20 @@ model WantVote {
 
 // Blog / editorial content managed from the admin CMS.
 model Post {
-  id          String    @id @default(cuid())
-  slug        String    @unique // derived from the title, immutable after create
-  title       String
-  excerpt     String // short summary shown on cards
-  content     String // markdown body
-  author      String    @default("AIStore Editors")
-  tags        String    @default("") // CSV, e.g. "changelog,featured"
-  coverEmoji  String    @default("📝") // fallback when no cover image
-  coverUrl    String? // uploaded cover image (/uploads/… or http(s))
-  status      String    @default("draft") // "draft" | "published"
-  publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  slug          String    @unique // derived from the title at create; renamable via PATCH
+  title         String
+  excerpt       String // short summary shown on cards
+  content       String // markdown body
+  author        String    @default("AIStore Editors")
+  tags          String    @default("") // CSV, e.g. "changelog,featured"
+  coverEmoji    String    @default("📝") // fallback when no cover image
+  coverUrl      String? // uploaded cover image (/uploads/… or http(s))
+  previousSlugs String    @default("") // CSV of retired slugs — old links keep resolving
+  status        String    @default("draft") // "draft" | "published"
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([status])
 }

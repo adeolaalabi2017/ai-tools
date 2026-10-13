@@ -48,6 +48,7 @@ export interface FakePost {
   tags: string;
   coverEmoji: string;
   coverUrl: string | null;
+  previousSlugs: string;
   status: string;
   publishedAt: Date | null;
   createdAt: Date;
@@ -381,6 +382,7 @@ export function createFakeDb() {
         tags: "",
         coverEmoji: "📝",
         coverUrl: null,
+        previousSlugs: "",
         status: "draft",
         publishedAt: null,
         createdAt: now,
@@ -655,6 +657,7 @@ export function createFakeDb() {
           tags: row.tags ?? "",
           coverEmoji: row.coverEmoji ?? "📝",
           coverUrl: row.coverUrl ?? null,
+          previousSlugs: row.previousSlugs ?? "",
           status: row.status ?? "draft",
           publishedAt: row.publishedAt ?? null,
           createdAt: row.createdAt ?? now,

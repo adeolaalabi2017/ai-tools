@@ -284,6 +284,8 @@ export interface PostPayload {
   tags?: string[];
   coverEmoji?: string;
   coverUrl?: string | null;
+  /** Edit only: renames the URL slug; old slugs keep resolving (PATCH /api/posts/[id]). */
+  slug?: string;
   status?: "draft" | "published";
 }
 

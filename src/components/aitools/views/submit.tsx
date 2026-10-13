@@ -544,8 +544,9 @@ function Step({ n, label }: { n: number; label: string }) {
   );
 }
 
-/* app-hosted uploads (/uploads/…) are valid image refs alongside URLs */
-const IMAGE_REF_RE = /^(https?:\/\/\S+|\/uploads\/[\w.-]+)$/i;
+/* app-hosted uploads (/uploads/… local, /api/uploads/… adapter-served) are
+   valid image refs alongside http(s) URLs */
+const IMAGE_REF_RE = /^(https?:\/\/\S+|\/(api\/)?uploads\/[\w.-]+)$/i;
 
 /** URL input with a live thumbnail preview (plain <img> — arbitrary remote hosts). */
 function ImageField({

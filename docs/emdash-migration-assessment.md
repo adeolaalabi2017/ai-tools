@@ -69,10 +69,10 @@ the fact that a directory id is a repo slug and curation is editorial.
 
 EmDash stays a reference; we implement the highest-value patterns natively.
 
-1. **Durable uploads** — adopt the *shape* of EmDash's storage ports: `uploadDir()` in
-   `src/app/api/upload/route.ts` becomes a small adapter interface (local | S3-API
-   compatible). S3-compatible via env creds on Cloudflare R2/Backblaze/MinIO; Neon's
-   storage could serve too if its S3 surface is exposed (unverified — flagged).
+1. **Durable uploads** — ✅ **implemented (Task 17, worklog)**: `UPLOAD_STORAGE=s3` stores
+   objects in any S3-compatible bucket (dependency-free SigV4 in `src/lib/aitools/s3-sign.ts`,
+   adapter in `src/lib/aitools/upload-storage.ts`), with the local disk adapter kept as the
+   zero-config default. Validation chain and rate limiting unchanged.
 2. **Scheduled publishing** on posts (`PublishAt` already half-exists via `publishedAt`).
 3. Then, if wanted: revisions, redirects + 404 log, FTS.
 

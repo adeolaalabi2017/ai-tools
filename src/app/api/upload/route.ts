@@ -18,13 +18,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isAdminAuthorized } from "@/lib/aitools/server";
 import { enforceRateLimit, UPLOAD_POLICY } from "@/lib/aitools/rate-limit";
 import { MAX_PIXELS, MAX_UPLOAD_BYTES, sniffImage } from "@/lib/aitools/image-validate";
+import { getUploadStore, newUploadName, UploadStorageConfigError } from "@/lib/aitools/upload-storage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function uploadDir(): string {
-  return process.env.UPLOAD_DIR || path.join(process.cwd(), "public", "uploads");
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,15 +63,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const dir = uploadDir();
-    await mkdir(dir, { recursive: true });
-    /* server-generated name: no client input ever reaches the path */
-    const name = `${randomUUID()}.${info.kind}`;
-    await writeFile(path.join(dir, name), bytes);
+    /* storage adapter decides where bytes live (local disk / S3-compatible);
+       UUID names mean no client input ever reaches a storage path */
+    let stored;
+    try {
+      stored = await getUploadStore().put(newUploadName(info.kind), bytes);
+    } catch (error) {
+      if (error instanceof UploadStorageConfigError) {
+        console.error("[POST /api/upload] storage misconfigured", error);
+        return NextResponse.json(
+          { error: "Storage is not configured correctly." },
+          { status: 500 },
+        );
+      }
+      console.error("[POST /api/upload] storage write failed", error);
+      return NextResponse.json(
+        { error: "Storage is unavailable. Try again shortly." },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json(
       {
-        url: `/uploads/${name}`,
+        url: stored.url,
         mime: info.mime,
         width: info.width,
         height: info.height,

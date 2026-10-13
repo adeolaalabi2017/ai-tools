@@ -191,7 +191,7 @@ const optionalImageUrl = z
       .trim()
       .max(500, "URL must be 500 characters or fewer")
       .refine(
-        (v) => /^https?:\/\/\S+$/i.test(v) || /^\/uploads\/[\w.-]+$/.test(v),
+        (v) => /^https?:\/\/\S+$/i.test(v) || /^\/(api\/)?uploads\/[\w.-]+$/.test(v),
         "Must be an http(s) URL or an uploaded image",
       ),
   ])

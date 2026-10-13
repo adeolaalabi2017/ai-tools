@@ -27,6 +27,10 @@ All seeds are idempotent upserts. `prisma/seed-pending.ts` can add two demo subm
 | `DATABASE_URL` | yes | Neon **direct** endpoint (`postgresql://…?sslmode=require`) — not the `-pooler` URL: the app uses Prisma interactive transactions |
 | `ADMIN_TOKEN` | yes* | Shared moderator secret for the admin console + every admin API. Generate: `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"` |
 | `UPLOAD_DIR` | no | Upload storage dir (default `public/uploads`; served statically at `/uploads/<name>`) |
+| `UPLOAD_STORAGE` | no | `local` (default) or `s3` — S3-compatible storage (R2/MinIO/B2/AWS) makes uploads survive redeploys |
+| `UPLOAD_S3_ENDPOINT` / `UPLOAD_S3_BUCKET` / `UPLOAD_S3_REGION` | with s3 | Storage origin (path-style), bucket, region (`auto` for R2) |
+| `UPLOAD_S3_ACCESS_KEY_ID` / `UPLOAD_S3_SECRET_ACCESS_KEY` / `UPLOAD_S3_SESSION_TOKEN` | with s3 | Bucket credentials (SigV4-signed server-side) |
+| `UPLOAD_S3_KEY_PREFIX` / `UPLOADS_PUBLIC_BASE_URL` | no | Key prefix inside the bucket / serve uploads from a CDN URL instead of the `/api/uploads/<name>` proxy |
 
 \* without `ADMIN_TOKEN` every admin endpoint fails closed (503) — the console cannot be opened.
 

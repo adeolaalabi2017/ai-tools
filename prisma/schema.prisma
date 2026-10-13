@@ -87,7 +87,8 @@ model Post {
   coverEmoji    String    @default("📝") // fallback when no cover image
   coverUrl      String? // uploaded cover image (/uploads/… or http(s))
   previousSlugs String    @default("") // CSV of retired slugs — old links keep resolving
-  status        String    @default("draft") // "draft" | "published"
+  status        String    @default("draft") // "draft" | "published" | "scheduled"
+  publishAt     DateTime? // when a scheduled post flips to published
   publishedAt   DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

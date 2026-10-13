@@ -13,6 +13,7 @@ import {
   PenLineIcon,
   PlusIcon,
   Trash2Icon,
+  ClockIcon,
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,7 @@ type FormState = {
   tags: string; // comma separated in the form
   coverEmoji: string;
   coverUrl: string;
+  scheduledAt: string; // for datetime-local input
 };
 
 const EMPTY_FORM: FormState = {
@@ -73,6 +75,7 @@ const EMPTY_FORM: FormState = {
   tags: "",
   coverEmoji: "📝",
   coverUrl: "",
+  scheduledAt: "",
 };
 
 function toForm(p: ApiPost): FormState {
@@ -85,6 +88,16 @@ function toForm(p: ApiPost): FormState {
     tags: p.tags.join(", "),
     coverEmoji: p.coverEmoji,
     coverUrl: p.coverUrl ?? "",
+    /* datetime-local input shows/changes LOCAL wall time; convert the
+       stored instant to local (and back via new Date(value) on submit) */
+    scheduledAt: p.publishAt
+      ? (() => {
+          const d = new Date(p.publishAt);
+          return new Date(d.getTime() - d.getTimezoneOffset() * 60_000)
+            .toISOString()
+            .slice(0, 16);
+        })()
+      : "",
   };
 }
 
@@ -128,7 +141,7 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
       .filter(Boolean)
       .slice(0, 6);
 
-  const save = async (status: "draft" | "published") => {
+  const save = async (status: "draft" | "published" | "scheduled") => {
     if (busy || !editing) return;
     setBusy(true);
     setError(null);
@@ -141,6 +154,11 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
       coverEmoji: form.coverEmoji,
       coverUrl: form.coverUrl.trim() || null,
       status,
+      /* scheduled carries the datetime-local value (converted to ISO);
+         other statuses clear/complete the schedule server-side */
+      ...(status === "scheduled" && form.scheduledAt
+        ? { publishAt: new Date(form.scheduledAt).toISOString() }
+        : {}),
       /* explicit slug rename is PATCH-only; unchanged slugs no-op server-side */
       ...(editing.post && form.slug.trim() !== editing.post.slug
         ? { slug: form.slug.trim() }
@@ -175,7 +193,12 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
     if (rowBusyId) return;
     setRowBusyId(p.id);
     try {
-      await updatePost(p.id, { status: p.status === "published" ? "draft" : "published" });
+      /* scheduled rows: the toggle cancels the pending schedule */
+      await updatePost(p.id, {
+        ...(p.status === "scheduled"
+          ? { status: "draft", publishAt: null }
+          : { status: p.status === "published" ? "draft" : "published" }),
+      });
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
     } catch {
       /* row stays as-is; the admin sees the toggle not move */
@@ -285,6 +308,10 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
                         <Badge className="border-primary/40 bg-accent-soft text-accent" variant="outline">
                           Published
                         </Badge>
+                      ) : p.status === "scheduled" ? (
+                        <Badge variant="outline" className="border-amber-500/60 text-amber-500">
+                          Scheduled{p.publishAt ? ` · ${fmtDateShort(p.publishAt)}` : ""}
+                        </Badge>
                       ) : (
                         <Badge variant="secondary">Draft</Badge>
                       )}
@@ -295,7 +322,9 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
                           aria-label={
                             p.status === "published"
                               ? `Unpublish ${p.title}`
-                              : `Publish ${p.title}`
+                              : p.status === "scheduled"
+                                ? `Cancel schedule ${p.title}`
+                                : `Publish ${p.title}`
                           }
                           className={cn(
                             "size-8",
@@ -481,6 +510,27 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
           </div>
 
           <div className="flex items-center justify-end gap-2 border-t pt-4">
+            <div className="mr-auto flex items-center gap-2">
+              <Input
+                id="post-schedule"
+                type="datetime-local"
+                aria-label="Schedule date and time"
+                className="h-9 w-44 font-mono text-xs"
+                min={new Date(Date.now() - 60_000)
+                  .toISOString()
+                  .slice(0, 16)}
+                value={form.scheduledAt}
+                onChange={(e) => set("scheduledAt", e.target.value)}
+              />
+              <Button
+                variant="outline"
+                disabled={busy || !form.scheduledAt}
+                onClick={() => void save("scheduled")}
+              >
+                {busy ? <Loader2Icon className="size-3.5 animate-spin" /> : <ClockIcon className="size-3.5" />}
+                Schedule
+              </Button>
+            </div>
             <Button
               disabled={busy}
               onClick={() => void save("draft")}

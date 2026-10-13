@@ -12,6 +12,7 @@ import { db } from "@/lib/db";
 import {
   isAdminAuthorized,
   postUpdateSchema,
+  publishDuePosts,
   requireAdmin,
   serializePost,
   slugify,
@@ -38,6 +39,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    /* due scheduled posts before public lookups, so single-post reads match
+       the list behavior (also used by the admin to anything due) */
+    if (request.nextUrl.searchParams.get("all") === "1") {
+      await publishDuePosts();
+    }
     const { id } = await params;
     const post = await findPost(id);
     if (!post) {
@@ -84,7 +90,7 @@ export async function PATCH(
 
     /* slug rename: explicit on PATCH, never a side effect of retitling.
        Old public URLs must survive, so the retired slug is remembered. */
-    let slugUpdate: { slug: string; previousSlugs: string } | undefined;
+     let slugUpdate: { slug: string; previousSlugs: string } | undefined;
     if (data.slug !== undefined) {
       const desired = slugify(data.slug);
       if (desired.length < 2 || desired.length > 80) {
@@ -113,6 +119,35 @@ export async function PATCH(
       }
     }
 
+    /* scheduling semantics:
+       - scheduled requires a future publishAt (given now, or already set)
+       - scheduled → draft cancels the pending schedule
+       - scheduled → published publishes now, keeping the original date
+       - already scheduled → a new future publishAt reschedules */
+    if (data.status === "scheduled") {
+      const effective = data.publishAt ?? existing.publishAt;
+      if (!effective) {
+        return NextResponse.json(
+          { error: "Validation failed", issues: ["Scheduled posts need a publish date (publishAt)"] },
+          { status: 400 },
+        );
+      }
+      if (effective.getTime() <= Date.now()) {
+        return NextResponse.json(
+          { error: "Validation failed", issues: ["Schedule date must be in the future"] },
+          { status: 400 },
+        );
+      }
+    } else if (existing.status === "scheduled" || data.publishAt !== undefined) {
+      /* schedule consumption: any explicit draft/published transition ends a
+         schedule (draft cancels, publish consumes — the publish-stamp logic
+         above keeps an original date). A publishAt sent with no status change
+         is an in-place reschedule and passes through the write below. */
+      if (data.status !== undefined) {
+        data.publishAt = null;
+      }
+    }
+
     const post = await db.post.update({
       where: { id },
       data: {
@@ -137,6 +172,7 @@ export async function PATCH(
                 : {}),
             }
           : {}),
+        ...(data.publishAt !== undefined ? { publishAt: data.publishAt } : {}),
       },
     });
     return NextResponse.json({ post: serializePost(post) });

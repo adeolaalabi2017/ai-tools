@@ -458,3 +458,20 @@ Stage Summary:
 - WORKLOG COVERAGE (this entry spans) 10 commits: 8270617 feat(catalog), 078d1f0 feat(admin), 5e91e53 feat(db), af4d5e5 fix(query semantics+import), 9eefa8d/072d115/dc4c5a0 test(api|CMS|frontend), b5b0afd feat(security), 82577e2 feat(images), aded706 feat(cms slug)
 - Known accepted gaps: the auth model is a shared bearer secret (as Task 14 already noted), RateEvent pruning is in-process (one lazy sweep/min per instance — a scheduled sweeper would be belt-and-braces), and render-time views are untested under jsdom (deliberate scope: the UI was verified in real browsers via agent tooling throughout)
 - Security note for whoever inherits: the Neon DB password and ADMIN_TOKEN both appeared in session transcripts; rotate them in the Neon console + .env
+
+---
+Task ID: 17
+Agent: OpenCode · GLM-5.3-Flash (main agent, interactive pairing with the product owner)
+Task: Durable upload storage — S3-compatible adapter alongside local disk (EmDash storage-port pattern-steal)
+
+Work Log:
+- upload-storage.ts: pluggable store with two adapters — local disk (default, zero-config, byte-identical to the pre-adapter behavior: public/uploads, static /uploads/<name>) and s3 (any S3-compatible bucket: R2/MinIO/B2/AWS) selected by UPLOAD_STORAGE; misconfiguration throws a dedicated UploadStorageConfigError so the route can answer 500 "not configured" distinctly from a transient 502 outage
+- s3-sign.ts: dependency-free AWS SigV4 (node:crypto) — path-style URLs with RFC3986-segment encoding, sorted canonical headers (content-type on PUT; host/x-amz-content-sha256/x-amz-date/x-amz-security-token), multi-stage HMAC keychain, empty-payload hash for GET. No presigned URLs: uploads happen through our authenticated API; serving is proxied or CDN-direct
+- Serving: names are server-generated UUIDs → immutable → GET /api/uploads/[name] proxies from storage with Cache-Control: public, max-age=31536000, immutable; when UPLOADS_PUBLIC_BASE_URL is set uploads return the CDN URL directly (no proxy hop)
+- Route changes: POST /api/upload now stores via the adapter (502 "Storage is unavailable" on store outage; 500 "Storage is not configured correctly" on operator misconfig); optionalImageUrl (server) + IMAGE_REF_RE (submit form) accept /api/uploads/<name> alongside /uploads/<name>; validation chain (2MB/25MP/magic-bytes/rate-limit/admin-bypass) untouched
+- Verified live against a throwaway in-memory S3-compatible HTTP endpoint (:4599, outside the repo): real 179-byte PNG → 201 /api/uploads/<uuid>.png → GET proxy → 200 image/png, immutable cache, sha256 byte-identical round-trip; mini-S3 log shows the signed PUT (auth=AWS4-HMAC-SHA256 Credent…, key under uploads/ prefix). Then dev server restored to default local mode
+- Suite 188 tests (18 files): s3-sign wire-format tests (canonical shape + independent SigV4 recomputation, determinism, session token, empty-payload hash), adapter tests (local round-trip, signed PUT capture, CDN URL selection, 404→null, failure throws), S3-mode route tests (upload→proxy round-trip incl. immutable cache header, name-malformat 404s, 502 outage, 500 misconfig), UPLOAD_NAME_RE traversal guards
+
+Stage Summary:
+- Durable uploads shipped: set UPLOAD_STORAGE=s3 + bucket env and uploads land in object storage with immutable-cache proxy serving — the first and highest-value pattern-steal from the EmDash assessment (docs/emdash-migration-assessment.md Option A item 1, now implemented)
+- Honest scope notes: SigV4 verified structurally + against a mock endpoint, not against a real bucket (needs the product owner's credentials); stored URLs are frozen at write time — switching adapters later does not rewrite existing DB URLs (local URLs keep working while the local files exist)

@@ -7,6 +7,7 @@
 import { createHash, timingSafeEqual } from "crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { db } from "@/lib/db";
 import { CATEGORIES } from "@/lib/aitools/data";
 import {
   ADMIN_AUTH_POLICY,
@@ -207,6 +208,30 @@ export function matchingCategoryIds(q: string): string[] {
   return CATEGORIES.filter((c) => c.label.toLowerCase().includes(needle)).map((c) => c.id);
 }
 
+/**
+ * Publish any scheduled posts whose time has arrived. Called on public
+ * post reads so no scheduler infrastructure is required; idempotent (the
+ * where-clause targets only scheduled rows due now, and rows already
+ * published no longer match). First-publish stamps publishedAt with the
+ * scheduled instant; re-publishes of a previously published post keep
+ * their original date.
+ */
+export async function publishDuePosts(): Promise<number> {
+  const due = await db.post.findMany({
+    where: { status: "scheduled", publishAt: { lte: new Date() } },
+  });
+  for (const row of due) {
+    await db.post.update({
+      where: { id: row.id },
+      data: {
+        status: "published",
+        ...(row.publishedAt ? {} : { publishedAt: row.publishAt }),
+      },
+    });
+  }
+  return due.length;
+}
+
 /* ------------------------------ zod schemas ------------------------------ */
 
 export const PLATFORM_VALUES = ["web", "mac", "win", "linux", "ios", "android"] as const;
@@ -352,6 +377,7 @@ export interface ApiPost {
   coverEmoji: string;
   coverUrl: string | null;
   status: "draft" | "published" | string;
+  publishAt: string | null;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -368,7 +394,9 @@ export interface DbPost {
   tags: string; // CSV
   coverEmoji: string;
   coverUrl: string | null;
+  previousSlugs: string;
   status: string;
+  publishAt: Date | null;
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -386,6 +414,7 @@ export function serializePost(p: DbPost): ApiPost {
     coverEmoji: p.coverEmoji,
     coverUrl: p.coverUrl,
     status: p.status,
+    publishAt: p.publishAt ? p.publishAt.toISOString() : null,
     publishedAt: p.publishedAt ? p.publishedAt.toISOString() : null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
@@ -401,7 +430,19 @@ export const postCreateSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(24, "Tags must be 24 characters or fewer")).max(6, "At most 6 tags").optional(),
   coverEmoji: z.string().trim().max(8, "Cover must be 8 characters or fewer").optional(),
   coverUrl: optionalImageUrl,
-  status: z.enum(["draft", "published"]).optional(),
+  status: z.enum(["draft", "published", "scheduled"]).optional(),
+  publishAt: z
+    .union([
+      z.literal(""),
+      z.null(),
+      z
+        .string()
+        .trim()
+        .max(40)
+        .refine((v) => !Number.isNaN(Date.parse(v)), "publishAt is not a valid date"),
+    ])
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v === null || v === "" ? null : new Date(v))),
 });
 
 /** Body for PATCH /api/posts/[id] — partial update. */

@@ -266,6 +266,7 @@ export interface ApiPost {
   coverEmoji: string;
   coverUrl: string | null;
   status: "draft" | "published" | string;
+  publishAt: string | null;
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -286,7 +287,10 @@ export interface PostPayload {
   coverUrl?: string | null;
   /** Edit only: renames the URL slug; old slugs keep resolving (PATCH /api/posts/[id]). */
   slug?: string;
-  status?: "draft" | "published";
+  /** ISO datetime for status "scheduled" (required with it, future-dated);
+   *  passing null/"" with a draft/published status clears any schedule. */
+  publishAt?: string | null;
+  status?: "draft" | "published" | "scheduled";
 }
 
 export interface UploadResult {

@@ -1,13 +1,20 @@
 /* ------------------------------------------------------------------ */
 /*  /api/posts — blog content managed from the admin CMS               */
-/*  GET  → published posts (public). `?all=1` returns drafts too       */
-/*         (admin CMS list — gated behind the admin token).            */
-/*  POST → create a post (draft or published). Admin only.             */
+/*  GET  → published posts (public; scheduled posts auto-publish on    */
+/*         the public read when their time is due). `?all=1` returns   */
+/*         drafts too (admin CMS list — admin token).                  */
+/*  POST → create a post (draft/published/scheduled). Admin only.      */
 /* ------------------------------------------------------------------ */
 
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { postCreateSchema, requireAdmin, serializePost, slugify } from "@/lib/aitools/server";
+import {
+  postCreateSchema,
+  publishDuePosts,
+  requireAdmin,
+  serializePost,
+  slugify,
+} from "@/lib/aitools/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +27,9 @@ export async function GET(request: NextRequest) {
     if (all) {
       const denied = await requireAdmin(request);
       if (denied) return denied;
+    } else {
+      // publish due scheduled posts lazily — no scheduler infra needed
+      await publishDuePosts();
     }
 
     const rows = await db.post.findMany({
@@ -60,6 +70,22 @@ export async function POST(request: NextRequest) {
       );
     }
     const data = parsed.data;
+
+    /* a scheduled post must carry a valid future date */
+    if (data.status === "scheduled") {
+      if (!data.publishAt) {
+        return NextResponse.json(
+          { error: "Validation failed", issues: ["Scheduled posts need a publish date (publishAt)"] },
+          { status: 400 },
+        );
+      }
+      if (data.publishAt.getTime() <= Date.now()) {
+        return NextResponse.json(
+          { error: "Validation failed", issues: ["Schedule date must be in the future"] },
+          { status: 400 },
+        );
+      }
+    }
     const now = new Date();
     const post = await db.post.create({
       data: {
@@ -73,6 +99,7 @@ export async function POST(request: NextRequest) {
         coverUrl: data.coverUrl ?? null,
         status: data.status ?? "draft",
         ...(data.status === "published" ? { publishedAt: now } : {}),
+        ...(data.status === "scheduled" ? { publishAt: data.publishAt ?? undefined } : {}),
       },
     });
     return NextResponse.json({ post: serializePost(post) }, { status: 201 });

@@ -50,6 +50,7 @@ export interface FakePost {
   coverUrl: string | null;
   previousSlugs: string;
   status: string;
+  publishAt: Date | null;
   publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -123,6 +124,8 @@ function matchesWhere(tool: FakeTool, where: Where): boolean {
         in?: string[];
         not?: unknown;
         gte?: Date | number;
+        lte?: Date | number;
+        gt?: Date | number;
         lt?: Date | number;
       };
       if (c.contains !== undefined) {
@@ -132,15 +135,28 @@ function matchesWhere(tool: FakeTool, where: Where): boolean {
           : String(value).includes(c.contains);
       }
       if (c.in !== undefined) return c.in.includes(String(value));
-      if (c.gte !== undefined) {
+            /* range operators have been needed for pageviews (gte), rate pruning
+         (lt) and scheduled publishing (lte) */
+      if (c.gte !== undefined || c.lte !== undefined || c.gt !== undefined || c.lt !== undefined) {
         const a = value instanceof Date ? value.getTime() : Number(value);
-        const b = c.gte instanceof Date ? c.gte.getTime() : Number(c.gte);
-        return a >= b;
-      }
-      if (c.lt !== undefined) {
-        const a = value instanceof Date ? value.getTime() : Number(value);
-        const b = c.lt instanceof Date ? c.lt.getTime() : Number(c.lt);
-        return a < b;
+        const bounds: { bound: number; ok: (x: number, y: number) => boolean }[] = [];
+        if (c.gte !== undefined) {
+          const raw = c.gte;
+          bounds.push({ bound: raw instanceof Date ? raw.getTime() : Number(raw), ok: (x, y) => x >= y });
+        }
+        if (c.lte !== undefined) {
+          const raw = c.lte;
+          bounds.push({ bound: raw instanceof Date ? raw.getTime() : Number(raw), ok: (x, y) => x <= y });
+        }
+        if (c.gt !== undefined) {
+          const raw = c.gt;
+          bounds.push({ bound: raw instanceof Date ? raw.getTime() : Number(raw), ok: (x, y) => x > y });
+        }
+        if (c.lt !== undefined) {
+          const raw = c.lt;
+          bounds.push({ bound: raw instanceof Date ? raw.getTime() : Number(raw), ok: (x, y) => x < y });
+        }
+        return bounds.every(({ bound, ok }) => ok(a, bound));
       }
       if ("not" in c) {
         if (c.not === null) return value !== null && value !== undefined;
@@ -384,6 +400,7 @@ export function createFakeDb() {
         coverUrl: null,
         previousSlugs: "",
         status: "draft",
+        publishAt: null,
         publishedAt: null,
         createdAt: now,
         updatedAt: now,
@@ -659,6 +676,7 @@ export function createFakeDb() {
           coverUrl: row.coverUrl ?? null,
           previousSlugs: row.previousSlugs ?? "",
           status: row.status ?? "draft",
+          publishAt: row.publishAt ?? null,
           publishedAt: row.publishedAt ?? null,
           createdAt: row.createdAt ?? now,
           updatedAt: row.updatedAt ?? now,

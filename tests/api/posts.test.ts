@@ -340,6 +340,148 @@ describe("slug rename policy", () => {
   });
 });
 
+describe("scheduled publishing", () => {
+  const FUTURE = () => new Date(Date.now() + 60 * 60_000).toISOString();
+
+  it("create: schedules with a future publishAt (hidden publicly, admin list shows it)", async () => {
+    const res = await createPost(
+      jsonRequest("/api/posts", {
+        method: "POST",
+        body: { ...NEW_POST, status: "scheduled", publishAt: FUTURE() },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+    );
+    expect(res.status).toBe(201);
+    const { post } = (await readJson(res)) as { post: { status: string; publishAt: string | null } };
+    expect(post.status).toBe("scheduled");
+    expect(post.publishAt).not.toBeNull();
+
+    /* public list excludes it; admin ?all=1 includes it */
+    const pub = await readJson(await listPosts(jsonRequest("/api/posts", { ip: nextIp() }))) as { total: number };
+    expect(pub.total).toBe(1); // hello-world only
+    const admin = await readJson(
+      await listPosts(jsonRequest("/api/posts?all=1", { token: TOKEN, ip: nextIp() })),
+    ) as { total: number };
+    expect(admin.total).toBe(3); // hello-world, secret-draft, scheduled
+  });
+
+  it("create: 400 on missing publishAt or a past date", async () => {
+    const noDate = await createPost(
+      jsonRequest("/api/posts", {
+        method: "POST",
+        body: { ...NEW_POST, status: "scheduled" },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+    );
+    expect(noDate.status).toBe(400);
+
+    const past = await createPost(
+      jsonRequest("/api/posts", {
+        method: "POST",
+        body: { ...NEW_POST, status: "scheduled", publishAt: "2020-01-01T00:00:00Z" },
+        token: TOKEN,
+        ip: nextIp(),
+      }),
+    );
+    expect(past.status).toBe(400);
+  });
+
+  it("schedule via PATCH; rescheduling in place; cancel to draft clears the date", async () => {
+    fake.seedPosts([{ id: "post-sched", slug: "to-schedule", title: "To schedule" }]);
+    const patch = (body: unknown) =>
+      updatePost(
+        jsonRequest("/api/posts/post-sched", { method: "PATCH", body, token: TOKEN, ip: nextIp() }),
+        withId("post-sched"),
+      );
+
+    /* schedule via PATCH (no status change but carries publishAt) */
+    const scheduled = await patch({ status: "scheduled", publishAt: FUTURE() });
+    expect(((await readJson(scheduled)) as { post: { status: string } }).post.status).toBe("scheduled");
+
+    /* in-place reschedule (no status sent) */
+    const later = new Date(Date.now() + 5 * 60 * 60_000).toISOString();
+    const rescheduled = await patch({ publishAt: later });
+    expect(((await readJson(rescheduled)) as { post: { publishAt: string } }).post.publishAt).toBe(
+      later,
+    );
+
+    /* schedule sending future date while staying scheduled passes through */
+
+    /* cancel: scheduled → draft clears the date */
+    const cancelled = await patch({ status: "draft" });
+    const cancelledBody = (await readJson(cancelled)) as { post: { status: string; publishAt: string | null } };
+    expect(cancelledBody.post.status).toBe("draft");
+    expect(cancelledBody.post.publishAt).toBeNull();
+  });
+
+  it("public reads auto-publish due scheduled posts, stamping the scheduled instant", async () => {
+    fake.seedPosts([
+      {
+        id: "post-due",
+        slug: "due-post",
+        title: "Due",
+        status: "scheduled",
+        publishAt: new Date(Date.now() - 30_000), // already due
+        publishedAt: null,
+      },
+      {
+        id: "post-later",
+        slug: "later-post",
+        title: "Later",
+        status: "scheduled",
+        publishAt: new Date(Date.now() + 60_000),
+        publishedAt: null,
+      },
+    ]);
+    const res = await listPosts(jsonRequest("/api/posts", { ip: nextIp() }));
+    const body = (await readJson(res)) as { posts: { id: string; publishedAt: string | null }[] };
+    const ids = body.posts.map((t) => t.id);
+    expect(ids).toContain("post-due");
+    expect(ids).not.toContain("post-later");
+    const due = body.posts.find((t) => t.id === "post-due")!;
+    /* publishedAt stamped with the scheduled instant, not the sweep time */
+    expect(due.publishedAt).not.toBeNull();
+
+    /* persisted: due row is now published */
+    const row = fake.rawPosts.find((p) => p.id === "post-due");
+    expect(row?.status).toBe("published");
+    expect(row?.publishedAt?.getTime()).toBe(row?.publishAt?.getTime());
+  });
+
+  it("publishing a scheduled post consumes the schedule and keeps draft-like rules", async () => {
+    fake.seedPosts([{ id: "post-s2", slug: "s2", title: "Schedule 2" }]);
+    const patch = (body: unknown) =>
+      updatePost(
+        jsonRequest("/api/posts/post-s2", { method: "PATCH", body, token: TOKEN, ip: nextIp() }),
+        withId("post-s2"),
+      );
+    await patch({ status: "scheduled", publishAt: FUTURE() });
+    const published = await patch({ status: "published" });
+    const body = (await readJson(published)) as { post: { status: string; publishAt: string | null } };
+    expect(body.post.status).toBe("published");
+    expect(body.post.publishAt).toBeNull();
+  });
+
+  it("PATCH scheduling validates: past date rejected, missing date rejected", async () => {
+    fake.seedPosts([{ id: "post-s3", slug: "s3", title: "Schedule 3" }]);
+    const patch = (body: unknown) =>
+      updatePost(
+        jsonRequest("/api/posts/post-s3", { method: "PATCH", body, token: TOKEN, ip: nextIp() }),
+        withId("post-s3"),
+      );
+    expect((await patch({ status: "scheduled", publishAt: "2020-01-01T00:00:00Z" })).status).toBe(400);
+    expect((await patch({ status: "scheduled" })).status).toBe(400);
+    /* already-scheduled post can keep its date (effective = existing) */
+    expect(
+      (
+        await patch({ status: "scheduled", publishAt: FUTURE() })
+      ).status,
+    ).toBe(200);
+  });
+});
+
 describe("DELETE /api/posts/[id]", () => {
   it("401 anonymously; deletes with a token", async () => {
     const anon = await deletePost(

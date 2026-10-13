@@ -56,6 +56,7 @@ All seeds are idempotent upserts. `prisma/seed-pending.ts` can add two demo subm
 ## Conventions
 
 - `worklog.md` is the development journal — one dated block per task with work log + stage summary; read it before changing anything non-obvious.
+- See `docs/emdash-migration-assessment.md` for the evaluated-and-parked EmDash re-platform decision (keep vs. replace the in-app CMS), including the frozen migration checklist.
 - Commits are thematic (`feat(scope): …`); tests and fixes may arrive in the same theme but keep each commit working.
 - Markdown is hand-rolled (`src/components/aitools/md.tsx`, no `dangerouslySetInnerHTML`); image upload validation is dependency-free (`src/lib/aitools/image-validate.ts`).
 - See `.env.example` for the full variable list and `tests/` for the suite.

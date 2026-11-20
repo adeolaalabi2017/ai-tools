@@ -148,7 +148,7 @@
   --ink: #fafafa;
   --ink-2: #d4d4d8;
   --mute: #a1a1aa;
-  --faint: #71717a;
+  --faint: #8a8a93;
   /* 10% — accent: CTA buttons, links, important icons */
   --accent: #4ade80;
   --accent-soft: rgba(74, 222, 128, 0.11);
@@ -201,10 +201,10 @@ html[data-theme='light'] {
   --ink: #09090b;
   --ink-2: #27272a;
   --mute: #52525b;
-  --faint: #8e8e96;
+  --faint: #66666e;
   /* 10% — accent */
-  --accent: #16a34a;
-  --accent-soft: rgba(22, 163, 74, 0.1);
+  --accent: #15803d;
+  --accent-soft: rgba(21, 128, 61, 0.1);
   --dot: rgba(0, 0, 0, 0.1);
   --backdrop: rgba(24, 24, 27, 0.4);
 
@@ -353,6 +353,22 @@ html[data-theme='light'] ::selection {
 }
 .animate-dot {
   animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+/* honour the OS "reduce motion" setting: end states only, no movement */
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-pop,
+  .animate-bar,
+  .animate-dot {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  body * {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* 60-30-10 palette applied */

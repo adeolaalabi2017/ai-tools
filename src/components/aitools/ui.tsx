@@ -73,6 +73,11 @@ export function AppIcon({ tool, size = "md" }: { tool: Tool; size?: "sm" | "md" 
   /* remember which URL failed (not a boolean) so a changed logo retries without an effect */
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const showLogo = Boolean(logo) && failedSrc !== logo;
+  /* a server-rendered <img> can fail before hydration, when React's onError
+     is not attached yet; catch that case when the element attaches */
+  const imgRef = (img: HTMLImageElement | null) => {
+    if (img && logo && img.complete && img.naturalWidth === 0) setFailedSrc(logo);
+  };
   return (
     <span
       aria-hidden
@@ -84,6 +89,7 @@ export function AppIcon({ tool, size = "md" }: { tool: Tool; size?: "sm" | "md" 
     >
       {showLogo && logo ? (
         <img
+          ref={imgRef}
           src={logo}
           alt=""
           draggable={false}

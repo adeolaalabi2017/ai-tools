@@ -307,6 +307,29 @@ describe("PATCH /api/tools/[id] (catalog edit, admin)", () => {
     expect(tool.name).toBe("OpenCode"); // immutable in the schema
     expect(tool.repo).toBe("owner/opencode");
   });
+
+  it("screenshotUrl accepts bundled /screenshots/ and uploaded images, rejects other relative paths", async () => {
+    const patch = (screenshotUrl: string) =>
+      patchTool(
+        jsonRequest("/api/tools/opencode", {
+          method: "PATCH",
+          body: { screenshotUrl },
+          token: TOKEN,
+          ip: nextIp(),
+        }),
+        withId("opencode"),
+      );
+
+    for (const ok of ["/screenshots/opencode.webp", "/api/uploads/abc.png", "https://example.com/s.png"]) {
+      const res = await patch(ok);
+      expect(res.status).toBe(200);
+      const { tool } = (await readJson(res)) as { tool: { screenshotUrl: string | null } };
+      expect(tool.screenshotUrl).toBe(ok);
+    }
+    for (const bad of ["/etc/passwd", "screenshots/a.webp", "//evil.test/a.png", "/screenshots/a/b.png"]) {
+      expect((await patch(bad)).status).toBe(400);
+    }
+  });
 });
 
 describe("submission rate limiting", () => {

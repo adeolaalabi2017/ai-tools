@@ -444,7 +444,7 @@ export function ToolDetail({
               <img
                 src={tool.screenshotUrl}
                 alt={`${tool.name} screenshot`}
-                className="absolute inset-0 h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover object-top"
               />
             ) : (
               <div className="origin-center scale-[1.1] sm:scale-[1.35] lg:scale-[1.6]">
@@ -454,7 +454,9 @@ export function ToolDetail({
           </div>
           <div className="border-t border-line px-4 py-2.5">
             <p className="truncate text-center font-mono text-[10px] uppercase tracking-wide text-faint">
-              {tool.screenshotUrl ? `${tool.name} · submitted screenshot` : `${tool.name} · ${cat.label} workspace`}
+              {tool.screenshotUrl
+                ? `${tool.name} · ${tool.screenshotUrl.startsWith("/screenshots/") ? "from the project README" : "submitted screenshot"}`
+                : `${tool.name} · ${cat.label} workspace`}
             </p>
           </div>
         </div>

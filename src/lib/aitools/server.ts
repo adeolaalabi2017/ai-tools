@@ -181,7 +181,8 @@ const optionalUrl = z
 /**
  * Optional image reference: same semantics as optionalUrl, but also
  * accepts an app-hosted upload (/uploads/<name> — no query/fragment, no
- * traversal). Anything else (javascript:, //, relative paths) is rejected.
+ * traversal) or a bundled editorial screenshot (/screenshots/<name>).
+ * Anything else (javascript:, //, relative paths) is rejected.
  */
 const optionalImageUrl = z
   .union([
@@ -192,7 +193,10 @@ const optionalImageUrl = z
       .trim()
       .max(500, "URL must be 500 characters or fewer")
       .refine(
-        (v) => /^https?:\/\/\S+$/i.test(v) || /^\/(api\/)?uploads\/[\w.-]+$/.test(v),
+        (v) =>
+          /^https?:\/\/\S+$/i.test(v) ||
+          /^\/(api\/)?uploads\/[\w.-]+$/.test(v) ||
+          /^\/screenshots\/[\w.-]+$/.test(v),
         "Must be an http(s) URL or an uploaded image",
       ),
   ])
@@ -359,7 +363,7 @@ export const toolUpdateSchema = z.object({
   sourceAvailable: z.boolean().optional(),
   emoji: z.string().trim().min(1, "Emoji required").max(8, "Emoji must be 8 characters or fewer").optional(),
   logoUrl: optionalUrl,
-  screenshotUrl: optionalUrl,
+  screenshotUrl: optionalImageUrl,
   headerUrl: optionalUrl,
 });
 

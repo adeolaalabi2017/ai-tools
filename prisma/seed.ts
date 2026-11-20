@@ -30,6 +30,9 @@ async function main() {
          brand logo is derived at render time — see brandLogoUrl() in
          src/lib/aitools/data.ts — so seeding stays mapping-fresh. */
       logoUrl: t.logoUrl ?? null,
+      /* bundled editorial screenshots (public/screenshots/) — only written
+         when the catalog defines one, so admin-set screenshots survive */
+      ...(t.screenshotUrl ? { screenshotUrl: t.screenshotUrl } : {}),
     };
     const existing = await prisma.tool.findUnique({ where: { id: t.id } });
     if (existing) {

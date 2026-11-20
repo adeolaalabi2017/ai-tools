@@ -119,8 +119,10 @@ export function Discover({
               key={t.id}
               className="group overflow-hidden rounded-2xl border border-line bg-card transition-colors hover:border-line2"
             >
-              <div className="dotgrid relative flex h-52 items-center gap-4 overflow-hidden p-6">
-                <div className="relative z-10 min-w-0 flex-1">
+              {t.screenshotUrl ? (
+                /* real product screenshot: copy on top, the app window rising
+                   from the bottom edge of the stage */
+                <div className="dotgrid relative flex flex-col overflow-hidden px-6 pt-6">
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-faint">
                     {catLabel(t.cat)}
                   </p>
@@ -128,13 +130,34 @@ export function Discover({
                     {pickHeadline(t.id)}
                   </h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-mute">{pickSub(t.id)}</p>
-                </div>
-                <div className="hidden w-[46%] shrink-0 sm:block">
-                  <div className="origin-right scale-[0.82]">
-                    <FeaturedArt kind={t.featuredArt ?? "chat"} />
+                  <div className="mt-6 h-48 overflow-hidden rounded-t-xl border border-b-0 border-line2 bg-elev">
+                    <img
+                      src={t.screenshotUrl}
+                      alt={`${t.name} screenshot`}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover object-left-top transition-transform duration-500 group-hover:scale-[1.02]"
+                    />
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="dotgrid relative flex h-52 items-center gap-4 overflow-hidden p-6">
+                  <div className="relative z-10 min-w-0 flex-1">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-faint">
+                      {catLabel(t.cat)}
+                    </p>
+                    <h3 className="mt-3 text-lg font-bold leading-snug tracking-tight text-ink">
+                      {pickHeadline(t.id)}
+                    </h3>
+                    <p className="mt-2 text-[13px] leading-relaxed text-mute">{pickSub(t.id)}</p>
+                  </div>
+                  <div className="hidden w-[46%] shrink-0 sm:block">
+                    <div className="origin-right scale-[0.82]">
+                      <FeaturedArt kind={t.featuredArt ?? "chat"} />
+                    </div>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={() => onOpenTool(t)}
                 className="flex w-full items-center gap-3 border-t border-line p-4 text-left transition-colors hover:bg-elev"

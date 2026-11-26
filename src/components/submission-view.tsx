@@ -199,7 +199,7 @@ export function SubmissionDialog({
               </Button>
               <div className="flex items-center gap-2">
                 <Button
-                  aria-label={`Remove ${tool.name}`}
+                  aria-label={`Reject ${tool.name}`}
                   className="text-muted-foreground hover:text-foreground"
                   disabled={rowBusy !== null}
                   onClick={() => onRemove(tool.id)}
@@ -211,7 +211,7 @@ export function SubmissionDialog({
                   ) : (
                     <Trash2Icon className="size-3.5" />
                   )}
-                  Remove
+                  Reject
                 </Button>
                 <Button
                   className="bg-primary text-primary-foreground hover:bg-primary/90"

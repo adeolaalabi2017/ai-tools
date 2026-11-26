@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { Check, ChevronDown, Github } from "lucide-react";
+import { Check, Github } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { CATEGORIES, githubAvatar } from "@/lib/aitools/data";
@@ -43,11 +43,6 @@ export function Submit({
   const [alt, setAlt] = useState("");
   const [desc, setDesc] = useState("");
   const [platforms, setPlatforms] = useState<string[]>([]);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [website, setWebsite] = useState("");
-  const [docs, setDocs] = useState("");
-  const [audience, setAudience] = useState("");
-  const [selfHosting, setSelfHosting] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
   const [screenshotUrl, setScreenshotUrl] = useState("");
   const [headerUrl, setHeaderUrl] = useState("");
@@ -76,7 +71,6 @@ export function Submit({
       const m = repo.trim().match(GITHUB_RE);
       if (m) {
         setName((n) => n || prettyName(m[2]));
-        setAlt((a) => a || "ChatGPT");
         /* prefill the logo with the project's original brand mark (the repo
            owner's own GitHub avatar) unless the submitter typed one already */
         const avatar = githubAvatar(`${m[1]}/${m[2]}`);
@@ -108,7 +102,6 @@ export function Submit({
         replaces: alt.trim(),
         cat: category,
         platforms,
-        homepage: website.trim() || undefined,
         logoUrl: logoUrl.trim() || undefined,
         screenshotUrl: screenshotUrl.trim() || undefined,
         headerUrl: headerUrl.trim() || undefined,
@@ -124,10 +117,12 @@ export function Submit({
         } else if (err.status === 400) {
           setFormError(err.issues[0] ?? err.message ?? "Please double-check the form and try again.");
         } else {
-          setFormError(err.message || "Something went wrong. Please try again.");
+          /* 5xx or other: the server's text ("Internal server error") gives
+             the submitter nothing to act on, so say what to do instead */
+          setFormError("Unable to submit right now. Your answers are still here, so try again in a minute.");
         }
       } else {
-        setFormError("Couldn't reach the server. Please try again.");
+        setFormError("Unable to reach the server. Check your connection, then submit again. Your answers are still here.");
       }
     } finally {
       setSubmitting(false);
@@ -265,8 +260,8 @@ export function Submit({
               {fetchState === "error"
                 ? "Enter a valid github.com/owner/repo URL."
                 : fetchState === "done"
-                  ? "Fetched from GitHub — name, description, website, and logo filled in."
-                  : "Name, description, website, and logo fill in from GitHub."}
+                  ? "Name and logo filled in from the repository."
+                  : "The name and logo fill in from the repository."}
             </p>
             {repoError && <p className="mt-2 text-xs font-medium text-destructive">{repoError}</p>}
           </div>
@@ -404,87 +399,6 @@ export function Submit({
               onChange={setHeaderUrl}
               previewClass="h-14 w-36 rounded-lg"
             />
-          </div>
-        </section>
-
-        {/* 04 — more details */}
-        <section className="grid grid-cols-1 gap-4 border-t border-line py-10 md:grid-cols-[200px_1fr] md:gap-10">
-          <div>
-            <p className="font-mono text-xs text-faint">04</p>
-            <h2 className="mt-1 text-[15px] font-semibold text-ink">More details</h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-faint">
-              Optional: Website, docs, audience, and self-hosting.
-            </p>
-          </div>
-          <div>
-            <button
-              type="button"
-              onClick={() => setDetailsOpen((o) => !o)}
-              className="flex h-10 items-center gap-2 rounded-lg border border-dashed border-line2 px-4 text-sm text-ink2 transition-colors hover:text-ink"
-            >
-              Add details
-              <ChevronDown className={cn("h-4 w-4 transition-transform", detailsOpen && "rotate-180")} />
-            </button>
-            {detailsOpen && (
-              <div className="animate-pop mt-5 grid gap-5 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="web" className="block text-[13px] font-medium text-ink2">
-                    Website
-                  </label>
-                  <input
-                    id="web"
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
-                    placeholder="https://example.com"
-                    className="mt-2 h-11 w-full rounded-lg border border-line bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-line2"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="docs" className="block text-[13px] font-medium text-ink2">
-                    Docs
-                  </label>
-                  <input
-                    id="docs"
-                    value={docs}
-                    onChange={(e) => setDocs(e.target.value)}
-                    placeholder="https://docs.example.com"
-                    className="mt-2 h-11 w-full rounded-lg border border-line bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-line2"
-                  />
-                </div>
-                <div>
-                  <span className="block text-[13px] font-medium text-ink2">Audience</span>
-                  <div className="mt-2">
-                    <Dropdown
-                      value={audience}
-                      onChange={setAudience}
-                      align="left"
-                      label="Who is it for?"
-                      options={[
-                        { value: "personal", label: "Personal use" },
-                        { value: "team", label: "Teams" },
-                        { value: "selfhost", label: "Self-hosters" },
-                        { value: "dev", label: "Developers" },
-                      ]}
-                    />
-                  </div>
-                </div>
-                <label className="flex cursor-pointer items-center gap-3 self-end pb-2 text-sm text-ink2">
-                  <button
-                    type="button"
-                    role="checkbox"
-                    aria-checked={selfHosting}
-                    onClick={() => setSelfHosting((s) => !s)}
-                    className={cn(
-                      "grid h-5 w-5 place-items-center rounded-md border transition-colors",
-                      selfHosting ? "border-accent bg-accent text-accent-foreground" : "border-line2 bg-card",
-                    )}
-                  >
-                    {selfHosting && <Check className="h-3.5 w-3.5" />}
-                  </button>
-                  Supports self-hosting
-                </label>
-              </div>
-            )}
           </div>
         </section>
 

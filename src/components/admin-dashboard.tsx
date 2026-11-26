@@ -39,6 +39,16 @@ import { TrafficCard } from "@/components/traffic-chart";
 import { TopPagesCard } from "@/components/top-pages";
 import { ModuleSummaries } from "@/components/module-summary";
 import { SubmissionDialog } from "@/components/submission-view";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Action = "approve" | "reject";
 type PendingAction = { id: string; action: Action } | null;
@@ -131,6 +141,12 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
   const viewing = useMemo(
     () => pendingRows.find((t) => t.id === viewingId) ?? null,
     [pendingRows, viewingId],
+  );
+  /* rejecting deletes the submission for good, so it is confirmed first */
+  const [rejectId, setRejectId] = useState<string | null>(null);
+  const rejecting = useMemo(
+    () => pendingRows.find((t) => t.id === rejectId) ?? null,
+    [pendingRows, rejectId],
   );
 
   /* ----------------------- summaries for the overview ----------------------- */
@@ -308,7 +324,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
       );
       if (viewingId === id) setViewingId(null);
     } catch {
-      setActionError("Couldn't remove the submission. Please try again.");
+      setActionError("Couldn't reject the submission. Try again.");
     } finally {
       setPendingAction(null);
     }
@@ -358,7 +374,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
         featureBusyId={featureBusyId}
         featureDrafts={featureDrafts}
         onApprove={(id, featured) => void approve(id, featured)}
-        onRemove={(id) => void remove(id)}
+        onRemove={(id) => setRejectId(id)}
         onToggleFeatureDraft={(id) =>
           setFeatureDrafts((d) => ({ ...d, [id]: !(d[id] ?? false) }))
         }
@@ -370,13 +386,35 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
         featureDraft={viewing ? (featureDrafts[viewing.id] ?? false) : false}
         onApprove={(id, featured) => void approve(id, featured)}
         onClose={() => setViewingId(null)}
-        onRemove={(id) => void remove(id)}
+        onRemove={(id) => setRejectId(id)}
         onToggleFeatureDraft={() =>
           viewing &&
           setFeatureDrafts((d) => ({ ...d, [viewing.id]: !(d[viewing.id] ?? false) }))
         }
         tool={viewing}
       />
+      <AlertDialog open={rejecting !== null} onOpenChange={(open) => !open && setRejectId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject &lsquo;{rejecting?.name}&rsquo;?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The submission is deleted and can&rsquo;t be restored. The submitter can send it again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (rejecting) void remove(rejecting.id);
+                setRejectId(null);
+              }}
+            >
+              Reject submission
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 

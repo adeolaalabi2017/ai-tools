@@ -14,7 +14,6 @@ import {
   ChevronUp,
   CircleDashed,
   CircleDot,
-  Github,
   Info,
   Loader2,
 } from "lucide-react";
@@ -294,7 +293,6 @@ export function Wanted({
   const [feedback, setFeedback] = useState<{ kind: "ok" | "deduped" | "error"; text: string } | null>(
     null,
   );
-  const [signinNote, setSigninNote] = useState(false);
 
   const boardQuery = useQuery<WantsPage>({
     queryKey: ["wants", sort],
@@ -386,41 +384,19 @@ export function Wanted({
         </p>
       </header>
 
-      {/* ---------------------------- sign-in banner ---------------------------- */}
-      <section aria-label="Sign in" className="mt-8">
-        <div className="flex flex-col gap-4 rounded-xl border border-line bg-card p-5 sm:flex-row sm:items-center sm:gap-5">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-line bg-elev text-ink2">
-            <Github className="h-5 w-5" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1">
+      {/* ------------------------------ how it works ----------------------------- */}
+      <section aria-label="How requests and votes work" className="mt-8">
+        <div className="flex items-start gap-3 rounded-xl border border-line bg-card p-5">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-ink2" aria-hidden />
+          <div className="min-w-0">
             <p className="text-[15px] font-semibold leading-snug text-ink">
-              Sign in to request or vote for an alternative.
+              Request an alternative or vote on one. No account needed.
             </p>
             <p className="mt-0.5 text-[13px] leading-relaxed text-mute">
-              Browsing and app submissions are open to everyone. Sign-in keeps votes to one per person.
+              Each browser gets one vote per request, so the board stays honest.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setSigninNote(true)}
-            className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-accent px-4 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
-          >
-            <Github className="h-4 w-4" aria-hidden />
-            Sign in with GitHub
-          </button>
         </div>
-        {signinNote && (
-          <p
-            role="status"
-            className="mt-3 flex items-start gap-2 rounded-lg border border-line bg-elev px-4 py-3 text-[13px] leading-relaxed text-mute"
-          >
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
-            <span>
-              Demo build — GitHub sign-in isn&rsquo;t wired up here. Votes are still limited to one
-              per browser, so the board stays honest.
-            </span>
-          </p>
-        )}
       </section>
 
       {/* -------------------------------- board -------------------------------- */}

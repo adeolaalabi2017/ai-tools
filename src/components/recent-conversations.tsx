@@ -186,7 +186,7 @@ export function ReviewQueueTable({
                                 : "Approve"}
                           </Button>
                           <Button
-                            aria-label={`Remove ${t.name}`}
+                            aria-label={`Reject ${t.name}`}
                             className="size-8 text-muted-foreground hover:text-foreground"
                             disabled={anyBusy}
                             onClick={() => onRemove(t.id)}

@@ -197,7 +197,7 @@ export function VoteChip({
   const classes = cn(
     "inline-flex cursor-pointer select-none items-center gap-0.5 rounded-md border px-1.5 py-0.5 font-mono text-xs leading-none transition-colors",
     voted
-      ? "border-accent/40 bg-accent-soft text-accent"
+      ? "border-accent/40 bg-accent-soft text-accent-text"
       : "border-line text-faint hover:border-line2 hover:text-ink2",
   );
   const onToggle = (e: React.SyntheticEvent) => {
@@ -405,7 +405,7 @@ export function WeeklyGain({ gain }: { gain: number }) {
     <span className="inline-flex items-center gap-1 font-mono text-xs text-accent">
       <ArrowUpRight className="h-3 w-3" />
       {fmtK(gain)}
-      <span className="text-accent/60">/wk</span>
+      <span className="text-faint">/wk</span>
     </span>
   );
 }
@@ -414,7 +414,7 @@ export function WeeklyGain({ gain }: { gain: number }) {
 
 export function SourceBadge() {
   return (
-    <span className="rounded-md border border-amber-500/25 bg-amber-500/10 px-1.5 py-px text-[10px] font-medium text-amber-500">
+    <span className="rounded-md border border-warning/25 bg-warning/10 px-1.5 py-px text-[10px] font-medium text-warning">
       Source-available
     </span>
   );
@@ -427,7 +427,7 @@ export function FeaturedBadge() {
   return (
     <span
       title="Editors' pick"
-      className="inline-flex shrink-0 items-center gap-1 rounded-md border border-accent/40 bg-accent-soft px-1.5 py-px text-[10px] font-medium leading-[1.4] text-accent"
+      className="inline-flex shrink-0 items-center gap-1 rounded-md border border-accent/40 bg-accent-soft px-1.5 py-px text-[10px] font-medium leading-[1.4] text-accent-text"
     >
       <Sparkles className="h-3 w-3" aria-hidden />
       Featured

@@ -71,7 +71,7 @@ const EMPTY_FORM: FormState = {
   slug: "",
   excerpt: "",
   content: "",
-  author: "AIStore Editors",
+  author: "Open AI Stack Editors",
   tags: "",
   coverEmoji: "📝",
   coverUrl: "",

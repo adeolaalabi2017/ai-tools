@@ -1,6 +1,6 @@
 "use client";
 
-import { Github, Moon, Search, ShoppingBag, Sun } from "lucide-react";
+import { Github, Layers, Moon, Search, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ViewId } from "@/lib/aitools/data";
 
@@ -37,10 +37,10 @@ export function Nav({
         <button
           onClick={() => onNavigate("discover")}
           className="flex items-center gap-2 text-ink"
-          aria-label="AIStore home"
+          aria-label="Open AI Stack home"
         >
-          <ShoppingBag className="h-[18px] w-[18px]" />
-          <span className="text-[15px] font-bold tracking-tight">AIStore</span>
+          <Layers className="h-[18px] w-[18px] text-accent" aria-hidden />
+          <span className="text-[15px] font-bold tracking-tight">Open AI Stack</span>
         </button>
 
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
@@ -92,7 +92,7 @@ export function Nav({
             href={REPO_URL}
             target="_blank"
             rel="noreferrer"
-            aria-label="AIStore on GitHub"
+            aria-label="Open AI Stack on GitHub"
             className="hidden h-8 w-8 place-items-center rounded-full text-mute transition-colors hover:bg-elev hover:text-ink sm:grid"
           >
             <Github className="h-4 w-4" />

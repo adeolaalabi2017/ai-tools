@@ -167,7 +167,7 @@ export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) 
       )}
 
       {actionError && (
-        <p role="alert" className="mt-5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-500">
+        <p role="alert" className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {actionError}
         </p>
       )}
@@ -218,11 +218,11 @@ export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) 
                 aria-label={
                   t.featured ? `Remove ${t.name} from featured picks` : `Feature ${t.name} as an editors' pick`
                 }
-                title={t.featured ? "Remove feature" : "Feature on AIStore"}
+                title={t.featured ? "Remove feature" : "Feature on Open AI Stack"}
                 className={cn(
                   "grid h-9 w-9 shrink-0 place-items-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-50",
                   t.featured
-                    ? "border-accent/40 bg-accent-soft text-accent"
+                    ? "border-accent/40 bg-accent-soft text-accent-text"
                     : "border-line text-mute hover:border-line2 hover:text-ink",
                 )}
               >
@@ -300,12 +300,12 @@ function PendingRow({
             onClick={() => setFeature((f) => !f)}
             aria-pressed={feature}
             aria-label={feature ? `Don't feature ${t.name} on approval` : `Also feature ${t.name} on approval`}
-            title={feature ? "Will be featured on approval" : "Feature on AIStore when approved"}
+            title={feature ? "Will be featured on approval" : "Feature on Open AI Stack when approved"}
             disabled={anyBusy}
             className={cn(
               "grid h-9 w-9 place-items-center rounded-lg border transition-colors disabled:cursor-not-allowed disabled:opacity-50",
               feature
-                ? "border-accent/40 bg-accent-soft text-accent"
+                ? "border-accent/40 bg-accent-soft text-accent-text"
                 : "border-line text-mute hover:border-line2 hover:text-ink",
             )}
           >

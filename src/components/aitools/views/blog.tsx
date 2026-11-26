@@ -49,7 +49,7 @@ export function Blog({
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-ink">Blog</h1>
           <p className="mt-2 text-[15px] text-mute">
-            News, guides, and community roundups from the AIStore team.
+            News, guides, and community roundups from the Open AI Stack team.
           </p>
         </div>
       </div>
@@ -62,7 +62,7 @@ export function Blog({
             className={cn(
               "flex shrink-0 items-center rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
               tag === null
-                ? "border-accent/40 bg-accent-soft text-accent"
+                ? "border-accent/40 bg-accent-soft text-accent-text"
                 : "border-line text-mute hover:border-line2 hover:text-ink",
             )}
           >
@@ -75,7 +75,7 @@ export function Blog({
               className={cn(
                 "flex shrink-0 items-center rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
                 t === tag
-                  ? "border-accent/40 bg-accent-soft text-accent"
+                  ? "border-accent/40 bg-accent-soft text-accent-text"
                   : "border-line text-mute hover:border-line2 hover:text-ink",
               )}
             >

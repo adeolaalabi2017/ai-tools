@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  AIStore — rate limiting                                             */
+/*  Open AI Stack — rate limiting                                             */
 /*  Sliding-window counters kept in the database (RateEvent rows), so   */
 /*  throttling and admin sign-in lockouts survive restarts and hold     */
 /*  across instances — process memory lost every deploy and silently     */

@@ -48,7 +48,7 @@ export function Categories({
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-ink">Categories</h1>
           <p className="mt-2 text-[15px] text-mute">
-            Every app in the collection, grouped by what it helps you do.
+            Every open-source project in the collection, grouped by what it helps you do.
           </p>
         </div>
         <button

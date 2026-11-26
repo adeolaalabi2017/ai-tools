@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  AIStore — upload storage adapters (EmDash-style storage ports)      */
+/*  Open AI Stack — upload storage adapters (EmDash-style storage ports)      */
 /*  local disk is the zero-config default; S3-compatible storage        */
 /*  (R2/MinIO/B2/Scaleway/AWS) makes uploads survive redeploys.        */
 /*                                                                      */

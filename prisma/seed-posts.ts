@@ -6,16 +6,16 @@ const db = new PrismaClient();
 const posts = [
   {
     slug: "welcome-to-aistore",
-    title: "Welcome to AIStore — the open-source AI directory",
+    title: "Welcome to Open AI Stack — the open-source AI directory",
     excerpt:
       "Why we built another directory: a curated, community-voted home for the best open-source AI tools, and how to get the most out of it.",
-    author: "AIStore Editors",
+    author: "Open AI Stack Editors",
     tags: "news,community",
     coverEmoji: "👋",
     status: "published",
-    content: `## Why AIStore exists
+    content: `## Why Open AI Stack exists
 
-Every week a dozen "awesome-ai" lists pop up, and every week they go stale. AIStore is a different take: a **small, curated catalog** of open-source AI tools that actually hold up — plus a community layer that keeps it honest.
+Every week a dozen "awesome-ai" lists pop up, and every week they go stale. Open AI Stack is a different take: a **small, curated catalog** of open-source AI tools that actually hold up — plus a community layer that keeps it honest.
 
 ## What you can do here
 
@@ -41,7 +41,7 @@ Happy exploring!`,
     title: "How Featured picks work (and how to get one)",
     excerpt:
       "The green Featured badge isn't a paid slot — it's an editors' flag. Here's exactly what we look for before a tool earns it.",
-    author: "AIStore Editors",
+    author: "Open AI Stack Editors",
     tags: "featured,guide",
     coverEmoji: "⭐",
     status: "published",
@@ -69,7 +69,7 @@ There is no paid placement. If you maintain a tool you think qualifies, submit i
     title: "Community roundup: what the directory voted for this month",
     excerpt:
       "NightOwl went from submission to featured in a week, the Wanted board crowned a new top request, and three categories got new blood.",
-    author: "AIStore Editors",
+    author: "Open AI Stack Editors",
     tags: "community,roundup",
     coverEmoji: "🗳️",
     status: "published",

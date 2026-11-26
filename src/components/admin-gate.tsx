@@ -121,7 +121,7 @@ function SignInCard() {
           </span>
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-faint">
-              AIStore · Admin
+              Open AI Stack · Admin
             </p>
             <h1 className="text-lg font-bold tracking-tight text-ink">Moderator sign in</h1>
           </div>

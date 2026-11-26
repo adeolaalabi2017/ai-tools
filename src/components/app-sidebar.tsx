@@ -36,13 +36,13 @@ export function AppSidebar({
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader className="h-14 justify-center">
         <SidebarMenuButton
-          tooltip="AIStore Admin"
+          tooltip="Open AI Stack Admin"
           onClick={() => onModule("overview")}
         >
           <span className="grid size-6 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground">
             <SparklesIcon className="size-3.5" />
           </span>
-          <span className="font-semibold tracking-tight">AIStore</span>
+          <span className="font-semibold tracking-tight">Open AI Stack</span>
           <span className="ml-1 rounded border border-border px-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             Admin
           </span>
@@ -65,14 +65,14 @@ export function AppSidebar({
               )}
             </SidebarMenuButton>
             <Button
-              aria-label="Back to AIStore"
+              aria-label="Back to Open AI Stack"
               className="size-8 group-data-[collapsible=icon]:opacity-0"
               onClick={() => onNavigate("discover")}
               size="icon"
               variant="outline"
             >
               <GlobeIcon />
-              <span className="sr-only">Back to AIStore</span>
+              <span className="sr-only">Back to Open AI Stack</span>
             </Button>
           </SidebarMenuItem>
         </SidebarGroup>

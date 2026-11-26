@@ -189,7 +189,7 @@ export function Submit({
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-faint">Contribute</p>
         <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink">Submit a project</h1>
         <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-mute">
-          Suggest an open-source AI tool for AIStore. Paste its GitHub repository and we'll fill in what we can. No
+          Suggest an open-source AI tool for Open AI Stack. Paste its GitHub repository and we'll fill in what we can. No
           account needed.
         </p>
 
@@ -224,7 +224,7 @@ export function Submit({
               <div
                 className={cn(
                   "flex h-11 flex-1 items-center gap-2.5 rounded-lg border bg-card px-3.5 transition-colors",
-                  fetchState === "error" ? "border-amber-500/60" : "border-line focus-within:border-line2",
+                  fetchState === "error" ? "border-destructive/60" : "border-line focus-within:border-line2",
                 )}
               >
                 <Github className="h-4 w-4 shrink-0 text-faint" />
@@ -256,7 +256,7 @@ export function Submit({
               className={cn(
                 "mt-2 text-xs",
                 fetchState === "error"
-                  ? "text-amber-500"
+                  ? "text-destructive"
                   : fetchState === "done"
                     ? "text-accent"
                     : "text-faint",
@@ -268,7 +268,7 @@ export function Submit({
                   ? "Fetched from GitHub — name, description, website, and logo filled in."
                   : "Name, description, website, and logo fill in from GitHub."}
             </p>
-            {repoError && <p className="mt-2 text-xs font-medium text-amber-500">{repoError}</p>}
+            {repoError && <p className="mt-2 text-xs font-medium text-destructive">{repoError}</p>}
           </div>
         </section>
 
@@ -356,7 +356,7 @@ export function Submit({
                       className={cn(
                         "h-9 rounded-full border px-4 text-[13px] transition-colors",
                         active
-                          ? "border-accent/40 bg-accent-soft text-accent"
+                          ? "border-accent/40 bg-accent-soft text-accent-text"
                           : "border-line text-mute hover:border-line2 hover:text-ink",
                       )}
                     >
@@ -489,7 +489,7 @@ export function Submit({
         </section>
 
         {formError && (
-          <p className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-500">
+          <p className="mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {formError}
           </p>
         )}
@@ -607,7 +607,7 @@ function ImageField({
             placeholder={placeholder}
             className={cn(
               "h-11 min-w-0 flex-1 rounded-lg border bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint",
-              trimmed && !looksValid ? "border-amber-500/60" : "border-line focus:border-line2",
+              trimmed && !looksValid ? "border-destructive/60" : "border-line focus:border-line2",
             )}
           />
           <UploadButton
@@ -620,7 +620,7 @@ function ImageField({
           />
         </div>
         {trimmed && !looksValid && (
-          <p className="mt-1.5 text-xs text-amber-500">
+          <p className="mt-1.5 text-xs text-destructive">
             Enter a full http(s) image URL, or upload a file.
           </p>
         )}

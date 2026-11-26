@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  AIStore — shared server-side API helpers                           */
+/*  Open AI Stack — shared server-side API helpers                           */
 /*  Serializer, slugify, and zod schemas behind /api/tools             */
 /*  Plus the admin bearer-token gate for moderator-only endpoints.     */
 /* ------------------------------------------------------------------ */

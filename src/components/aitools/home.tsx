@@ -21,7 +21,7 @@ import { trackPageView } from "@/lib/aitools/api";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { AdminGate } from "@/components/admin-gate";
 
-const DEFAULT_TITLE = "AIStore — Find the best AI tools";
+const DEFAULT_TITLE = "Open AI Stack — Open-source alternatives to popular AI tools";
 
 export default function AIToolStore() {
   return (
@@ -117,7 +117,7 @@ function AIToolStoreApp() {
     const h1 = document.querySelector<HTMLHeadingElement>("main h1");
     const heading = h1?.textContent?.replace(/\s+/g, " ").trim();
     document.title =
-      view === "discover" || !heading ? DEFAULT_TITLE : `${heading} — AIStore`;
+      view === "discover" || !heading ? DEFAULT_TITLE : `${heading} — Open AI Stack`;
     if (firstView.current) {
       firstView.current = false;
       return;

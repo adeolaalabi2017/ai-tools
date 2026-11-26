@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  AIStore — admin session                                            */
+/*  Open AI Stack — admin session                                            */
 /*  Bearer token for moderator-only endpoints, kept in localStorage.   */
 /*  Same external-store pattern as myVotes/bookmarks: subscribe/       */
 /*  snapshot pairs so React reads it with useSyncExternalStore and     */

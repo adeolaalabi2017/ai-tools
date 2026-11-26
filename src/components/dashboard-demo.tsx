@@ -5,7 +5,7 @@ import { Dashboard } from "@/components/dashboard";
 /**
  * Demo mount for the @efferd/dashboard-3 registry block.
  *
- * AIStore's global palette re-assigns shadcn surface tokens (--card, --accent,
+ * Open AI Stack's global palette re-assigns shadcn surface tokens (--card, --accent,
  * ...) to its dark 60/30/10 system, which would leave the block's cards with
  * dark text on dark surfaces. This wrapper re-scopes the standard shadcn light
  * theme to the block's subtree so it renders exactly as designed.

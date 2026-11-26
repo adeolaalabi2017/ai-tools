@@ -156,7 +156,7 @@ export async function PATCH(
         ...(data.excerpt !== undefined ? { excerpt: data.excerpt } : {}),
         ...(data.content !== undefined ? { content: data.content } : {}),
         ...(data.author !== undefined
-          ? { author: data.author.trim() || "AIStore Editors" }
+          ? { author: data.author.trim() || "Open AI Stack Editors" }
           : {}),
         ...(data.tags !== undefined ? { tags: data.tags.join(",") } : {}),
         ...(data.coverEmoji !== undefined

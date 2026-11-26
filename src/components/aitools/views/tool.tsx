@@ -345,7 +345,7 @@ export function ToolDetail({
             className={cn(
               "grid h-10 w-10 place-items-center rounded-lg border bg-card transition-colors",
               isSaved
-                ? "border-accent/40 bg-accent-soft text-accent"
+                ? "border-accent/40 bg-accent-soft text-accent-text"
                 : "border-line text-mute hover:border-line2 hover:text-ink",
             )}
           >
@@ -386,7 +386,7 @@ export function ToolDetail({
             <TrendingUp className="h-5 w-5" />
             {voteCount}
           </div>
-          <p className={cn("mt-1.5 text-xs", voted ? "text-accent/80" : "text-faint")}>
+          <p className={cn("mt-1.5 text-xs", voted ? "text-accent-text" : "text-faint")}>
             {voted ? "You upvoted this" : "Upvote"}
           </p>
         </button>

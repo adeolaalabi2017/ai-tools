@@ -1,7 +1,7 @@
 "use client";
 
 /* ------------------------------------------------------------------ */
-/*  AIStore Admin — module-based console.                              */
+/*  Open AI Stack Admin — module-based console.                              */
 /*  Overview  = traffic analytics + summaries of every other module,   */
 /*  Review / Catalog / Wanted / Blog / Ads = standalone wide modules.  */
 /* ------------------------------------------------------------------ */

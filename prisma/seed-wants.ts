@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  AIStore — seed the "Wanted alternatives" request board             */
+/*  Open AI Stack — seed the "Wanted alternatives" request board             */
 /*  Idempotent: every row is upserted by its slug id.                  */
 /*  Run: bun prisma/seed-wants.ts                                      */
 /* ------------------------------------------------------------------ */

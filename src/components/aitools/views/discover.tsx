@@ -55,23 +55,25 @@ export function Discover({
       {/* ---------------------------------- hero --------------------------------- */}
       <section className="pb-20 pt-20 text-center sm:pt-24">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-faint">
-          The AI tools directory · {tools.length} reviewed tools
+          Open-source AI directory · {tools.length} reviewed projects
         </p>
         <h1 className="mx-auto mt-5 text-balance text-5xl font-extrabold leading-[1.04] tracking-tight text-ink sm:text-6xl md:text-7xl">
-          Find the best
+          Find your
           <br />
           <span className="underline decoration-accent decoration-[3px] underline-offset-[10px] md:underline-offset-[14px]">
-            AI tools.
+            open-source AI stack.
           </span>
         </h1>
-        <p className="mt-6 text-[15px] text-mute">Curated AI tools for the way you work.</p>
+        <p className="mx-auto mt-6 max-w-xl text-pretty text-[15px] text-mute">
+          Every project publishes its code. Run it yourself, see how it works and keep your data.
+        </p>
 
         <button
           onClick={() => onOpenSearch()}
           className="mx-auto mt-9 flex h-12 w-full max-w-xl items-center gap-3 rounded-xl border border-line bg-card px-4 text-left transition-colors hover:border-line2"
         >
           <Search className="h-4 w-4 shrink-0 text-faint" />
-          <span className="flex-1 truncate font-mono text-[13px] text-faint">Search open-source apps…</span>
+          <span className="flex-1 truncate font-mono text-[13px] text-faint">Search a project, or a tool to replace…</span>
           <span className="shrink-0 rounded-[5px] border border-line bg-elev px-1.5 py-0.5 font-mono text-[10px] text-faint">{shortcut}</span>
         </button>
 
@@ -94,7 +96,7 @@ export function Discover({
         </div>
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13px]">
-          <span className="text-faint">Popular:</span>
+          <span className="text-faint">Alternatives to:</span>
           {PAGE_SEEDS.map((s) => (
             <button
               key={s}
@@ -111,7 +113,7 @@ export function Discover({
       <section>
         <SectionHeader
           title="Editor's picks"
-          sub="Three standouts to start with."
+          sub="Three open-source projects to start with."
           action="All apps"
           onAction={() => onNavigate("browse")}
         />
@@ -265,7 +267,7 @@ export function Discover({
       <section className="pt-20">
         <SectionHeader
           title="Popular"
-          sub="Most-starred tools in the collection."
+          sub="The collection's most-starred projects on GitHub."
           action="See all"
           onAction={() => onNavigate("browse")}
         />
@@ -373,10 +375,10 @@ export function Discover({
             <div className="max-w-xl">
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-faint">Community</p>
               <h2 className="mt-3 text-2xl font-bold tracking-tight text-ink">
-                Know a project that belongs here?
+                Know an open-source project that belongs here?
               </h2>
               <p className="mt-2.5 text-sm leading-relaxed text-mute">
-                Recommend promising finds while AIStore's editorial review keeps the primary catalog carefully curated.
+                Send us its GitHub link. Editors review every suggestion before it joins the catalog.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -384,19 +386,19 @@ export function Discover({
                 onClick={() => onNavigate("submit")}
                 className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
               >
-                Submit an app
+                Submit a project
               </button>
               <button
                 onClick={() => onNavigate("trending")}
                 className="rounded-lg border border-line bg-elev px-4 py-2.5 text-sm text-ink2 transition-colors hover:border-line2 hover:text-ink"
               >
-                Community Finds
+                Trending projects
               </button>
               <button
-                onClick={() => onNavigate("submit")}
+                onClick={() => onNavigate("wanted")}
                 className="rounded-lg border border-line bg-elev px-4 py-2.5 text-sm text-ink2 transition-colors hover:border-line2 hover:text-ink"
               >
-                Wanted
+                Request an alternative
               </button>
             </div>
           </div>
@@ -409,15 +411,15 @@ export function Discover({
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-faint">Collection</p>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-ink">An open AI stack</h2>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-ink">Build your own AI stack</h2>
               <p className="mt-3 max-w-md text-sm leading-relaxed text-mute">
-                Chat, images, agents, and automation — an independent toolkit for AI that stays in your hands.
+                Chat, images, agents and automation, all with public code you can run yourself. Your tools, your data.
               </p>
               <button
                 onClick={() => onNavigate("categories")}
                 className="mt-7 inline-flex items-center gap-2 rounded-lg border border-line2 bg-elev px-4 py-2.5 text-sm text-ink transition-colors hover:bg-card"
               >
-                Explore the AI stack
+                Explore by category
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>

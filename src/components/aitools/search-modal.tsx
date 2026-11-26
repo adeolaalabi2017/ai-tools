@@ -278,7 +278,7 @@ function Palette({
                 <p aria-hidden className="flex items-center gap-1.5 px-4 pb-1 pt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
                   <CategoryIcon id={g.cat} className="h-3 w-3" />
                   {catLabel(g.cat)}
-                  <span className="text-faint/60">· {g.items.length}</span>
+                  <span className="text-faint">· {g.items.length}</span>
                 </p>
                 {g.items.map((item) => {
                   const gi = items.indexOf(item);

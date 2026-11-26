@@ -44,7 +44,7 @@ export async function POST(
 
     if (action === "approve") {
       // Idempotent: pending → community; community/curated stay untouched.
-      // An explicit `featured` flag ("Feature on AIStore" toggle) is applied
+      // An explicit `featured` flag ("Feature on Open AI Stack" toggle) is applied
       // whenever provided — including on idempotent re-approvals.
       //
       // Logo note: the UI derives every tool's original brand logo from its

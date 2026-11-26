@@ -1,4 +1,4 @@
-/* Seed the AIStore database from the curated static tool list. */
+/* Seed the Open AI Stack database from the curated static tool list. */
 import { PrismaClient } from "@prisma/client";
 import { TOOLS } from "../src/lib/aitools/data";
 

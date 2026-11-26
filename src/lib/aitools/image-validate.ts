@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  AIStore — image upload validation                                   */
+/*  Open AI Stack — image upload validation                                   */
 /*  Dependency-free sniffing for the formats uploads accept. Only      */
 /*  raster formats (PNG/JPEG/GIF/WebP) — SVG is deliberately excluded   */
 /*  because it is a script carrier when served same-origin.             */

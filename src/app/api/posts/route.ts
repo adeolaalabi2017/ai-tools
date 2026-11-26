@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         title: data.title,
         excerpt: data.excerpt,
         content: data.content,
-        author: data.author?.trim() || "AIStore Editors",
+        author: data.author?.trim() || "Open AI Stack Editors",
         tags: (data.tags ?? []).join(","),
         coverEmoji: data.coverEmoji?.trim() || "📝",
         coverUrl: data.coverUrl ?? null,

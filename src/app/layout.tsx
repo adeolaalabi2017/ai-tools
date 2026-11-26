@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AIStore — Find the best AI tools",
+  title: "Open AI Stack — Open-source alternatives to popular AI tools",
   description:
-    "A curated directory of the best open and open-source AI tools. Chat, coding, image generation, voice, agents, automation, and more — independently reviewed.",
+    "A curated directory of open-source and source-available AI tools, each matched to the product it replaces. Chat, coding, images, voice, agents and automation, reviewed by editors.",
   keywords: [
     "AI tools",
     "open source AI",
@@ -25,14 +25,14 @@ export const metadata: Metadata = {
     "self-hosted AI",
     "AI agents",
   ],
-  authors: [{ name: "AIStore" }],
+  authors: [{ name: "Open AI Stack" }],
   icons: {
     icon: "/logo.svg",
   },
   openGraph: {
-    title: "AIStore — Find the best AI tools",
-    description: "Curated AI tools for the way you work with AI.",
-    siteName: "AIStore",
+    title: "Open AI Stack — Open-source alternatives to popular AI tools",
+    description: "Open-source alternatives to the AI tools you use.",
+    siteName: "Open AI Stack",
     type: "website",
   },
 };

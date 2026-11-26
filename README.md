@@ -1,6 +1,6 @@
-# AIStore — Find the best AI tools
+# Open AI Stack — open-source alternatives to popular AI tools
 
-A curated directory of open and open-source AI tools: public directory with community voting, submissions and a "Wanted alternatives" request board — plus a full admin console for moderation, a tool catalog editor, a blog CMS and ad management.
+A curated directory of open-source and source-available AI tools, each matched to the product it replaces: public directory with community voting, submissions and a "Wanted alternatives" request board — plus a full admin console for moderation, a tool catalog editor, a blog CMS and ad management.
 
 Built with **Next.js 16 (standalone) / React 19 / Tailwind v4 / Prisma + Neon Postgres**, run with **bun**. Single-page app: all public views (Discover → tool detail) and the admin console switch inside one route — `src/components/aitools/home.tsx` owns a `ViewId` state, there are no Next routes beyond the REST API under `src/app/api/`.
 

@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  AIStore — data layer                                               */
+/*  Open AI Stack — data layer                                               */
 /* ------------------------------------------------------------------ */
 
 export type ViewId =
@@ -392,7 +392,7 @@ export const VIEW_PAGES: { label: string; view: ViewId; hint: string }[] = [
   { label: "Trending", view: "trending", hint: "GitHub momentum this week" },
   { label: "New", view: "browse", hint: "Every tool in the collection" },
   { label: "Blog", view: "blog", hint: "News, guides, and roundups" },
-  { label: "Submit a project", view: "submit", hint: "Add a tool to AIStore" },
+  { label: "Submit a project", view: "submit", hint: "Add a tool to Open AI Stack" },
 ];
 
 export function matchTool(t: Tool, qRaw: string): boolean {

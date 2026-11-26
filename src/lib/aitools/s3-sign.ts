@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  AIStore — AWS SigV4 signing for S3-compatible object storage        */
+/*  Open AI Stack — AWS SigV4 signing for S3-compatible object storage        */
 /*  Dependency-free (node:crypto). Header-signed PUT/GET for the        */
 /*  upload-store adapter — enough for R2, MinIO, B2, Scaleway and AWS   */
 /*  with path-style addressing. No presigned URLs (uploads go through   */

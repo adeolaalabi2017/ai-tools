@@ -130,7 +130,7 @@ export const navGroups: SidebarNavGroup[] = [
 
 export const footerNavLinks: SidebarNavItem[] = [
   {
-    title: "Back to AIStore",
+    title: "Back to Open AI Stack",
     view: "discover",
     icon: <GlobeIcon />,
   },

@@ -133,7 +133,7 @@ export function FilterBar({
         className={cn(
           "flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
           active
-            ? "border-accent/40 bg-accent-soft text-accent"
+            ? "border-accent/40 bg-accent-soft text-accent-text"
             : "border-line bg-transparent text-mute hover:border-line2 hover:text-ink",
         )}
       >
@@ -225,7 +225,7 @@ export function CountRow({
         className={cn(
           "flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs transition-colors",
           selfHosted
-            ? "border-accent/40 bg-accent-soft text-accent"
+            ? "border-accent/40 bg-accent-soft text-accent-text"
             : "border-line text-mute hover:border-line2 hover:text-ink",
         )}
       >

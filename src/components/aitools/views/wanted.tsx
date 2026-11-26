@@ -111,12 +111,12 @@ const STATUS_META: Record<string, { label: string; className: string; icon: Reac
   },
   progress: {
     label: "In progress",
-    className: "border-amber-500/40 bg-amber-500/10 text-amber-500",
+    className: "border-warning/40 bg-warning/10 text-warning",
     icon: <CircleDashed className="h-3 w-3" aria-hidden />,
   },
   fulfilled: {
     label: "Fulfilled",
-    className: "border-accent/40 bg-accent-soft text-accent",
+    className: "border-accent/40 bg-accent-soft text-accent-text",
     icon: <Check className="h-3 w-3" aria-hidden />,
   },
 };
@@ -223,7 +223,7 @@ function WantRow({
         className={cn(
           "flex h-fit w-12 shrink-0 select-none flex-col items-center gap-0.5 rounded-lg border py-2 transition-colors sm:w-14 sm:py-2.5",
           voted
-            ? "border-accent/40 bg-accent-soft text-accent"
+            ? "border-accent/40 bg-accent-soft text-accent-text"
             : "border-line text-mute hover:border-line2 hover:text-ink",
         )}
       >
@@ -486,8 +486,8 @@ export function Wanted({
                     className={cn(
                       "mt-3 rounded-lg border px-3.5 py-2.5 text-[13px] leading-relaxed",
                       feedback.kind === "error"
-                        ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
-                        : "border-accent/30 bg-accent-soft text-accent",
+                        ? "border-destructive/30 bg-destructive/10 text-destructive"
+                        : "border-accent/30 bg-accent-soft text-accent-text",
                     )}
                   >
                     {feedback.text}

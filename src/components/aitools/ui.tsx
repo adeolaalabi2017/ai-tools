@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   Apple,
   AppWindow,
@@ -432,5 +432,23 @@ export function FeaturedBadge() {
       <Sparkles className="h-3 w-3" aria-hidden />
       Featured
     </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shortcut hint: "⌘K" on Apple platforms, "Ctrl K" everywhere else.  */
+/*  The server renders "⌘K"; the client corrects it after hydration.  */
+/* ------------------------------------------------------------------ */
+const noopSubscribe = () => () => {};
+function isApplePlatform(): boolean {
+  const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+  const platform = nav.userAgentData?.platform || nav.platform || nav.userAgent;
+  return /mac|iphone|ipad|ipod/i.test(platform);
+}
+export function useSearchShortcut(): string {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => (isApplePlatform() ? "⌘K" : "Ctrl K"),
+    () => "⌘K",
   );
 }

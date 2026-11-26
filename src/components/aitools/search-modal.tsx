@@ -17,7 +17,7 @@ import {
 import { fetchTools } from "@/lib/aitools/api";
 import { useTools, apiToolToTool } from "./tools-provider";
 import { useDebounced } from "./use-debounced";
-import { AppIcon, Kbd, CategoryIcon } from "./ui";
+import { AppIcon, Kbd, CategoryIcon, useSearchShortcut } from "./ui";
 
 type PageItem = { kind: "page"; label: string; hint: string; view: ViewId };
 type ToolItem = { kind: "tool"; tool: Tool };
@@ -67,6 +67,7 @@ function Palette({
   const listRef = useRef<HTMLDivElement>(null);
 
   const { getTool } = useTools();
+  const shortcut = useSearchShortcut();
   const debouncedQ = useDebounced(q, 150);
   const searching = debouncedQ.trim().length > 0;
 
@@ -324,7 +325,7 @@ function Palette({
         <div className="flex items-center gap-5 border-t border-line bg-card/60 px-4 py-2.5 font-mono text-[11px] text-faint">
           <span>↑↓ to navigate</span>
           <span>↵ to open</span>
-          <span className="ml-auto">⌘K to toggle</span>
+          <span className="ml-auto">{shortcut} to toggle</span>
         </div>
       </div>
     </dialog>

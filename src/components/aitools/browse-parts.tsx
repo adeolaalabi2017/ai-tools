@@ -11,7 +11,7 @@ import {
   type Platform,
   type Tool,
 } from "@/lib/aitools/data";
-import { AppIcon, Dropdown, FeaturedBadge, PlatformRow, WeeklyGain, CategoryIcon, VoteChip } from "./ui";
+import { AppIcon, Dropdown, FeaturedBadge, PlatformRow, WeeklyGain, CategoryIcon, VoteChip, useSearchShortcut } from "./ui";
 
 /* ------------------------------ filter bar ----------------------------- */
 
@@ -53,6 +53,7 @@ export function FilterBar({
   onFilters: (v: string) => void;
 }) {
   const chipCats = useMemo(() => CATEGORIES, []);
+  const shortcut = useSearchShortcut();
 
   return (
     <div className="space-y-3">
@@ -66,7 +67,7 @@ export function FilterBar({
             aria-label="Search tools"
             className="h-full min-w-0 flex-1 bg-transparent font-mono text-[13px] text-ink outline-none placeholder:text-faint"
           />
-          <span className="hidden shrink-0 font-mono text-[10px] text-faint sm:block">⌘K</span>
+          <span className="hidden shrink-0 font-mono text-[10px] text-faint sm:block">{shortcut}</span>
         </div>
         <div className="flex items-center gap-2">
           <Dropdown

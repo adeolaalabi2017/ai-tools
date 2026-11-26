@@ -11,7 +11,7 @@ import {
   type ViewId,
 } from "@/lib/aitools/data";
 import { useTools } from "../tools-provider";
-import { CategoryIcon, SectionHeader, SourceBadge, ToolRow } from "../ui";
+import { CategoryIcon, SectionHeader, SourceBadge, ToolRow, useSearchShortcut } from "../ui";
 
 export function Categories({
   onNavigate,
@@ -25,6 +25,7 @@ export function Categories({
   onOpenTool: (t: Tool) => void;
 }) {
   const { tools, votes } = useTools();
+  const shortcut = useSearchShortcut();
   const goodStarts = GOOD_STARTS(tools);
 
   /* aggregate GitHub stars + community votes per category, from live data */
@@ -56,7 +57,7 @@ export function Categories({
         >
           <Search className="h-4 w-4 shrink-0 text-faint" />
           <span className="flex-1 truncate font-mono text-[13px] text-faint">Search open-source apps...</span>
-          <span className="shrink-0 rounded-[5px] border border-line bg-elev px-1.5 py-0.5 font-mono text-[10px] text-faint">⌘K</span>
+          <span className="shrink-0 rounded-[5px] border border-line bg-elev px-1.5 py-0.5 font-mono text-[10px] text-faint">{shortcut}</span>
         </button>
       </div>
 

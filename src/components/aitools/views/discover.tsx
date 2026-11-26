@@ -25,6 +25,7 @@ import {
   SectionHeader,
   ToolRow,
   TrendBar,
+  useSearchShortcut,
 } from "../ui";
 import { FeaturedArt } from "../mockups";
 
@@ -40,6 +41,7 @@ export function Discover({
   onOpenTool: (t: Tool) => void;
 }) {
   const { tools } = useTools();
+  const shortcut = useSearchShortcut();
   const trend = trendingTools(tools);
   const maxGain = Math.max(...trend.map((t) => t.weeklyGain ?? 0), 1);
   const openFamily = OPEN_FAMILY(tools);
@@ -70,7 +72,7 @@ export function Discover({
         >
           <Search className="h-4 w-4 shrink-0 text-faint" />
           <span className="flex-1 truncate font-mono text-[13px] text-faint">Search open-source apps...</span>
-          <span className="shrink-0 rounded-[5px] border border-line bg-elev px-1.5 py-0.5 font-mono text-[10px] text-faint">⌘K</span>
+          <span className="shrink-0 rounded-[5px] border border-line bg-elev px-1.5 py-0.5 font-mono text-[10px] text-faint">{shortcut}</span>
         </button>
 
         <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
@@ -197,21 +199,23 @@ export function Discover({
           action="See all"
           onAction={() => onNavigate("trending")}
         />
-        <div className="overflow-x-auto">
-          <div className="min-w-[640px]">
-            <div className="grid grid-cols-[28px_minmax(0,1fr)_130px_170px_90px_24px] items-center gap-4 border-b border-line pb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-faint">
+        {/* phones keep rank, project, weekly gain and stars; category and
+            the GitHub mark join from md up, so nothing hides past a scroll edge */}
+        <div>
+          <div>
+            <div className="grid grid-cols-[20px_minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-line pb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-faint md:grid-cols-[28px_minmax(0,1fr)_130px_170px_90px_24px] md:gap-4">
               <span>#</span>
               <span>Project</span>
-              <span>Category</span>
+              <span className="hidden md:block">Category</span>
               <span>This week</span>
               <span>Stars</span>
-              <span />
+              <span className="hidden md:block" />
             </div>
             {trend.map((t, i) => (
               <button
                 key={t.id}
                 onClick={() => onOpenTool(t)}
-                className="grid w-full grid-cols-[28px_minmax(0,1fr)_130px_170px_90px_24px] items-center gap-4 border-b border-line/60 py-4 text-left transition-colors hover:bg-white/[0.02]"
+                className="grid w-full grid-cols-[20px_minmax(0,1fr)_auto_auto] items-center gap-3 border-b border-line/60 py-4 text-left transition-colors hover:bg-card md:grid-cols-[28px_minmax(0,1fr)_130px_170px_90px_24px] md:gap-4"
               >
                 <span className="text-sm text-faint">{i + 1}</span>
                 <span className="flex min-w-0 items-center gap-3">
@@ -221,10 +225,10 @@ export function Discover({
                     <span className="block truncate font-mono text-[11px] text-faint">{t.repo}</span>
                   </span>
                 </span>
-                <span className="text-[13px] text-mute">{catLabel(t.cat)}</span>
+                <span className="hidden text-[13px] text-mute md:block">{catLabel(t.cat)}</span>
                 <TrendBar gain={t.weeklyGain ?? 0} max={maxGain} />
                 <span className="font-mono text-[13px] text-ink2">{fmtK(t.stars)}</span>
-                <Github className="h-4 w-4 text-faint" />
+                <Github className="hidden h-4 w-4 text-faint md:block" />
               </button>
             ))}
           </div>

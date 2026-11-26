@@ -301,7 +301,7 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
       void queryClient.invalidateQueries({ queryKey: ["tools", "all"] });
       if (viewingId === id) setViewingId(null);
     } catch {
-      setActionError("Couldn't approve the submission. Please try again.");
+      setActionError("Couldn't approve the submission. Try again.");
     } finally {
       setPendingAction(null);
     }
@@ -348,8 +348,8 @@ export function AdminDashboard({ onNavigate }: { onNavigate: (v: ViewId) => void
       queryClient.setQueryData<ToolsPage>(["tools", "all"], prev);
       setActionError(
         featured
-          ? "Couldn't feature the tool. Please try again."
-          : "Couldn't remove the feature. Please try again.",
+          ? "Couldn't feature the tool. Try again."
+          : "Couldn't remove the feature. Try again.",
       );
     } finally {
       setFeatureBusyId(null);

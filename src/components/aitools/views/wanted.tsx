@@ -18,7 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Tool, ViewId } from "@/lib/aitools/data";
+import { plural, type Tool, type ViewId } from "@/lib/aitools/data";
 import { createWant, fetchWants, voteWant, type ApiWant, type WantsPage } from "@/lib/aitools/api";
 import { ensureVoterToken, useTools } from "../tools-provider";
 import { Dropdown } from "../ui";
@@ -208,8 +208,10 @@ function WantRow({
     .map((id) => getTool(id))
     .filter((t): t is Tool => Boolean(t));
 
-  const dupeLabel =
-    want.dupes === 1 ? "1 duplicate became a vote" : `${want.dupes} duplicates became votes`;
+  const dupeLabel = plural(want.dupes, {
+    one: "1 duplicate became a vote",
+    other: `${want.dupes} duplicates became votes`,
+  });
 
   return (
     <li className="flex gap-3 p-5 sm:gap-4 sm:p-6">
@@ -361,7 +363,7 @@ export function Wanted({
       setNote("");
     } catch (err) {
       const message =
-        err instanceof Error && err.message ? err.message : "Couldn't post the request. Please try again.";
+        err instanceof Error && err.message ? err.message : "Couldn't post the request. Try again.";
       setFeedback({ kind: "error", text: message });
     } finally {
       setSubmitting(false);

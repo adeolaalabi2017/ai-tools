@@ -153,7 +153,7 @@ export function CatalogManager({ className, ...props }: React.ComponentProps<typ
             ? issues[0]
             : ((issues[0] as { message?: string })?.message ?? null)
           : null;
-      setError(first ?? "Couldn't save the tool. Please try again.");
+      setError(first ?? "Couldn't save the tool. Try again.");
     } finally {
       setBusy(false);
     }

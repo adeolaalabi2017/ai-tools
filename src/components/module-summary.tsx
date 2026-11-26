@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { AdminModule } from "@/components/app-shared";
+import { plural } from "@/lib/aitools/data";
 
 export type ModuleSummaryData = {
   pending: number;
@@ -52,7 +53,7 @@ export function ModuleSummaries({
       module: "review",
       title: "Review queue",
       value: String(data.pending),
-      footnote: data.pending === 1 ? "submission awaiting review" : "submissions awaiting review",
+      footnote: plural(data.pending, { one: "submission awaiting review", other: "submissions awaiting review" }),
       icon: <ListChecksIcon />,
       warn: data.pending > 0,
     },

@@ -301,6 +301,14 @@ export function brandLogoUrl(t: {
   return BRAND_LOGOS[owner] ?? githubAvatar(owner);
 }
 
+/* Picks the whole phrase for a count by the locale's plural rules, so a
+   string is never assembled from "s" suffixes. Pass every form the
+   language needs; English uses one and other. */
+const PLURALS = new Intl.PluralRules("en");
+export function plural(n: number, forms: { one: string; other: string }): string {
+  return PLURALS.select(n) === "one" ? forms.one : forms.other;
+}
+
 export const fmtK = (n: number): string => {
   if (n >= 1000) {
     const k = n / 1000;

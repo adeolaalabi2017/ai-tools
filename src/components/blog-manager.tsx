@@ -53,6 +53,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { UploadButton } from "@/components/aitools/image-upload";
+import { plural } from "@/lib/aitools/data";
 
 type FormState = {
   title: string;
@@ -183,7 +184,7 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
             ? issues[0]
             : ((issues[0] as { message?: string })?.message ?? null)
           : null;
-      setError(first ?? "Couldn't save the post. Please try again.");
+      setError(first ?? "Couldn't save the post. Try again.");
     } finally {
       setBusy(false);
     }
@@ -233,7 +234,7 @@ export function BlogManager({ className, ...props }: React.ComponentProps<typeof
             <CardTitle>Blog posts</CardTitle>
             <CardDescription>
               {posts.length > 0
-                ? `${publishedCount} published · ${posts.length - publishedCount} draft${posts.length - publishedCount === 1 ? "" : "s"}`
+                ? `${publishedCount} published · ${plural(posts.length - publishedCount, { one: "1 draft", other: `${posts.length - publishedCount} drafts` })}`
                 : "Editorial content for the public blog"}
             </CardDescription>
           </div>

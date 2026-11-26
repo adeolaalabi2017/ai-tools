@@ -35,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { plural } from "@/lib/aitools/data";
 
 const STATUS_LABEL: Record<string, string> = {
   open: "Open",
@@ -109,7 +110,7 @@ export function WantsManager({ className, ...props }: React.ComponentProps<typeo
         <CardTitle>Wanted board</CardTitle>
         <CardDescription>
           {wants.length > 0
-            ? `${wants.length} request${wants.length === 1 ? "" : "s"} · ${wants.filter((w) => w.status === "fulfilled").length} fulfilled`
+            ? `${plural(wants.length, { one: "1 request", other: `${wants.length} requests` })} · ${wants.filter((w) => w.status === "fulfilled").length} fulfilled`
             : "Community requests for alternatives"}
         </CardDescription>
       </CardHeader>

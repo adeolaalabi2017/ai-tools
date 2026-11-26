@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Check, Loader2, RefreshCw, Star, Trash2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import { catLabel, fmtK, type ViewId } from "@/lib/aitools/data";
+import { catLabel, fmtK, plural, type ViewId } from "@/lib/aitools/data";
 import { featureTool, fetchTools, moderateTool, type ApiTool, type ToolsPage } from "@/lib/aitools/api";
 import { apiToolToTool, useTools } from "../tools-provider";
 import { AppIcon, CategoryIcon, PlatformRow } from "../ui";
@@ -77,8 +77,8 @@ export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) 
     } catch {
       setActionError(
         action === "approve"
-          ? "Couldn't approve the submission. Please try again."
-          : "Couldn't remove the submission. Please try again.",
+          ? "Couldn't approve the submission. Try again."
+          : "Couldn't remove the submission. Try again.",
       );
     } finally {
       setPendingAction(null);
@@ -103,8 +103,8 @@ export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) 
       queryClient.setQueryData<ToolsPage>(["tools", "all"], prev);
       setActionError(
         featured
-          ? "Couldn't feature the tool. Please try again."
-          : "Couldn't remove the feature. Please try again.",
+          ? "Couldn't feature the tool. Try again."
+          : "Couldn't remove the feature. Try again.",
       );
     } finally {
       setFeatureBusyId(null);
@@ -120,7 +120,7 @@ export function AdminQueue({ onNavigate }: { onNavigate: (v: ViewId) => void }) 
           Community submissions awaiting editorial approval
           {count !== null ? (
             <span className="ml-2 font-mono text-[13px] text-faint">
-              · {count} {count === 1 ? "submission" : "submissions"}
+              · {plural(count, { one: "1 submission", other: `${count} submissions` })}
             </span>
           ) : null}
         </p>

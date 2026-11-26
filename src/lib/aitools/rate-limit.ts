@@ -49,7 +49,7 @@ export function clientIp(request: Request): string {
 
 function tooMany(retryAfterSeconds: number): NextResponse {
   return NextResponse.json(
-    { error: "Too many requests. Please slow down and try again shortly." },
+    { error: "Too many requests. Wait a minute, then try again." },
     { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } },
   );
 }

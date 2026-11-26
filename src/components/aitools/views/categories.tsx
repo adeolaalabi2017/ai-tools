@@ -9,6 +9,7 @@ import {
   fmtK,
   type Tool,
   type ViewId,
+  plural,
 } from "@/lib/aitools/data";
 import { useTools } from "../tools-provider";
 import { CategoryIcon, SectionHeader, SourceBadge, ToolRow, useSearchShortcut } from "../ui";
@@ -93,7 +94,7 @@ export function Categories({
                   title={`${stats.votes.toLocaleString("en-US")} community votes in ${c.label}`}
                 >
                   ▲ {stats.votes}
-                  <span className="hidden sm:inline">{stats.votes === 1 ? "vote" : "votes"}</span>
+                  <span className="hidden sm:inline">{plural(stats.votes, { one: "vote", other: "votes" })}</span>
                 </span>
               </div>
             </button>

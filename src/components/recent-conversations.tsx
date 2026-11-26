@@ -24,6 +24,7 @@ import type { ApiTool } from "@/lib/aitools/api";
 import { catLabel, fmtDateShort } from "@/components/admin-format";
 import { AppIcon, CategoryIcon } from "@/components/aitools/ui";
 import { apiToolToTool } from "@/components/aitools/tools-provider";
+import { plural } from "@/lib/aitools/data";
 
 type ReviewAction = "approve" | "reject";
 
@@ -63,7 +64,10 @@ export function ReviewQueueTable({
         <CardTitle>Review queue</CardTitle>
         <CardDescription>
           {tools.length > 0
-            ? `${tools.length} community ${tools.length === 1 ? "submission" : "submissions"} awaiting editorial review — open one to see the full submission`
+            ? plural(tools.length, {
+                one: "1 community submission awaiting editorial review — open it to see the full submission",
+                other: `${tools.length} community submissions awaiting editorial review — open one to see the full submission`,
+              })
             : "Community submissions appear here for review"}
         </CardDescription>
       </CardHeader>

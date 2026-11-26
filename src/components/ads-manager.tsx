@@ -181,7 +181,7 @@ export function AdsManager({ className }: { className?: string }) {
             ? issues[0]
             : ((issues[0] as { message?: string })?.message ?? null)
           : null;
-      setError(first ?? "Couldn't save the ad. Please try again.");
+      setError(first ?? "Couldn't save the ad. Try again.");
     } finally {
       setBusy(false);
     }

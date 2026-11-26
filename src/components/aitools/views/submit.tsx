@@ -173,7 +173,7 @@ export function Submit({
             </button>
             <button
               onClick={onDiscover}
-              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90"
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
             >
               Back to Discover
             </button>
@@ -476,7 +476,7 @@ export function Submit({
                     onClick={() => setSelfHosting((s) => !s)}
                     className={cn(
                       "grid h-5 w-5 place-items-center rounded-md border transition-colors",
-                      selfHosting ? "border-accent bg-accent text-zinc-950" : "border-line2 bg-card",
+                      selfHosting ? "border-accent bg-accent text-accent-foreground" : "border-line2 bg-card",
                     )}
                   >
                     {selfHosting && <Check className="h-3.5 w-3.5" />}
@@ -517,7 +517,7 @@ export function Submit({
             <button
               type="submit"
               disabled={!canSubmit || submitting}
-              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? "Submitting…" : "Submit project"}
             </button>

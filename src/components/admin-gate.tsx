@@ -150,7 +150,7 @@ function SignInCard() {
           <button
             type="submit"
             disabled={busy || !value.trim()}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-accent text-[13px] font-semibold text-zinc-950 transition-colors hover:bg-accent/90 disabled:opacity-50"
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-accent text-[13px] font-semibold text-accent-foreground transition-colors hover:bg-accent/90 disabled:opacity-50"
           >
             <ShieldCheckIcon className="h-4 w-4" />
             {busy ? "Checking…" : "Enter console"}

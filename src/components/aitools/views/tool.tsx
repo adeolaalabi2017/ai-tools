@@ -323,7 +323,7 @@ export function ToolDetail({
             href={repoUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90"
+            className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
           >
             Get {tool.name}
             <ExternalLink className="h-3.5 w-3.5" />
@@ -423,8 +423,17 @@ export function ToolDetail({
       {/* ------------------------------ screenshots ------------------------------ */}
       <section className="mt-12">
         <div className="flex items-end justify-between gap-4">
-          <h2 className="text-xl font-bold tracking-tight text-ink">Screenshots</h2>
-          <p className="text-xs text-faint">Official project imagery</p>
+          <h2 className="text-xl font-bold tracking-tight text-ink">
+            {tool.screenshotUrl ? "Screenshots" : "Preview"}
+          </h2>
+          {/* only a real image gets a source claim; the fallback art says what it is */}
+          <p className="text-xs text-faint">
+            {tool.screenshotUrl
+              ? tool.screenshotUrl.startsWith("/screenshots/")
+                ? "From the project README"
+                : "Submitted screenshot"
+              : "Illustration, not a product screenshot"}
+          </p>
         </div>
         <div className="mt-4 overflow-hidden rounded-2xl border border-line bg-card">
           <div className="flex h-10 items-center gap-2 border-b border-line bg-elev/60 px-4">
@@ -456,7 +465,7 @@ export function ToolDetail({
             <p className="truncate text-center font-mono text-[10px] uppercase tracking-wide text-faint">
               {tool.screenshotUrl
                 ? `${tool.name} · ${tool.screenshotUrl.startsWith("/screenshots/") ? "from the project README" : "submitted screenshot"}`
-                : `${tool.name} · ${cat.label} workspace`}
+                : `${cat.label} illustration`}
             </p>
           </div>
         </div>

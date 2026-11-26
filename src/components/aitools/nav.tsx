@@ -65,7 +65,7 @@ export function Nav({
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => onNavigate("submit")}
-            className="mr-1 hidden h-8 items-center rounded-full bg-accent px-3.5 text-[13px] font-medium text-zinc-950 transition-colors hover:bg-accent/90 sm:flex"
+            className="mr-1 flex h-8 shrink-0 items-center rounded-full bg-accent px-3.5 text-[13px] font-medium text-accent-foreground transition-colors hover:bg-accent/90"
           >
             Submit
           </button>
@@ -98,17 +98,18 @@ export function Nav({
         </div>
       </div>
 
-      {/* mobile secondary nav */}
+      {/* mobile secondary nav: wraps to a second row on the narrowest phones
+          rather than hiding links past a scroll edge */}
       <nav
         aria-label="Primary mobile"
-        className="no-scrollbar flex items-center gap-1 overflow-x-auto border-t border-line/70 px-5 py-2 md:hidden"
+        className="flex flex-wrap items-center gap-1 border-t border-line/70 px-4 py-2 md:hidden"
       >
         {LINKS.map((l) => (
           <button
             key={l.id}
             onClick={() => onNavigate(l.id)}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] transition-colors",
+              "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] transition-colors",
               view === l.id || (l.id === "blog" && view === "post")
                 ? "bg-elev text-ink"
                 : "text-mute",
@@ -118,12 +119,6 @@ export function Nav({
             {l.dot && <span className="animate-dot h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />}
           </button>
         ))}
-        <button
-          onClick={() => onNavigate("submit")}
-          className="shrink-0 rounded-full bg-accent px-3 py-1.5 text-[13px] font-medium text-zinc-950 transition-colors hover:bg-accent/90"
-        >
-          Submit
-        </button>
       </nav>
     </header>
   );

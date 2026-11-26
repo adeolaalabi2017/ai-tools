@@ -129,7 +129,7 @@ export function Blog({
         </div>
         <button
           onClick={() => onNavigate("submit")}
-          className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90"
+          className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
         >
           Submit a project
           <ArrowRight className="h-4 w-4" />

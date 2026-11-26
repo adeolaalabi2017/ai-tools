@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Search, CornerDownLeft, Star } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -62,6 +62,7 @@ function Palette({
 }) {
   const [q, setQ] = useState(initialQuery);
   const [idx, setIdx] = useState(0);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -69,12 +70,18 @@ function Palette({
   const debouncedQ = useDebounced(q, 150);
   const searching = debouncedQ.trim().length > 0;
 
-  useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 10);
+  /* a native modal <dialog> makes the page behind it inert, so Tab cannot
+     leave the palette; on close, focus goes back to whatever opened it */
+  useLayoutEffect(() => {
+    const dialog = dialogRef.current;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    dialog?.showModal();
+    inputRef.current?.focus();
     document.documentElement.style.overflow = "hidden";
     return () => {
-      clearTimeout(t);
+      if (dialog?.open) dialog.close();
       document.documentElement.style.overflow = "";
+      if (opener?.isConnected) opener.focus();
     };
   }, []);
 
@@ -188,11 +195,15 @@ function Palette({
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[9vh]"
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
       aria-label="Search apps, alternatives, and pages"
+      onCancel={(e) => {
+        /* Escape: let React unmount the palette instead of the browser closing it */
+        e.preventDefault();
+        onClose();
+      }}
+      className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none items-start justify-center bg-transparent px-4 pt-[9vh] text-ink open:flex backdrop:bg-transparent"
     >
       <button
         aria-label="Close search"
@@ -300,6 +311,6 @@ function Palette({
           <span className="ml-auto">⌘K to toggle</span>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

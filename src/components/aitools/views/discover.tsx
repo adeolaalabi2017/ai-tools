@@ -378,7 +378,7 @@ export function Discover({
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => onNavigate("submit")}
-                className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-zinc-950 transition-colors hover:bg-accent/90"
+                className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90"
               >
                 Submit an app
               </button>

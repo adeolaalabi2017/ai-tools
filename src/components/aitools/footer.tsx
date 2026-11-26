@@ -1,6 +1,7 @@
 "use client";
 
-import { Github, Layers } from "lucide-react";
+import { Github } from "lucide-react";
+import { BrandMark } from "./brand-mark";
 import type { ViewId } from "@/lib/aitools/data";
 import { REPO_URL } from "./nav";
 
@@ -25,7 +26,7 @@ export function Footer({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
         <div className="flex flex-col justify-between gap-10 md:flex-row">
           <div className="max-w-xs">
             <div className="flex items-center gap-2 text-ink">
-              <Layers className="h-[18px] w-[18px] text-accent" aria-hidden />
+              <BrandMark className="h-5 w-5 text-accent" />
               <span className="text-[15px] font-bold tracking-tight">Open AI Stack</span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-mute">

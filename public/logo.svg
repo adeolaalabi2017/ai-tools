@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Open AI Stack mark: lucide "layers" in the brand accent on the base tone -->
+  <!-- Open AI Stack mark (same geometry as src/components/aitools/brand-mark.tsx):
+       solid top plate, two open plates below, accent on the base tone -->
   <rect width="32" height="32" rx="8" fill="#0a0c0b"/>
   <g transform="translate(4 4)" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"/>
-    <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"/>
-    <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"/>
+    <path d="M12 2.75 21 7.25 12 11.75 3 7.25Z" fill="#4ade80"/>
+    <path d="M3 12 12 16.5 21 12"/>
+    <path d="M3 16.75 12 21.25 21 16.75"/>
   </g>
 </svg>

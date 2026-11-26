@@ -1,6 +1,7 @@
 "use client";
 
-import { Github, Layers, Moon, Search, Sun } from "lucide-react";
+import { Github, Moon, Search, Sun } from "lucide-react";
+import { BrandMark } from "./brand-mark";
 import { cn } from "@/lib/utils";
 import type { ViewId } from "@/lib/aitools/data";
 
@@ -39,7 +40,7 @@ export function Nav({
           className="flex items-center gap-2 text-ink"
           aria-label="Open AI Stack home"
         >
-          <Layers className="h-[18px] w-[18px] text-accent" aria-hidden />
+          <BrandMark className="h-5 w-5 text-accent" />
           <span className="text-[15px] font-bold tracking-tight">Open AI Stack</span>
         </button>
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { GlobeIcon, ListChecksIcon, SparklesIcon } from "lucide-react";
+import { GlobeIcon, ListChecksIcon } from "lucide-react";
+import { BrandMark } from "@/components/aitools/brand-mark";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -40,7 +41,7 @@ export function AppSidebar({
           onClick={() => onModule("overview")}
         >
           <span className="grid size-6 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground">
-            <SparklesIcon className="size-3.5" />
+            <BrandMark className="size-4" />
           </span>
           <span className="font-semibold tracking-tight">Open AI Stack</span>
           <span className="ml-1 rounded border border-border px-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">

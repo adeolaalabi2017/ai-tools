@@ -27,7 +27,8 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Open AI Stack" }],
   icons: {
-    icon: "/logo.svg",
+    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   openGraph: {
     title: "Open AI Stack — Open-source alternatives to popular AI tools",

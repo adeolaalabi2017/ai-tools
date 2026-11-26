@@ -383,7 +383,7 @@ export const HERO_CHIPS: { label: string; cat: string | null }[] = [
   { label: "Video & Audio", cat: "video" },
   { label: "Voice", cat: "voice" },
   { label: "Agents", cat: "agents" },
-  { label: "More...", cat: "__more" },
+  { label: "More…", cat: "__more" },
 ];
 
 export const VIEW_PAGES: { label: string; view: ViewId; hint: string }[] = [

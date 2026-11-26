@@ -249,7 +249,7 @@ export function Submit({
                 disabled={fetchState === "loading"}
                 className="h-11 shrink-0 rounded-lg border border-line2 bg-elev px-4 text-sm text-ink transition-colors hover:bg-card disabled:opacity-60"
               >
-                {fetchState === "loading" ? "Fetching..." : "Fetch"}
+                {fetchState === "loading" ? "Fetching…" : "Fetch"}
               </button>
             </div>
             <p

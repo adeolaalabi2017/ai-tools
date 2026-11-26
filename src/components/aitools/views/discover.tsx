@@ -71,7 +71,7 @@ export function Discover({
           className="mx-auto mt-9 flex h-12 w-full max-w-xl items-center gap-3 rounded-xl border border-line bg-card px-4 text-left transition-colors hover:border-line2"
         >
           <Search className="h-4 w-4 shrink-0 text-faint" />
-          <span className="flex-1 truncate font-mono text-[13px] text-faint">Search open-source apps...</span>
+          <span className="flex-1 truncate font-mono text-[13px] text-faint">Search open-source apps…</span>
           <span className="shrink-0 rounded-[5px] border border-line bg-elev px-1.5 py-0.5 font-mono text-[10px] text-faint">{shortcut}</span>
         </button>
 

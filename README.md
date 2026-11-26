@@ -40,7 +40,7 @@ All seeds are idempotent upserts. `prisma/seed-pending.ts` can add two demo subm
 | --- | --- |
 | `bun run dev` | Dev server on :3000 (logs to `dev.log`) |
 | `bun run build` / `bun run start` | Standalone production build / server (`server.log`) |
-| `bun run test` / `test:watch` | Vitest suite (**194 tests / 18 files**) |
+| `bun run test` / `test:watch` | Vitest suite (**195 tests / 18 files**) |
 | `bun run lint` | ESLint |
 | `bun run db:push / db:generate / db:migrate / db:reset` | Prisma |
 

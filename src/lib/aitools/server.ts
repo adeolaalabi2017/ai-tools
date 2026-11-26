@@ -242,12 +242,14 @@ export const PLATFORM_VALUES = ["web", "mac", "win", "linux", "ios", "android"] 
 
 /** Community submission body. Unknown fields are stripped by default. */
 export const submissionSchema = z.object({
-  name: z.string().trim().min(2, "Name must be 2–60 characters").max(60, "Name must be 2–60 characters"),
-  repo: z.string().trim().regex(/^[\w.-]+\/[\w.-]+$/, "Repo must be in owner/repo format"),
-  desc: z.string().trim().min(10, "Description must be 10–200 characters").max(200, "Description must be 10–200 characters"),
-  replaces: z.string().trim().min(2, "Replaces must be 2–80 characters").max(80, "Replaces must be 2–80 characters"),
-  cat: z.string().refine(isCategoryId, "Unknown category"),
-  platforms: z.array(z.enum(PLATFORM_VALUES)).min(1).default(["web"]),
+  /* messages name the submit form's labels; the form routes them back to
+     their fields (FIELD_MESSAGES in views/submit.tsx) */
+  name: z.string().trim().min(2, "Project name needs 2–60 characters.").max(60, "Project name needs 2–60 characters."),
+  repo: z.string().trim().regex(/^[\w.-]+\/[\w.-]+$/, "Enter the repository as github.com/owner/repo."),
+  desc: z.string().trim().min(10, "Short description needs 10–200 characters.").max(200, "Short description needs 10–200 characters."),
+  replaces: z.string().trim().min(2, "Alternative to needs 2–80 characters.").max(80, "Alternative to needs 2–80 characters."),
+  cat: z.string().refine(isCategoryId, "Choose a category."),
+  platforms: z.array(z.enum(PLATFORM_VALUES)).min(1, "Choose at least one platform.").default(["web"]),
   submitter: z.string().trim().max(120).optional(),
   homepage: z.string().trim().optional(), // accepted but not persisted (no column)
   logoUrl: optionalUrl, // branding: small square logo

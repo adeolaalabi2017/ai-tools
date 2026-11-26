@@ -135,7 +135,7 @@ export const footerNavLinks: SidebarNavItem[] = [
     icon: <GlobeIcon />,
   },
   {
-    title: "Submit an app",
+    title: "Submit a project",
     view: "submit",
     icon: <PlusIcon />,
   },

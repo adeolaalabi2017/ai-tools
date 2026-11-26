@@ -119,7 +119,7 @@ export function Trending({ onOpenTool }: { onOpenTool: (t: Tool) => void }) {
       </div>
 
       {!page && !isError ? (
-        <div className="mt-10 font-mono text-sm text-faint">Loading apps…</div>
+        <div className="mt-10 font-mono text-sm text-faint">Loading projects…</div>
       ) : results.length > 0 ? (
         <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
           {results.map((t) => (
@@ -127,7 +127,16 @@ export function Trending({ onOpenTool }: { onOpenTool: (t: Tool) => void }) {
           ))}
         </div>
       ) : (
-        <EmptyState />
+        <EmptyState
+          onClear={() => {
+            setQ("");
+            setCategory(null);
+            setPlatform("all");
+            setSelfHosted(false);
+            setSourceAvailable(false);
+            setFeatured(false);
+          }}
+        />
       )}
 
       <p className="mt-12 border-t border-line pt-6 text-xs text-faint">
@@ -138,11 +147,18 @@ export function Trending({ onOpenTool }: { onOpenTool: (t: Tool) => void }) {
   );
 }
 
-export function EmptyState() {
+export function EmptyState({ onClear }: { onClear: () => void }) {
   return (
     <div className="mt-10 grid place-items-center rounded-xl border border-dashed border-line px-6 py-16 text-center">
-      <p className="text-sm text-mute">Nothing matches those filters.</p>
-      <p className="mt-1 text-xs text-faint">Try clearing the search or picking another category.</p>
+      <p className="text-sm text-mute">No projects match these filters.</p>
+      <p className="mt-1 text-xs text-faint">Clear them to see every project again.</p>
+      <button
+        type="button"
+        onClick={onClear}
+        className="mt-4 rounded-lg border border-line bg-elev px-3.5 py-2 text-[13px] text-ink2 transition-colors hover:border-line2 hover:text-ink"
+      >
+        Clear filters
+      </button>
     </div>
   );
 }

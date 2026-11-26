@@ -114,7 +114,7 @@ export function Discover({
         <SectionHeader
           title="Editor's picks"
           sub="Three open-source projects to start with."
-          action="All apps"
+          action="All projects"
           onAction={() => onNavigate("browse")}
         />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -313,7 +313,7 @@ export function Discover({
       <section className="pt-20">
         <SectionHeader
           title="Well reviewed"
-          sub="Established apps with published user ratings."
+          sub="Established projects with published user ratings."
           action="See all"
           onAction={() => onNavigate("browse")}
         />

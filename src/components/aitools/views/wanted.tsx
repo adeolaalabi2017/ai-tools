@@ -564,7 +564,7 @@ export function Wanted({
             onClick={() => onNavigate("submit")}
             className="text-ink2 underline underline-offset-4 transition-colors hover:text-ink"
           >
-            Submit an app
+            Submit a project
           </button>
           .
         </p>

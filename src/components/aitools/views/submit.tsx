@@ -28,6 +28,35 @@ function prettyName(slug: string): string {
     .join(" ");
 }
 
+/* Field messages name each field by its visible label. The server's
+   submissionSchema uses the same strings, so a 400 maps back to its field. */
+const FIELD_MESSAGES = {
+  name: "Project name needs 2–60 characters.",
+  cat: "Choose a category.",
+  alt: "Alternative to needs 2–80 characters.",
+  desc: "Short description needs 10–200 characters.",
+  platforms: "Choose at least one platform.",
+} as const;
+const REPO_MESSAGE = "Enter the repository as github.com/owner/repo.";
+const FIELD_ORDER = ["name", "cat", "alt", "desc", "platforms"] as const;
+const FIELD_IDS: Record<(typeof FIELD_ORDER)[number] | "repo", string> = {
+  repo: "repo",
+  name: "pname",
+  cat: "cat-field",
+  alt: "alt",
+  desc: "desc",
+  platforms: "platforms-field",
+};
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={id} className="mt-1.5 text-xs font-medium text-destructive">
+      {message}
+    </p>
+  );
+}
+
 export function Submit({
   onDiscover,
   onWanted,
@@ -57,8 +86,26 @@ export function Submit({
 
   const repoValid = useMemo(() => GITHUB_RE.test(repo.trim()), [repo]);
 
-  const canSubmit =
-    repoValid && name.trim().length > 0 && category !== "" && platforms.length > 0 && desc.trim().length > 0;
+  /* per-field errors, shown under each field; messages use the field's own
+     label and match the server's rules in submissionSchema */
+  type Field = "name" | "cat" | "alt" | "desc" | "platforms";
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({});
+  const clearError = (f: Field) => setFieldErrors((e) => (e[f] ? { ...e, [f]: undefined } : e));
+  const validate = () => {
+    const errs: Partial<Record<Field, string>> = {};
+    const len = (v: string) => v.trim().length;
+    if (len(name) < 2 || len(name) > 60) errs.name = FIELD_MESSAGES.name;
+    if (!category) errs.cat = FIELD_MESSAGES.cat;
+    if (len(alt) < 2 || len(alt) > 80) errs.alt = FIELD_MESSAGES.alt;
+    if (len(desc) < 10 || len(desc) > 200) errs.desc = FIELD_MESSAGES.desc;
+    if (platforms.length === 0) errs.platforms = FIELD_MESSAGES.platforms;
+    return errs;
+  };
+  const focusField = (id: string) => {
+    const el = document.getElementById(id);
+    const target = el?.matches("input, textarea, button") ? el : el?.querySelector<HTMLElement>("input, textarea, button");
+    target?.focus();
+  };
 
   const fetchRepo = () => {
     if (!repoValid) {
@@ -88,10 +135,20 @@ export function Submit({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit || submitting) return;
-    setSubmitting(true);
+    if (submitting) return;
     setRepoError(null);
     setFormError(null);
+    /* validate on submit: show every problem beside its field, then move
+       focus to the first one */
+    const errs = validate();
+    setFieldErrors(errs);
+    if (!repoValid) setRepoError(REPO_MESSAGE);
+    const first = !repoValid ? "repo" : FIELD_ORDER.find((f) => errs[f]);
+    if (first) {
+      focusField(FIELD_IDS[first]);
+      return;
+    }
+    setSubmitting(true);
     const m = repo.trim().match(GITHUB_RE);
     try {
       const created = await submitTool({
@@ -115,7 +172,21 @@ export function Submit({
         if (err.status === 409) {
           setRepoError(err.message || "This repository is already listed.");
         } else if (err.status === 400) {
-          setFormError(err.issues[0] ?? err.message ?? "Please double-check the form and try again.");
+          /* the server's messages match FIELD_MESSAGES, so route each one
+             back to its field; anything unrecognised goes above the button */
+          const routed: Partial<Record<Field, string>> = {};
+          const rest: string[] = [];
+          for (const issue of err.issues) {
+            const f = FIELD_ORDER.find((k) => FIELD_MESSAGES[k] === issue);
+            if (f) routed[f] = issue;
+            else rest.push(issue);
+          }
+          setFieldErrors(routed);
+          if (rest.length || !Object.keys(routed).length) {
+            setFormError(rest[0] ?? "Check the highlighted fields, then submit again.");
+          }
+          const firstRouted = FIELD_ORDER.find((f) => routed[f]);
+          if (firstRouted) focusField(FIELD_IDS[firstRouted]);
         } else {
           /* 5xx or other: the server's text ("Internal server error") gives
              the submitter nothing to act on, so say what to do instead */
@@ -219,7 +290,7 @@ export function Submit({
               <div
                 className={cn(
                   "flex h-11 flex-1 items-center gap-2.5 rounded-lg border bg-card px-3.5 transition-colors",
-                  fetchState === "error" ? "border-destructive/60" : "border-line focus-within:border-line2",
+                  fetchState === "error" || repoError ? "border-destructive/60" : "border-line focus-within:border-line2",
                 )}
               >
                 <Github className="h-4 w-4 shrink-0 text-faint" />
@@ -235,6 +306,8 @@ export function Submit({
                     autoLogo.current = null;
                   }}
                   placeholder="github.com/owner/repo"
+                  aria-invalid={repoError || fetchState === "error" ? true : undefined}
+                  aria-describedby={repoError && fetchState !== "error" ? "repo-error" : "repo-hint"}
                   className="h-full min-w-0 flex-1 bg-transparent font-mono text-[13px] text-ink outline-none placeholder:text-faint"
                 />
               </div>
@@ -248,22 +321,27 @@ export function Submit({
               </button>
             </div>
             <p
+              id="repo-hint"
               className={cn(
                 "mt-2 text-xs",
                 fetchState === "error"
                   ? "text-destructive"
                   : fetchState === "done"
-                    ? "text-accent"
+                    ? "text-accent-text"
                     : "text-faint",
               )}
             >
               {fetchState === "error"
-                ? "Enter a valid github.com/owner/repo URL."
+                ? REPO_MESSAGE
                 : fetchState === "done"
                   ? "Name and logo filled in from the repository."
                   : "The name and logo fill in from the repository."}
             </p>
-            {repoError && <p className="mt-2 text-xs font-medium text-destructive">{repoError}</p>}
+            {repoError && fetchState !== "error" && (
+              <p id="repo-error" className="mt-2 text-xs font-medium text-destructive">
+                {repoError}
+              </p>
+            )}
           </div>
         </section>
 
@@ -283,22 +361,35 @@ export function Submit({
                 <input
                   id="pname"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    clearError("name");
+                  }}
                   placeholder="e.g. AppFlowy"
-                  className="mt-2 h-11 w-full rounded-lg border border-line bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-line2"
+                  aria-invalid={fieldErrors.name ? true : undefined}
+                  aria-describedby={fieldErrors.name ? "pname-error" : undefined}
+                  className={cn(
+                    "mt-2 h-11 w-full rounded-lg border bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint",
+                    fieldErrors.name ? "border-destructive/60" : "border-line focus:border-line2",
+                  )}
                 />
+                <FieldError id="pname-error" message={fieldErrors.name} />
               </div>
               <div>
                 <span className="block text-[13px] font-medium text-ink2">Category</span>
-                <div className="mt-2">
+                <div id="cat-field" className="mt-2">
                   <Dropdown
                     value={category}
-                    onChange={setCategory}
+                    onChange={(v) => {
+                      setCategory(v);
+                      clearError("cat");
+                    }}
                     align="left"
                     label="Choose a category"
                     options={CATEGORIES.map((c) => ({ value: c.id, label: c.label }))}
                   />
                 </div>
+                <FieldError id="cat-error" message={fieldErrors.cat} />
               </div>
             </div>
 
@@ -309,11 +400,22 @@ export function Submit({
               <input
                 id="alt"
                 value={alt}
-                onChange={(e) => setAlt(e.target.value)}
+                onChange={(e) => {
+                  setAlt(e.target.value);
+                  clearError("alt");
+                }}
                 placeholder="e.g. Notion, Confluence"
-                className="mt-2 h-11 w-full rounded-lg border border-line bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint focus:border-line2"
+                aria-invalid={fieldErrors.alt ? true : undefined}
+                aria-describedby={fieldErrors.alt ? "alt-error alt-hint" : "alt-hint"}
+                className={cn(
+                  "mt-2 h-11 w-full rounded-lg border bg-card px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-faint",
+                  fieldErrors.alt ? "border-destructive/60" : "border-line focus:border-line2",
+                )}
               />
-              <p className="mt-1.5 text-xs text-faint">Proprietary products it can replace, separated by commas.</p>
+              <FieldError id="alt-error" message={fieldErrors.alt} />
+              <p id="alt-hint" className="mt-1.5 text-xs text-faint">
+                Proprietary products it can replace, separated by commas.
+              </p>
             </div>
 
             <div>
@@ -323,14 +425,23 @@ export function Submit({
               <textarea
                 id="desc"
                 value={desc}
-                maxLength={320}
-                onChange={(e) => setDesc(e.target.value)}
+                maxLength={200}
+                onChange={(e) => {
+                  setDesc(e.target.value);
+                  clearError("desc");
+                }}
                 placeholder="What does this project help people do?"
-                className="mt-2 min-h-28 w-full resize-y rounded-lg border border-line bg-card px-3.5 py-3 text-sm leading-relaxed text-ink outline-none transition-colors placeholder:text-faint focus:border-line2"
+                aria-invalid={fieldErrors.desc ? true : undefined}
+                aria-describedby={fieldErrors.desc ? "desc-error desc-hint" : "desc-hint"}
+                className={cn(
+                  "mt-2 min-h-28 w-full resize-y rounded-lg border bg-card px-3.5 py-3 text-sm leading-relaxed text-ink outline-none transition-colors placeholder:text-faint",
+                  fieldErrors.desc ? "border-destructive/60" : "border-line focus:border-line2",
+                )}
               />
-              <div className="mt-1.5 flex items-center justify-between text-xs text-faint">
-                <span>One or two plain sentences.</span>
-                <span className="font-mono">{desc.length} / 320</span>
+              <FieldError id="desc-error" message={fieldErrors.desc} />
+              <div id="desc-hint" className="mt-1.5 flex items-center justify-between text-xs text-faint">
+                <span>One or two plain sentences, 10–200 characters.</span>
+                <span className="font-mono tabular-nums">{desc.length} / 200</span>
               </div>
             </div>
 
@@ -339,7 +450,7 @@ export function Submit({
                 <span className="text-[13px] font-medium text-ink2">Available on</span>
                 <span className="text-xs text-faint">Choose at least one</span>
               </span>
-              <div className="mt-2.5 flex flex-wrap gap-2">
+              <div id="platforms-field" className="mt-2.5 flex flex-wrap gap-2">
                 {PLATFORM_CHIPS.map((p) => {
                   const active = platforms.includes(p.id);
                   return (
@@ -347,7 +458,10 @@ export function Submit({
                       key={p.id}
                       type="button"
                       aria-pressed={active}
-                      onClick={() => togglePlatform(p.id)}
+                      onClick={() => {
+                        togglePlatform(p.id);
+                        clearError("platforms");
+                      }}
                       className={cn(
                         "h-9 rounded-full border px-4 text-[13px] transition-colors",
                         active
@@ -360,6 +474,7 @@ export function Submit({
                   );
                 })}
               </div>
+              <FieldError id="platforms-error" message={fieldErrors.platforms} />
             </div>
           </div>
         </section>
@@ -430,18 +545,13 @@ export function Submit({
             </button>
             <button
               type="submit"
-              disabled={!canSubmit || submitting}
+              disabled={submitting}
               className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {submitting ? "Submitting…" : "Submit project"}
             </button>
           </div>
         </div>
-        {!canSubmit && (
-          <p className="mt-3 text-right text-xs text-faint">
-            Add a valid repo URL, name, category, description, and at least one platform to submit.
-          </p>
-        )}
       </form>
     </div>
   );

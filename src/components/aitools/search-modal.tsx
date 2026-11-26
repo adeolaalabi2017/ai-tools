@@ -198,7 +198,7 @@ function Palette({
   return (
     <dialog
       ref={dialogRef}
-      aria-label="Search apps, alternatives, and pages"
+      aria-label="Search projects, alternatives and pages"
       onCancel={(e) => {
         /* Escape: let React unmount the palette instead of the browser closing it */
         e.preventDefault();
@@ -222,7 +222,7 @@ function Palette({
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search apps, alternatives, and pages…"
+            placeholder="Search projects, alternatives and pages…"
             className="h-12 flex-1 bg-transparent font-mono text-base text-ink outline-none placeholder:text-faint sm:text-sm"
             aria-label="Search query"
             /* combobox pattern: focus stays here, arrows move the active option */

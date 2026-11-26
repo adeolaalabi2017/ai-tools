@@ -139,7 +139,7 @@ export function Browse({
       </div>
 
       {!page && !isError ? (
-        <div className="mt-10 font-mono text-sm text-faint">Loading apps…</div>
+        <div className="mt-10 font-mono text-sm text-faint">Loading projects…</div>
       ) : shown.length > 0 ? (
         <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
           {shown.slice(0, 6).map((t) => (
@@ -152,7 +152,16 @@ export function Browse({
           ))}
         </div>
       ) : (
-        <EmptyState />
+        <EmptyState
+          onClear={() => {
+            setQ("");
+            setCategory(null);
+            setPlatform("all");
+            setSelfHosted(false);
+            setSourceAvailable(false);
+            setFeatured(false);
+          }}
+        />
       )}
 
       {shown.length > 0 && (

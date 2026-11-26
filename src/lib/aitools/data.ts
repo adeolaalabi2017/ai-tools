@@ -376,7 +376,7 @@ export const STACK_LIST = (list: Tool[] = TOOLS): Tool[] =>
 export const PAGE_SEEDS = ["ChatGPT", "Midjourney", "GitHub Copilot", "ElevenLabs"];
 
 export const HERO_CHIPS: { label: string; cat: string | null }[] = [
-  { label: "All apps", cat: null },
+  { label: "All projects", cat: null },
   { label: "Chat", cat: "assistants" },
   { label: "Coding", cat: "coding" },
   { label: "Images", cat: "images" },

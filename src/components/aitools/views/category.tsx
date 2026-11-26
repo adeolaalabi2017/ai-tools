@@ -102,7 +102,7 @@ export function CategoryView({
   const catTotal = countByCat(catId, liveTools);
 
   /* chips inside the shared FilterBar: picking a category opens its page,
-     "All apps" returns to the full catalog */
+     "All projects" returns to the full catalog */
   const onChipCategory = (v: string | null) => {
     if (v === null) onNavigate("browse");
     else if (v !== catId) onOpenCategory?.(v);
@@ -160,7 +160,7 @@ export function CategoryView({
       </div>
 
       {!page && !isError ? (
-        <div className="mt-10 font-mono text-sm text-faint">Loading apps…</div>
+        <div className="mt-10 font-mono text-sm text-faint">Loading projects…</div>
       ) : shown.length > 0 ? (
         <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
           {shown.map((t) => (
@@ -168,7 +168,15 @@ export function CategoryView({
           ))}
         </div>
       ) : (
-        <EmptyState />
+        <EmptyState
+          onClear={() => {
+            setQ("");
+            setPlatform("all");
+            setSelfHosted(false);
+            setSourceAvailable(false);
+            setFeatured(false);
+          }}
+        />
       )}
 
       {shown.length > 0 && (

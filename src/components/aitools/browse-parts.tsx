@@ -63,7 +63,7 @@ export function FilterBar({
           <input
             value={q}
             onChange={(e) => onQ(e.target.value)}
-            placeholder="Search open-source apps…"
+            placeholder="Search open-source projects…"
             aria-label="Search tools"
             className="h-full min-w-0 flex-1 bg-transparent font-mono text-[13px] text-ink outline-none placeholder:text-faint"
           />
@@ -100,7 +100,7 @@ export function FilterBar({
         <Chip
           active={category === null}
           icon={null}
-          label="All apps"
+          label="All projects"
           onClick={() => onCategory(null)}
         />
         {chipCats.map((c) => (

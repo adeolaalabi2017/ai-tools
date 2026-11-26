@@ -4,6 +4,8 @@ import { Github, Moon, Search, ShoppingBag, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ViewId } from "@/lib/aitools/data";
 
+export const REPO_URL = "https://github.com/adeolaalabi2017/ai-tools";
+
 const LINKS: { id: ViewId; label: string; dot?: boolean }[] = [
   { id: "discover", label: "Discover" },
   { id: "categories", label: "Categories" },
@@ -87,7 +89,7 @@ export function Nav({
           </button>
           <span className="mx-1 hidden h-5 w-px bg-line sm:block" aria-hidden />
           <a
-            href="https://github.com"
+            href={REPO_URL}
             target="_blank"
             rel="noreferrer"
             aria-label="AIStore on GitHub"
@@ -104,21 +106,23 @@ export function Nav({
         aria-label="Primary mobile"
         className="flex flex-wrap items-center gap-1 border-t border-line/70 px-4 py-2 md:hidden"
       >
-        {LINKS.map((l) => (
-          <button
-            key={l.id}
-            onClick={() => onNavigate(l.id)}
-            className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] transition-colors",
-              view === l.id || (l.id === "blog" && view === "post")
-                ? "bg-elev text-ink"
-                : "text-mute",
-            )}
-          >
-            {l.label}
-            {l.dot && <span className="animate-dot h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />}
-          </button>
-        ))}
+        {LINKS.map((l) => {
+          const active = view === l.id || (l.id === "blog" && view === "post");
+          return (
+            <button
+              key={l.id}
+              onClick={() => onNavigate(l.id)}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[13px] transition-colors",
+                active ? "bg-elev text-ink" : "text-mute",
+              )}
+            >
+              {l.label}
+              {l.dot && <span className="animate-dot h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />}
+            </button>
+          );
+        })}
       </nav>
     </header>
   );

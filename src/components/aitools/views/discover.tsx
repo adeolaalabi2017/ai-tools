@@ -192,8 +192,8 @@ export function Discover({
       {/* ------------------------------- trending table ---------------------------- */}
       <section className="pt-14">
         <SectionHeader
-          title="Trending this week"
-          sub="Projects on GitHub's weekly Trending page."
+          title="Trending on GitHub"
+          sub="The fastest-rising projects, from GitHub's weekly Trending page."
           action="See all"
           onAction={() => onNavigate("trending")}
         />
@@ -231,7 +231,7 @@ export function Discover({
         </div>
         <p className="mt-5 flex items-center gap-2 text-xs text-faint">
           <ArrowUpRight className="h-3 w-3" />
-          From GitHub's weekly Trending page · Snapshot Oct 5, 2026
+          Snapshot of GitHub's weekly Trending page, taken Oct 5, 2026
         </p>
       </section>
 

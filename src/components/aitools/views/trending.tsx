@@ -78,10 +78,10 @@ export function Trending({ onOpenTool }: { onOpenTool: (t: Tool) => void }) {
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
       <header className="pb-8 pt-14">
-        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-faint">GitHub Trending</p>
-        <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink">Trending this week</h1>
+        <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-faint">Weekly snapshot</p>
+        <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-ink">Trending on GitHub</h1>
         <p className="mt-2 text-[15px] text-mute">
-          Real momentum from GitHub's weekly Trending page. Snapshot Oct 5, 2026.
+          Real momentum from GitHub's weekly Trending page, as of Oct 5, 2026.
         </p>
       </header>
 

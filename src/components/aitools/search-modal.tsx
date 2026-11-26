@@ -221,9 +221,15 @@ function Palette({
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search apps, alternatives, and pages..."
-            className="h-12 flex-1 bg-transparent font-mono text-sm text-ink outline-none placeholder:text-faint"
+            placeholder="Search apps, alternatives, and pages…"
+            className="h-12 flex-1 bg-transparent font-mono text-base text-ink outline-none placeholder:text-faint sm:text-sm"
             aria-label="Search query"
+            /* combobox pattern: focus stays here, arrows move the active option */
+            role="combobox"
+            aria-expanded={items.length > 0}
+            aria-controls="search-results"
+            aria-autocomplete="list"
+            aria-activedescendant={items.length > 0 ? `search-opt-${idx}` : undefined}
           />
           <button onClick={onClose} aria-label="Close search" className="shrink-0">
             <Kbd>esc</Kbd>
@@ -231,9 +237,10 @@ function Palette({
         </div>
 
         <div ref={listRef} className="thin-scroll max-h-[318px] overflow-y-auto overscroll-contain py-2">
+          <div id="search-results" role="listbox" aria-label="Search results">
           {pages.length > 0 && (
-            <>
-              <p className="px-4 pb-1.5 pt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
+            <div role="group" aria-label="Pages">
+              <p aria-hidden className="px-4 pb-1.5 pt-2 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
                 Pages
               </p>
               {pages.map((p, i) => {
@@ -241,6 +248,10 @@ function Palette({
                 return (
                   <button
                     key={`page-${p.label}`}
+                    id={`search-opt-${gi}`}
+                    role="option"
+                    aria-selected={gi === idx}
+                    tabIndex={-1}
                     data-idx={gi}
                     onMouseEnter={() => setIdx(gi)}
                     onClick={() => activate(p)}
@@ -257,13 +268,13 @@ function Palette({
                   </button>
                 );
               })}
-            </>
+            </div>
           )}
 
           {grouped.length > 0 &&
             grouped.map((g) => (
-              <div key={`cat-${g.cat}`}>
-                <p className="flex items-center gap-1.5 px-4 pb-1 pt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
+              <div key={`cat-${g.cat}`} role="group" aria-label={catLabel(g.cat)}>
+                <p aria-hidden className="flex items-center gap-1.5 px-4 pb-1 pt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-faint">
                   <CategoryIcon id={g.cat} className="h-3 w-3" />
                   {catLabel(g.cat)}
                   <span className="text-faint/60">· {g.items.length}</span>
@@ -274,6 +285,10 @@ function Palette({
                   return (
                     <button
                       key={t.id}
+                      id={`search-opt-${gi}`}
+                      role="option"
+                      aria-selected={gi === idx}
+                      tabIndex={-1}
                       data-idx={gi}
                       onMouseEnter={() => setIdx(gi)}
                       onClick={() => activate(item)}
@@ -296,6 +311,7 @@ function Palette({
                 })}
               </div>
             ))}
+          </div>
 
           {items.length === 0 && (
             <div className="px-4 py-10 text-center">

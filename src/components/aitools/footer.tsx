@@ -2,6 +2,7 @@
 
 import { Github, ShoppingBag } from "lucide-react";
 import type { ViewId } from "@/lib/aitools/data";
+import { REPO_URL } from "./nav";
 
 export function Footer({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
   const browse: { label: string; view: ViewId }[] = [
@@ -14,7 +15,6 @@ export function Footer({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
   const contribute: { label: string; view?: ViewId; external?: boolean }[] = [
     { label: "Submit an app", view: "submit" },
     { label: "Wanted alternatives", view: "wanted" },
-    { label: "About the collection", view: "discover" },
     { label: "Review queue", view: "admin" },
     { label: "GitHub", external: true },
   ];
@@ -53,7 +53,7 @@ export function Footer({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
                   <li key={l.label}>
                     {l.external ? (
                       <a
-                        href="https://github.com"
+                        href={REPO_URL}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-sm text-mute transition-colors hover:text-ink"
@@ -75,9 +75,6 @@ export function Footer({ onNavigate }: { onNavigate: (v: ViewId) => void }) {
 
         <div className="mt-14 flex flex-col gap-2 border-t border-line pt-6 text-xs text-faint sm:flex-row sm:items-center sm:justify-between">
           <p>Independently curated. Comparisons describe overlapping use cases.</p>
-          <p>
-            Built by <span className="text-mute underline underline-offset-2">Z</span>
-          </p>
         </div>
       </div>
     </footer>

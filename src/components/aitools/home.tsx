@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { type Tool, type ViewId } from "@/lib/aitools/data";
 import { ToolsProvider, useTools } from "./tools-provider";
 import { Nav } from "./nav";
@@ -20,6 +20,8 @@ import type { ApiPost } from "@/lib/aitools/api";
 import { trackPageView } from "@/lib/aitools/api";
 import { AdminDashboard } from "@/components/admin-dashboard";
 import { AdminGate } from "@/components/admin-gate";
+
+const DEFAULT_TITLE = "AIStore — Find the best AI tools";
 
 export default function AIToolStore() {
   return (
@@ -105,6 +107,28 @@ function AIToolStoreApp() {
     setView("post");
     window.scrollTo({ top: 0 });
   }, []);
+
+  /* a view change is a page change: retitle the tab from the new view's
+     <h1> and move focus there so screen readers announce it. Skipped on the
+     first render so a fresh page load keeps the browser's default focus. */
+  const viewKey = `${view}:${activeCategory ?? ""}:${activeToolId ?? ""}:${activePost?.id ?? ""}`;
+  const firstView = useRef(true);
+  useEffect(() => {
+    const h1 = document.querySelector<HTMLHeadingElement>("main h1");
+    const heading = h1?.textContent?.replace(/\s+/g, " ").trim();
+    document.title =
+      view === "discover" || !heading ? DEFAULT_TITLE : `${heading} — AIStore`;
+    if (firstView.current) {
+      firstView.current = false;
+      return;
+    }
+    if (h1) {
+      /* the heading is a focus target, not a control, so it draws no ring */
+      h1.tabIndex = -1;
+      h1.classList.add("outline-none");
+      h1.focus({ preventScroll: true });
+    }
+  }, [viewKey, view]);
 
   /* anonymous page-view beacon on every public view change (admin excluded) */
   useEffect(() => {

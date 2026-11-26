@@ -258,7 +258,7 @@ export function ToolDetail({
   ];
   if (tool.selfHosted) metaBits.push("Self-hosting available");
   if (tool.sourceAvailable) metaBits.push("Source available");
-  if (typeof tool.weeklyGain === "number") metaBits.push("Trending this week");
+  if (typeof tool.weeklyGain === "number") metaBits.push("On GitHub Trending");
 
   const firstReplace = replacesList[0] ?? "closed alternatives";
   /* keep "AI" capitalized inside the sentence ("for AI assistants") */
@@ -371,7 +371,6 @@ export function ToolDetail({
           type="button"
           onClick={() => toggleVote(tool.id)}
           aria-pressed={voted}
-          aria-label={voted ? `Remove your vote from ${tool.name}` : `Upvote ${tool.name}`}
           className={cn(
             "px-5 py-6 text-left transition-colors hover:bg-elev md:border-r md:border-line",
             voted && "text-accent",
@@ -388,7 +387,7 @@ export function ToolDetail({
             {voteCount}
           </div>
           <p className={cn("mt-1.5 text-xs", voted ? "text-accent/80" : "text-faint")}>
-            {voted ? "You upvoted this" : "Tap to upvote"}
+            {voted ? "You upvoted this" : "Upvote"}
           </p>
         </button>
 

@@ -13,7 +13,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/* Absolute base for the share image and other metadata URLs. Set SITE_URL to
+   the public origin in production; without it Next falls back to localhost. */
+const siteUrl = process.env.SITE_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Open AI Stack — Open-source alternatives to popular AI tools",
   description:
     "A curated directory of open-source and source-available AI tools, each matched to the product it replaces. Chat, coding, images, voice, agents and automation, reviewed by editors.",
@@ -35,6 +40,9 @@ export const metadata: Metadata = {
     description: "Open-source alternatives to the AI tools you use.",
     siteName: "Open AI Stack",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
   },
 };
 
